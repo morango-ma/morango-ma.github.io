@@ -336,7 +336,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 <div id="viewer" hidden><div class="panel"><div class="ph"><h2>الدليل</h2><button class="x" data-act="closeviewer" aria-label="إغلاق">×</button></div><div class="pb" id="viewer-body"></div></div></div>
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261104164517"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261104164828"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1202,7 +1202,7 @@ function sheetClientMgr(id){if(!isMgr())return;const c=S.clients.find(x=>x.id===
     const reserved=activeVouchers(c).reduce((s2,v)=>s2+(+v.pts||0),0);if(pts+reserved>(+c.points||0))return ferr('النقاط ما كافياش: عندو '+fmt(c.points)+(reserved?' (منهم '+fmt(reserved)+' محجوزين)':'')+'.');
     busy(f,true);try{const v={id:'v'+Date.now(),amount:r2(amount),pts,note:f.vnote.value.trim(),by:meName(),ts:Date.now(),status:'active'};await db.doc('clients/'+id).update({vouchers:[...vs,v]});closeSheet();toast('✅ الخصم تصادق عليه')}catch(e){fail(f,e)}})}
 /* ---------- expenses: salaries are direct per workshop; everything else is overhead split by share of revenue ---------- */
-const CHC=[['salaries','الأجور','👥'],['tools','أدوات العمل','🔧'],['water','الماء','💧'],['electricity','الكهرباء','⚡'],['gas','الغاز','🔥'],['rent','الكرا','🏠'],['marketing','التسويق','📣'],['insurance','التأمين','🛡️'],['taxes','الضرائب','🏛️'],['other','أخرى','📦']];
+const CHC=[['salaries','الأجور','👥'],['tools','أدوات العمل','🔧'],['water','الماء','💧'],['electricity','الكهرباء','⚡'],['gas','الغاز','🔥'],['rent','الكرا','🏠'],['housing','سكن العمال','🛏️'],['marketing','التسويق','📣'],['insurance','التأمين','🛡️'],['taxes','الضرائب','🏛️'],['other','أخرى','📦']];
 const CHL=Object.fromEntries(CHC.map(c=>[c[0],c[1]])),CHI=Object.fromEntries(CHC.map(c=>[c[0],c[2]]));CHL.packaging='فروقات جرد التغليف';CHI.packaging='📦';
 const ym=d=>d.slice(0,7);const monthDays=m=>new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();
 const addMonths=(m,k)=>{const d=new Date(+m.slice(0,4),+m.slice(5,7)-1+k,1);return dstr(d).slice(0,7)};
