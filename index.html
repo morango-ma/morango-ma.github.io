@@ -336,7 +336,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 <div id="viewer" hidden><div class="panel"><div class="ph"><h2>الدليل</h2><button class="x" data-act="closeviewer" aria-label="إغلاق">×</button></div><div class="pb" id="viewer-body"></div></div></div>
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261104094958"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261104095515"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1748,7 +1748,7 @@ function needsFor(ws){const days=hzDays();const R={};const sm=stockMap(ws);for(c
   const since=daysAgo(13),cons={};S.ops.filter(o=>o.type==='production'&&o.ws===ws&&o.date>=since).forEach(o=>(o.consumed||[]).forEach(c=>{if(isBought(S.items[c.item]?.kind))cons[c.item]=(cons[c.item]||0)+(+c.qty||0)}));
   if(noPlan.length&&S.pcfg?.autoPlan)Object.entries(cons).forEach(([k,v])=>need(k,v/14*noPlan.length,0,'🔄'));
   if(EG){const n=eggsFor(EG,eg.white,eg.yolk);if(n>0){need(EG.id,n,0,'🥚',egF0?shiftDay(egF0,leadOf(S.items[EG.id])):today())}}
-  const inc={};S.preqs.filter(r=>r.ws===ws&&r.purpose!=='tools'&&(['approved','partial'].includes(r.status)||(r.status==='pending'&&!r.auto))).forEach(r=>(r.lines||[]).forEach(l=>{if(!l.tool)inc[l.item]=(inc[l.item]||0)+Math.max(0,(+l.qty||0)-((r.delivered||{})[l.item]||0))}));
+  const inc={};S.preqs.filter(r=>r.ws===ws&&r.purpose!=='tools'&&!r.auto&&(['approved','partial','pending'].includes(r.status))).forEach(r=>(r.lines||[]).forEach(l=>{if(!l.tool)inc[l.item]=(inc[l.item]||0)+Math.max(0,(+l.qty||0)-((r.delivered||{})[l.item]||0))}));
   const ids=new Set([...Object.keys(rest),...Object.keys(used),...itemsArr().filter(i=>i.kind==='raw'&&!i.noStock&&+i.min>0&&(i.id in sm)).map(i=>i.id)]);
   const rows=[...ids].map(id=>{const it=S.items[id];if(!it||it.noStock)return null;const st=Math.max(0,stockOf(ws,id)),tot=(used[id]||0)+(rest[id]||0),left=R[id]??st,mn=+it.min||0;
     const buy=Math.max(0,(rest[id]||0)+Math.max(0,mn-left)-(inc[id]||0));const daily=tot/7;const cover=daily>0?st/daily:null;
