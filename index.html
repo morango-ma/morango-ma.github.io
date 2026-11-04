@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261104172826"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261104174941"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1378,6 +1378,12 @@ function vPricing(){if(!isAdmin())return emptyB('🔒','غير المشرف ال
    <section class="card">${L.length?L.map(row).join(''):emptyB('🏷️','ما كاين حتى منتوج.')}</section>`}
 async function prSave(k,v){const P=PRC();const n=num(v);if(!(n>=0&&n<100))return toast('كتب رقم بين 0 و 99',true);if(k.startsWith('other.')){P.other={...(P.other||{}),[k.slice(6)]:n}}else P[k]=n;try{await db.doc('config/prod').update({pricing:P});S.pcfg={...(S.pcfg||{}),pricing:P};render()}catch(e){toast('ما تحفظش',true)}}
 async function prApply(id,v){try{await db.doc('items/'+id).update({price:v,updBy:meName(),updTs:Date.now()});S.items[id].price=v;toast('✅ الثمن تبدل: '+money(v));render()}catch(e){toast('ما تبدلش',true)}}
+/* one-time: sale price = suggested price (rounded up to .5 / 1) for every final product; runs once on the admin's device with live data */
+let MIG1=0;async function migSugPrice(){if(MIG1||!me||!isAdmin()||!S.ready||!S.pcfg)return;ensureRates();if(!S.rates)return;const ws=[...new Set(itemsArr().filter(i=>i.kind==='final'&&i.active!==false&&i.ws).map(i=>i.ws))];if(ws.some(w=>rateOf(w).src==='loading'))return;MIG1=1;
+  try{const ref=db.doc('config/mig');const g=await ref.get();if(g.exists&&g.data().price_sug_1)return;await ref.set({price_sug_1:{ts:Date.now(),by:meName(),state:'running'}},{merge:true});
+    const P=PRC();const ch=[];for(const i of itemsArr().filter(i=>i.kind==='final'&&i.active!==false)){const v=sugPrice(i,P);if(!v||+i.price===v)continue;ch.push({id:i.id,old:+i.price||0,new:v});await db.doc('items/'+i.id).update({price:v,priceOld:+i.price||0,priceTs:Date.now(),priceBy:'💡 الثمن المقترح'})}
+    await ref.set({price_sug_1:{ts:Date.now(),by:meName(),state:'done',n:ch.length,changes:ch}},{merge:true});toast('💡 تبدلو '+ch.length+' أثمنة للثمن المقترح')}catch(e){MIG1=0;console.warn('mig',e)}}
+setInterval(()=>{migSugPrice()},4000);
 async function prApplyAll(w){const P=PRC();const o=+((P.other||{})[w])||0;const L=itemsArr().filter(i=>i.kind==='final'&&i.ws===w&&i.active!==false).filter(i=>{const c=unitCost(i),pr=+i.price||0;return !pr||(c>0&&(1-c/pr-o/100)*100<P.netMargin-0.05)}).map(i=>({i,v:sugPrice(i,P)})).filter(x=>x.v);
   if(!L.length)return;if(!confirm('غادي يتبدل الثمن ديال '+L.length+' منتوج. متأكد؟'))return;for(const x of L){await db.doc('items/'+x.i.id).update({price:x.v,updBy:meName(),updTs:Date.now()});S.items[x.i.id].price=x.v}toast('✅ تبدلو '+L.length+' ثمن');render()}
 function sheetPlan(w,d,pos){if(!isMgr())return;pos=pos||POS[0].id;const PS=POS.find(x=>x.id===pos)||POS[0];const fin=itemsArr().filter(i=>i.kind==='final'&&i.ws===w);const P=planOf(w,d);const pm={};(P?.lines||[]).forEach(l=>{const v=+(l.dist||{[POS[0].id]:l.qty})[pos]||0;if(v)pm[l.item]=v});
