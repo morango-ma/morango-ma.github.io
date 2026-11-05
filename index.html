@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261105193850"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261105223637"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1228,7 +1228,7 @@ async function sheetBdays(id){const c=await getClient(id);if(!c)return toast('م
    <button class="btn primary block" type="submit">✅ زيد</button>`,async f=>{const v=f.bdate.value;if(!/^\d{4}-\d\d-\d\d$/.test(v))return ferr('اختاري التاريخ.');const who=f.bwho.value;const name=f.bname.value.trim();if(who!=='أنا'&&!name)return ferr('كتبي السمية.');
     busy(f,true);try{const nb=[...L,{who,name:who==='أنا'?'':name,d:v.slice(5),ts:Date.now(),by:meName()}];await db.doc('clients/'+id).update({bdays:nb});c.bdays=nb;const cu=S.cust[S.pos];if(cu&&cu.id===id)cu.bn=nb.length;toast('🎂 تزاد');sheetBdays(id)}catch(e){fail(f,e)}})}
 /* ---------- expenses: salaries are direct per workshop; everything else is overhead split by share of revenue ---------- */
-const CHC=[['salaries','الأجور','👥'],['tools','أدوات العمل','🔧'],['water','الماء','💧'],['electricity','الكهرباء','⚡'],['gas','الغاز','🔥'],['rent','الكرا','🏠'],['housing','سكن العمال','🛏️'],['marketing','التسويق','📣'],['insurance','التأمين','🛡️'],['taxes','الضرائب','🏛️'],['other','أخرى','📦']];
+const CHC=[['salaries','الأجور','👥'],['tools','أدوات العمل','🔧'],['water','الماء','💧'],['electricity','الكهرباء','⚡'],['gas','الغاز','🔥'],['rent','الكرا','🏠'],['housing','سكن العمال','🛏️'],['food','ماكلة العمال','🍲'],['marketing','التسويق','📣'],['insurance','التأمين','🛡️'],['taxes','الضرائب','🏛️'],['other','أخرى','📦']];
 const CHL=Object.fromEntries(CHC.map(c=>[c[0],c[1]])),CHI=Object.fromEntries(CHC.map(c=>[c[0],c[2]]));CHL.packaging='فروقات جرد التغليف';CHI.packaging='📦';
 const ym=d=>d.slice(0,7);const monthDays=m=>new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();
 const addMonths=(m,k)=>{const d=new Date(+m.slice(0,4),+m.slice(5,7)-1+k,1);return dstr(d).slice(0,7)};
