@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106201442"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106202148"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1350,7 +1350,11 @@ function dayCmp(w,d){const P=planOf(w,d),R=realLines(w,d),me2=allocOf(w),dp=dayP
   const SL=sentLines(w,d);const rows=ids.map(id=>{const it=S.items[id],p=pm[id]||0,r=R[id]||0,u=basisU(it,me2);bp+=p*u;br+=r*u;kp+=p*pieceKg(it);kr+=r*pieceKg(it);const sn=Math.min(SL[id]||0,r);return{id,it,p,r,d:r-p,sn,st:r-sn}}).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
   const k=me2==='sales'?100:1;const tp=bp>0?dp.v/(bp/k):null,tr=br>0?dp.v/(br/k):null;
   return{P,rows,bp:bp/k,br:br/k,kp,kr,pay:dp.v,payM:dp.m,tp,tr,m:me2,ecart:tp!=null?(bp-br)/k*tp:null,pct:bp>0?Math.round(br/bp*100):null}}
-function latestPlanRate(w){for(let i=-1;i<=14;i++){const d=daysAgo(i),c=planOf(w,d);if(!c)continue;const x=dayCmp(w,d);if(x.tp>0&&x.pay>0)return{v:x.tp,date:d}}return null}
+/* labour per unit from a day's programme: daily pay ÷ (planned finals + manual freezing programme pieces) */
+function planBasis(w,d){const P=planOf(w,d);if(!P)return 0;const me2=allocOf(w);let b=0;(P.lines||[]).forEach(l=>{const it=S.items[l.item];if(it)b+=(+l.qty||0)*basisU(it,me2)});
+  Object.entries(P.frz||{}).forEach(([id,q])=>{const it=S.items[id];if(!it||isW(it.unit))return;b+=(+q||0)*basisU(it,me2)});return me2==='sales'?b/100:b}
+function latestPlanRate(w){const tryD=d=>{const c=planOf(w,d);if(!c)return null;const dp=dayPay(w,d);const b=planBasis(w,d);return b>0&&dp.v>0?{v:dp.v/b,date:d,basis:b}:null};
+  for(let i=0;i<=14;i++){for(const d of [daysAgo(-i),daysAgo(i)]){const r=tryD(d);if(r)return r}}return null}
 function vPlan(){const r=me.role;if(!(isMgr()||r==='prod'||r==='ws'))return emptyB('🔒','ما عندكش الحق.');
   const w=r==='ws'?me.loc:(S.plw||S.ws||'w1');const d=S.pld||today();const W=WS.find(x=>x.id===w);const can=isMgr();
   const dates=[{id:daysAgo(1),name:'البارح',i:'⏪'},{id:today(),name:'اليوم',i:'☀️'},{id:daysAgo(-1),name:'غدا',i:'⏩'},...[2,3,4,5,6,7,8,9,10,11,12,13].map(k=>({id:daysAgo(-k),name:dayName(daysAgo(-k))+' '+daysAgo(-k).slice(8),i:planOf(w,daysAgo(-k))?(planOf(w,daysAgo(-k)).auto?'🤖':'✅'):'📅'}))];if(!dates.some(x=>x.id===d))dates.unshift({id:d,name:d,i:'🗓️'});
