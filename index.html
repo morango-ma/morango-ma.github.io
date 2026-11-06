@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106181246"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106182042"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1683,7 +1683,8 @@ function sheetClose(){
    <div>${ids.length?ids.map(id=>prow(id,'',stepper('data-cnt',id,'',iunit(id)))).join(''):emptyB('🧺','ما كاين حتى منتوج.')}</div>
    ${moneyIn('ccash','💵 الفلوس اللي فالصندوق دابا (مع fond de caisse)')}
    ${mgrs.length?choice('cmgr','📊 المسير اللي استلم الفلوس',mgrs,mgrs[0].v,3):inp('cmgr','المسير اللي استلم الفلوس')}${sigField('csig','توقيع المسير (استلم الصندوق)')}
-   ${night?photoField('nret','📷 صور السلعة اللي رجعات (اختياري)'):''}<div class="box" id="nbox" ${night?'hidden':''}><h3>🤝 البائعة اللي استلمات</h3><label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="nok" style="width:22px;height:22px"> ✅ حسبنا السلعة جوج وتفاهمنا على الأرقام</label>${sigField('nsig','توقيع البائعة اللي استلمات')}</div>${errP}<button class="btn primary block" type="submit">🔒 سد النوبة</button>`,async f=>{
+   ${night?photoField('nret','📷 صور السلعة اللي رجعات (retour) · إجبارية'):''}<div class="box" id="nbox" ${night?'hidden':''}><h3>🤝 البائعة اللي استلمات</h3><label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="nok" style="width:22px;height:22px"> ✅ حسبنا السلعة جوج وتفاهمنا على الأرقام</label>${sigField('nsig','توقيع البائعة اللي استلمات')}</div>${errP}<button class="btn primary block" type="submit">🔒 سد النوبة</button>`,async f=>{
+    if(night&&ins.some(i=>num(i.value)>0)&&!(PH.nret||[]).length)return ferr('📷 صوري السلعة اللي غادي ترجع (retour).');
     const nx=night?'-':(f.cnext?.value||'-');if(nx!=='-'){if(!f.nok?.checked)return ferr('🤝 خاص البائعة اللي غادي تستلم تحسب معاك وتأكد.');if(!sigData('nsig'))return ferr('🤝 خاص توقيع البائعة اللي استلمات.')}
     const ins=$$('input[data-cnt]',f);if(ins.some(i=>!(num(i.value)>=0)))return ferr('دخلي العدد ديال كل منتوج، حتى إلا كان 0.');
     const cash=num(f.ccash.value);if(!(cash>=0))return ferr('دخلي المبلغ اللي فالصندوق.');const mgr=(f.cmgr.value||'').trim();if(!mgr)return ferr('اختاري المسير.');if(!sigData('csig'))return ferr('خاص توقيع المسير.');
@@ -1713,8 +1714,8 @@ function sheetReturnPos(){
   const p=S.pos,m=stockMap(p);const rows=itemsArr().filter(i=>i.kind==='final'&&(m[i.id]||0)>0);
   if(!rows.length)return openSheet('↩️ إرجاع غير المباع',emptyB('🧺','ما بقى حتى منتوج فالمحل.'));
   openSheet('↩️ إرجاع غير المباع',`<p class="muted">الكميات معمرة باللي باقي. نقص إلا بغيتي تخلي شي حاجة. كل منتوج كيرجع للورشة ديالو.</p>
-   <div>${rows.map(i=>prow(i.id,LOCI[i.ws]+' '+esc(LOC[i.ws]||''),stepper('data-ret',i.id,m[i.id],i.unit))).join('')}</div>${photoField('ret','صور المرتجعات')}${errP}<button class="btn primary block" type="submit">↩️ أكد الإرجاع</button>`,async f=>{
-    const lines=$$('input[data-ret]',f).map(i=>({item:i.dataset.ret,qty:num(i.value)})).filter(l=>l.qty>0);if(!lines.length)return ferr('ما كاين حتى كمية.');
+   <div>${rows.map(i=>prow(i.id,LOCI[i.ws]+' '+esc(LOC[i.ws]||''),stepper('data-ret',i.id,m[i.id],i.unit))).join('')}</div>${photoField('ret','📷 صور المرتجعات · إجبارية')}${errP}<button class="btn primary block" type="submit">↩️ أكد الإرجاع</button>`,async f=>{
+    const lines=$$('input[data-ret]',f).map(i=>({item:i.dataset.ret,qty:num(i.value)})).filter(l=>l.qty>0);if(!lines.length)return ferr('ما كاين حتى كمية.');if(!(PH.ret||[]).length)return ferr('📷 صوري المرتجعات.');
     busy(f,true);try{const photos=await saveMedia(PH.ret,'return');const by={};lines.forEach(l=>{const w=S.items[l.item]?.ws||'w1';(by[w]=by[w]||[]).push(l)});
       for(const w in by)await newOp({type:'return',pos:p,ws:w,lines:by[w],photos,status:'pending'});const d={};lines.forEach(l=>d[l.item]=-l.qty);await bumpStock(p,d);closeSheet();toast('↩️ المرتجعات تصيفطو للورشات')}catch(e){fail(f,e)}
   });
