@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106175852"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106180019"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1668,19 +1668,23 @@ function sheetClose(){
   const p=S.pos,sh=openShift(p);if(!sh)return;const m=stockMap(p);const sold={};(sh.tickets||[]).forEach(t=>t.lines.forEach(l=>sold[l.item]=1));
   const ids=itemsArr().filter(i=>i.kind==='final'&&((m[i.id]||0)!==0||sold[i.id]||(sh.opening||{})[i.id])).map(i=>i.id);const mgrs=[...userOpts('admin'),...userOpts('manager')];
   const TKs=sh.tickets||[];
-  openSheet('🔒 إغلاق النوبة',`<p class="muted">حسبي اللي بقى فالمحل بيدك. الأرقام النظرية ما كتبانش دابا، غادي تبان من بعد المقارنة.</p>${TKs.length?`<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📋</span><div><b>سلمي للمسير ${TKs.length} نسخة ديال الوصولات (نسخة المحل)</b><div class="muted">${TKs[0].no?'من '+esc(rNo(TKs[0]))+' حتى '+esc(rNo(TKs[TKs.length-1])):''} · المجموع ${money(sumTickets(sh))}</div></div></div></div>`:''}
+  const nexts=usersArr().filter(u=>u.role==='seller'&&u.name!==sh.seller).map(u=>({v:u.name,l:u.name,i:'🛍️'}));
+  openSheet('🔒 إغلاق النوبة · جرد التسليم',`<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🤝</span><div><b>جرد التسليم (Inventaire inter-passation) إجباري</b><div class="muted">حسبي كل منتوج بيدك${nexts.length?' مع البائعة اللي غادي تستلم من بعدك':''}. الأرقام النظرية ما كتبانش دابا، غادي تبان من بعد المقارنة.</div></div></div></div>
+   ${choice('cnext','🤝 شكون غادي تستلم المحل من بعدك؟',[...nexts,{v:'-',l:'حتى واحد · سدينا المحل',i:'🌙'}],nexts[0]?.v||'-',3)}${TKs.length?`<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📋</span><div><b>سلمي للمسير ${TKs.length} نسخة ديال الوصولات (نسخة المحل)</b><div class="muted">${TKs[0].no?'من '+esc(rNo(TKs[0]))+' حتى '+esc(rNo(TKs[TKs.length-1])):''} · المجموع ${money(sumTickets(sh))}</div></div></div></div>`:''}
    <div>${ids.length?ids.map(id=>prow(id,'',stepper('data-cnt',id,'',iunit(id)))).join(''):emptyB('🧺','ما كاين حتى منتوج.')}</div>
    ${moneyIn('ccash','💵 الفلوس اللي فالصندوق دابا (مع fond de caisse)')}
-   ${mgrs.length?choice('cmgr','📊 المسير اللي استلم الفلوس',mgrs,mgrs[0].v,3):inp('cmgr','المسير اللي استلم الفلوس')}${sigField('csig','توقيع المسير (استلم الصندوق)')}${errP}<button class="btn primary block" type="submit">🔒 سد النوبة</button>`,async f=>{
+   ${mgrs.length?choice('cmgr','📊 المسير اللي استلم الفلوس',mgrs,mgrs[0].v,3):inp('cmgr','المسير اللي استلم الفلوس')}${sigField('csig','توقيع المسير (استلم الصندوق)')}
+   <div class="box" id="nbox"><h3>🤝 البائعة اللي استلمات</h3><label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="nok" style="width:22px;height:22px"> ✅ حسبنا السلعة جوج وتفاهمنا على الأرقام</label>${sigField('nsig','توقيع البائعة اللي استلمات')}</div>${errP}<button class="btn primary block" type="submit">🔒 سد النوبة</button>`,async f=>{
+    const nx=f.cnext?.value||'-';if(nx!=='-'){if(!f.nok?.checked)return ferr('🤝 خاص البائعة اللي غادي تستلم تحسب معاك وتأكد.');if(!sigData('nsig'))return ferr('🤝 خاص توقيع البائعة اللي استلمات.')}
     const ins=$$('input[data-cnt]',f);if(ins.some(i=>!(num(i.value)>=0)))return ferr('دخلي العدد ديال كل منتوج، حتى إلا كان 0.');
     const cash=num(f.ccash.value);if(!(cash>=0))return ferr('دخلي المبلغ اللي فالصندوق.');const mgr=(f.cmgr.value||'').trim();if(!mgr)return ferr('اختاري المسير.');if(!sigData('csig'))return ferr('خاص توقيع المسير.');
     const counted={},theo={};ins.forEach(i=>{counted[i.dataset.cnt]=num(i.value);theo[i.dataset.cnt]=r2(m[i.dataset.cnt]||0)});
     const stockDiff=Object.keys(counted).map(id=>({item:id,theo:theo[id],counted:counted[id],d:r2(counted[id]-theo[id]),val:r2((counted[id]-theo[id])*(+S.items[id]?.price||0))})).filter(x=>x.d);
     const salesCost=Math.round((sh.tickets||[]).reduce((s,t)=>s+t.lines.reduce((a,l)=>a+l.qty*(+l.unitCost||0)+(+l.packCost||0),0),0)*100)/100;const salesT=r2(sumTickets(sh)),expected=r2((+sh.float||0)+salesT),cashDiff=r2(cash-expected);
-    busy(f,true);try{const sig=await sigSave('csig','cash');await setStockVals(p,counted);const close={ts:Date.now(),counted,theo,stockDiff,cash,expected,cashDiff,sales:salesT,salesCost,handedTo:mgr,sig,by:meName()};
+    busy(f,true);try{const sig=await sigSave('csig','cash');const nsig=nx!=='-'?await sigSave('nsig','passation'):null;await setStockVals(p,counted);const close={ts:Date.now(),counted,theo,stockDiff,cash,expected,cashDiff,sales:salesT,salesCost,handedTo:mgr,sig,by:meName(),passation:{to:nx==='-'?null:nx,sig:nsig,ok:nx!=='-',ts:Date.now()}};
       await db.doc('shifts/'+sh.id).update({status:'closed',close});
       if(sh.team==='مسائية')for(const o of S.outs.filter(o=>o.status==='open'&&o.pos===p))await db.doc('stockouts/'+o.id).update({status:'eod',closeTs:Date.now(),endOfDay:true});if(stockDiff.length)await newOp({type:'count',pos:p,shift:sh.id,diffs:stockDiff});sheetShiftResult({...sh,status:'closed',close})}catch(e){fail(f,e)}
-  });
+  },f=>{const u=()=>{const b=$('#nbox',f);if(b)b.style.display=f.cnext?.value==='-'?'none':''};f.addEventListener('click',e=>{if(e.target.closest('[data-name="cnext"]'))setTimeout(u,0)});u()});
 }
 function sheetShiftResult(x){
   if(typeof x==='string')x=S.shifts.find(s=>s.id===x);if(!x)return;const c=x.close;
@@ -1690,6 +1694,7 @@ function sheetShiftResult(x){
    <div class="stats sheet-stats"><div class="stat"><span>🧾 المبيعات</span><b>${money(c.sales)}</b></div><div class="stat"><span>💵 fond de caisse</span><b>${money(x.float)}</b></div><div class="stat"><span>🎯 خاص يكون</span><b>${money(c.expected)}</b></div><div class="stat"><span>💰 لقينا</span><b>${money(c.cash)}</b></div></div>
    <div class="alert ${Math.abs(c.cashDiff)<0.01?'acc':'bad'}"><b>💰 الصندوق: ${Math.abs(c.cashDiff)<0.01?'مطابق ✅':(c.cashDiff>0?'زايد ':'ناقص ')+money(Math.abs(c.cashDiff))}</b></div>
    ${isAdmin()&&c.salesCost!=null?`<div class="stats sheet-stats"><div class="stat"><span>🏷️ تكلفة اللي تباع (CMUP)</span><b>${money(c.salesCost)}</b></div><div class="stat"><span>📈 الربح الخام</span><b class="${c.sales-c.salesCost<0?'neg':'pos'}">${money(c.sales-c.salesCost)}</b></div></div>`:''}
+   ${c.passation?`<div class="alert ${c.passation.to?'acc':''}" style="cursor:default"><b>🤝 جرد التسليم: ${c.passation.to?'تسلم لـ '+esc(c.passation.to)+' ✅ (حسبو جوج ووقعات)':'سدينا المحل، حتى واحد ما استلم'}</b>${c.passation.sig?` <button type="button" class="link" data-act="media" data-id="${c.passation.sig}">✍️ التوقيع</button>`:''}</div>`:''}
    <h3>🔍 السلعة: النظري مقابل الجرد</h3>${c.stockDiff?.length?c.stockDiff.map(d=>prow(d.item,'نظري '+fmt(d.theo)+' · لقينا '+fmt(d.counted),`<div style="text-align:end"><b class="num ${d.d<0?'neg':'pos'}">${d.d>0?'+':''}${fmt(d.d)}</b><div class="muted num">${money(d.val)}</div></div>`)).join('')+`<p class="muted">مجموع قيمة الفرق: ${money(c.stockDiff.reduce((s,d)=>s+d.val,0))}</p>`:'<p><span class="tag good">✅ كلشي مطابق</span></p>'}
    <p class="muted">💵 الفلوس تسلمات لـ${esc(c.handedTo)}.</p><div class="media">${mediaBtns([c.sig],'توقيع المسير','✍️')}</div>`);
 }
