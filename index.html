@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106222905"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106223058"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -347,7 +347,15 @@ const rid=()=>{const a='abcdefghijklmnopqrstuvwxyz0123456789';let s='';const r=c
 const snap=(id,data)=>({id,exists:data!=null,data:()=>clone(data)});
 function fire(c,id){(L[c]||new Set()).forEach(f=>{try{f(id)}catch(e){console.warn(e)}})}
 function listen(c,f){(L[c]||(L[c]=new Set())).add(f);return()=>L[c].delete(f)}
-function startRealtime(){if(chan)return;chan=sb.channel('docs-all').on('postgres_changes',{event:'*',schema:'public',table:'docs'},p=>{const r=p.new&&p.new.col?p.new:p.old;if(r&&r.col)fire(r.col,r.id)}).subscribe(st=>{if(st==='SUBSCRIBED')Object.keys(L).forEach(c=>fire(c,null))})}
+/* live sync: realtime channel (re-subscribes when the phone drops it) + a light catch-up check every 15 s and when the app comes back */
+let rtOk=false,lastTs=null,pollBusy=false;const fireAll=()=>Object.keys(L).forEach(c=>fire(c,null));
+function startRealtime(){if(chan)return;chan=sb.channel('docs-all-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:'docs'},p=>{const r=p.new&&p.new.col?p.new:p.old;if(r&&r.col)fire(r.col,r.id);if(p.new&&p.new.updated_at&&(!lastTs||p.new.updated_at>lastTs))lastTs=p.new.updated_at}).subscribe(st=>{
+  if(st==='SUBSCRIBED'){const was=rtOk;rtOk=true;if(!was)fireAll()}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED'){rtOk=false;const c=chan;chan=null;try{sb.removeChannel(c)}catch(_){}setTimeout(()=>{if(sb&&authed)startRealtime()},3000)}})}
+async function catchUp(){if(!sb||!authed||pollBusy)return;pollBusy=true;try{if(!lastTs){const {data}=await sb.from('docs').select('updated_at').order('updated_at',{ascending:false}).limit(1);lastTs=data&&data[0]?data[0].updated_at:new Date().toISOString()}else{
+    const {data,error}=await sb.from('docs').select('col,id,updated_at').gt('updated_at',lastTs).order('updated_at',{ascending:true}).limit(500);if(!error&&data&&data.length){const seen=new Set();data.forEach(r=>{const k=r.col+'/'+r.id;if(!seen.has(k)){seen.add(k);fire(r.col,r.id)}});lastTs=data[data.length-1].updated_at}}}catch(_){}pollBusy=false}
+setInterval(()=>{if(!document.hidden)catchUp()},15000);
+const wake=()=>{if(!sb||!authed)return;catchUp();if(!rtOk||!chan){const c=chan;chan=null;if(c)try{sb.removeChannel(c)}catch(_){}startRealtime();fireAll()}};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)wake()});window.addEventListener('online',wake);window.addEventListener('focus',wake);
 function devInfo(){const ua=navigator.userAgent;const touch=navigator.maxTouchPoints>1;let type='جهاز',os='',model='';let m;
   if(/iPhone/.test(ua)){type='iPhone';m=ua.match(/OS (\d+)[_.](\d+)/);os=m?'iOS '+m[1]+'.'+m[2]:'iOS'}
   else if(/iPad/.test(ua)||(/Macintosh/.test(ua)&&touch)){type='iPad';m=ua.match(/(?:OS|Version\/)(\d+)[_.](\d+)/);os=m?'iPadOS '+m[1]+'.'+m[2]:'iPadOS'}
