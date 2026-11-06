@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106172359"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106173323"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1153,7 +1153,7 @@ function sheetCart(){if(tempLocked(S.pos)){sheetTemp(S.pos);return}if(vitLocked(
    <div class="btns"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button><button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div>`,async f=>{
     const sh=openShift(p);if(!sh)return ferr('ما كاينة حتى نوبة مفتوحة.');const lines=ids.filter(id=>c[id]>0).map(id=>({item:id,qty:c[id],price:+S.items[id].price,unitCost:costOf(id,0,p)}));const grossT=r2(lines.reduce((s,l)=>s+l.qty*l.price,0));const tot=r2(grossT-useVal);
     const given=num(f.cgiven.value);if(f.cgiven.value.trim()&&!(given>=tot))return ferr('المبلغ اللي عطى الزبون ناقص على المجموع.');
-    busy(f,true);try{const fresh=await db.doc('shifts/'+sh.id).get();const tk=[...(fresh.data().tickets||[])];const t={n:tk.length+1,ts:Date.now(),lines,total:tot,pay:'cash'};if(given>=tot){t.given=given;t.change=r2(given-tot)}
+    busy(f,true);try{const fresh=await db.doc('shifts/'+sh.id).get();const tk=[...(fresh.data().tickets||[])];const t={n:tk.length+1,ts:Date.now(),lines,total:tot,pay:'cash'};{const gv=given>=tot?given:tot;t.given=r2(gv);t.change=r2(gv-tot)}
       if(cu){const L=LOY();const cref=db.doc('clients/'+cu.id);const cs=await cref.get();const cd=cs.exists?cs.data():{points:0,total:0,visits:0};const fv=vch&&(cd.vouchers||[]).find(v=>v.id===vch.id&&v.status==='active');const used=fv?(+fv.pts||0):0;const earned=L.on?ptsLines(lines):0;const bal=Math.max(0,(+cd.points||0)-used)+earned;
         t.client={id:cu.id,name:cu.name,used,earned,balance:bal};if(fv&&useVal){t.gross=grossT;t.discount=useVal;t.voucher=fv.id}
         const upd={points:bal,total:r2((+cd.total||0)+tot),visits:(+cd.visits||0)+1,lastTs:Date.now()};if(fv)upd.vouchers=(cd.vouchers||[]).map(v=>v.id===fv.id?{...v,status:'used',usedTs:Date.now(),usedBy:meName(),pos:p,ticket:t.n}:v);
@@ -1164,8 +1164,18 @@ function sheetCart(){if(tempLocked(S.pos)){sheetTemp(S.pos);return}if(vitLocked(
       tk.push(t);await db.doc('shifts/'+sh.id).update({tickets:tk});const d={};lines.forEach(l=>d[l.item]=-l.qty);Object.entries(PF).forEach(([id,q])=>d[id]=(d[id]||0)-q);const sres=await bumpStock(p,d);S.cart[p]={};S.packEdit[p]={};sheetReceipt(sh,t);render();stockWatch(p,sres,'sale').catch(()=>{})}catch(e){fail(f,e)}
   },f=>{const upd=()=>{const g=num(f.cgiven.value);const box=$('#chg',f);if(!(g>0)){box.innerHTML='';return}box.innerHTML=g>=total?`<div class="change">🪙 الصرف: ${money(g-total)}</div>`:`<div class="change neg">ناقص ${money(total-g)}</div>`};f.addEventListener('input',upd)});
 }
-const receiptHtml=(sh,t)=>`<div class="receipt"><div class="head"><b class="disp">🍓 ${esc(LOC[sh.pos])}</b><span class="muted">وصل رقم ${t.n}</span></div><div class="muted">${dhm(t.ts)} · ${esc(sh.seller)}</div>
-  <div class="tw"><table class="t"><tbody>${t.lines.map(l=>`<tr><td>${ico(l.item)} ${esc(iname(l.item))}</td><td>${fmt(l.qty)} × ${money(l.price)}</td><td class="num">${money(l.qty*l.price)}</td></tr>`).join('')}</tbody></table></div>${t.discount?`<div class="muted num">خصم الوفاء −${money(t.discount)}</div>`:''}<div class="tot"><span>المجموع</span><span>${money(t.total)}</span></div>${t.client?`<div class="muted">⭐ ${esc(t.client.name)} · +${fmt(t.client.earned)} نقطة · الرصيد ${fmt(t.client.balance)}</div>`:''}${t.given!=null?`<div class="muted num">عطى ${money(t.given)} · الصرف ${money(t.change)}</div>`:''}<div class="muted">💵 كاش · شكراً على الزيارة 💛</div></div>`;
+const hms=ts=>{const d=new Date(ts);return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())};
+const dhms=ts=>dstr(new Date(ts))+' · '+hms(ts);
+const unitLbl=id=>{const u=S.items[id]?.unit||'قطعة';return u==='قطعة'?'حبة':u==='كغ'?'كيلو':u};
+const rQtyU=l=>fmt(l.qty)+' '+unitLbl(l.item);
+/* logo for the receipt: uploaded one (config/receipt.logo) or the app icon turned black on white */
+let LOGOIMG=null,LOGOSRC='';async function receiptLogo(){const src=(S.cfg||{}).logo||'icon-192.png';if(LOGOIMG&&LOGOSRC===src)return LOGOIMG;
+  const im=await new Promise(res=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>res(i);i.onerror=()=>res(null);i.src=src});if(!im)return null;
+  const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0);
+  if(!(S.cfg||{}).logo){const d=g.getImageData(0,0,c.width,c.height),a=d.data;for(let k=0;k<a.length;k+=4){const w=a[k]>200&&a[k+1]>200&&a[k+2]>200;const v=w?0:255;a[k]=a[k+1]=a[k+2]=v;a[k+3]=255}g.putImageData(d,0,0)}
+  LOGOIMG=c;LOGOSRC=src;return c}
+const receiptHtml=(sh,t)=>`<div class="receipt"><div style="text-align:center"><img src="${esc((S.cfg||{}).logo||'icon-192.png')}" alt="" style="width:56px;height:56px;object-fit:contain;border-radius:12px"></div><div class="head"><b class="disp">${esc((S.cfg||{}).title||'Morango')} · ${esc(LOC[sh.pos])}</b><span class="muted">وصل رقم ${t.n}</span></div><div class="muted num">🕒 ${dhms(t.ts)} · ${esc(sh.seller)}</div>
+  <div class="tw"><table class="t"><tbody>${t.lines.map(l=>`<tr><td>${ico(l.item)} ${esc(iname(l.item))}</td><td>${rQtyU(l)} × ${money(l.price)}</td><td class="num">${money(l.qty*l.price)}</td></tr>`).join('')}</tbody></table></div>${t.discount?`<div class="muted num">خصم الوفاء −${money(t.discount)}</div>`:''}<div class="tot"><span>المجموع</span><span>${money(t.total)}</span></div>${t.client?`<div class="muted">⭐ ${esc(t.client.name)} · +${fmt(t.client.earned)} نقطة · الرصيد ${fmt(t.client.balance)}</div>`:''}${t.given!=null?`<div class="prow num" style="border:0;padding:2px 0"><span>💵 عطى الزبون</span><b>${money(t.given)}</b></div><div class="prow num" style="border:0;padding:2px 0"><span>🪙 الصرف اللي رجع ليه</span><b>${money(t.change)}</b></div>`:''}<div class="muted">💵 كاش · شكراً على الزيارة 💛</div></div>`;
 /* ---------- receipt image for thermal printers (58mm = 384px, 80mm = 576px wide) ---------- */
 async function receiptBlob(sh,t){
   const cfg=S.cfg||{};const W=cfg.width==='58'?384:576;const P=W>400?22:14;const F=W>400?24:19;const FONT='"IBM Plex Sans Arabic",Tahoma,sans-serif';
@@ -1175,18 +1185,20 @@ async function receiptBlob(sh,t){
   const R=[];const center=(txt,sz,b)=>wrap(txt,sz,b,W-2*P).forEach(l=>R.push({k:'c',t:l,sz,b}));
   const pair=(r,l,sz,b)=>{x.font=font(sz,b);const lw=x.measureText(l).width;const rl=wrap(r,sz,b,W-2*P-lw-12);rl.forEach((t2,i)=>R.push({k:'p',r:t2,l:i===rl.length-1?l:'',sz,b}))};
   const line=()=>R.push({k:'l'}),gap=h=>R.push({k:'g',h});
+  let LG=null;try{LG=await receiptLogo()}catch(_){}if(LG){const lw=Math.round(W*.32);R.push({k:'img',im:LG,w:lw,h:Math.round(lw*LG.height/LG.width)});gap(6)}
   center(cfg.title||'MORANGO',Math.round(F*1.45),true);if(cfg.address)center(cfg.address,Math.round(F*.8));if(cfg.phone)center('☎ '+cfg.phone,Math.round(F*.8));
   center(LOC[sh.pos],Math.round(F*.85));gap(6);line();
-  pair('وصل رقم '+t.n,dhm(t.ts),Math.round(F*.85),true);pair('البائعة: '+sh.seller,'',Math.round(F*.8));line();
-  t.lines.forEach(l=>{pair(iname(l.item),money(l.qty*l.price).replace(' د.م',''),F,true);R.push({k:'p',r:fmt(l.qty)+' × '+money(l.price),l:'',sz:Math.round(F*.78),b:false,mut:true})});
+  pair('وصل رقم '+t.n,dhms(t.ts),Math.round(F*.85),true);pair('البائعة: '+sh.seller,'',Math.round(F*.8));line();
+  t.lines.forEach(l=>{pair(iname(l.item),money(l.qty*l.price).replace(' د.م',''),F,true);R.push({k:'p',r:rQtyU(l)+' × '+money(l.price)+' ('+(unitLbl(l.item)==='كيلو'?'ثمن الكيلو':'ثمن الحبة')+')',l:'',sz:Math.round(F*.78),b:false,mut:true})});
   line();if(t.discount)pair('خصم الوفاء','-'+money(t.discount),Math.round(F*.85));pair('المجموع',money(t.total),Math.round(F*1.35),true);
-  if(t.given!=null){pair('عطى الزبون',money(t.given),Math.round(F*.85));pair('الصرف',money(t.change),Math.round(F*.85))}
+  if(t.given!=null){pair('عطى الزبون',money(t.given),Math.round(F*.95),true);pair('الصرف اللي رجع',money(t.change),Math.round(F*.95),true)}
   pair('طريقة الأداء','كاش',Math.round(F*.8));
   if(t.client){line();center('⭐ '+t.client.name,Math.round(F*.85),true);pair('النقاط ديال اليوم','+'+fmt(t.client.earned),Math.round(F*.8));pair('الرصيد ديالك',fmt(t.client.balance)+' نقطة',Math.round(F*.8),true)}line();gap(4);center(cfg.footer||'شكراً على الزيارة',Math.round(F*.9),true);gap(P);
-  const lh=r=>r.k==='l'?20:r.k==='g'?r.h:Math.round(r.sz*1.45);let H=P;R.forEach(r=>H+=lh(r));
+  const lh=r=>r.k==='l'?20:r.k==='g'?r.h:r.k==='img'?r.h:Math.round(r.sz*1.45);let H=P;R.forEach(r=>H+=lh(r));
   cv.width=W;cv.height=H;x.fillStyle='#FFFFFF';x.fillRect(0,0,W,H);x.fillStyle='#000000';x.strokeStyle='#000000';x.textBaseline='middle';let y=P;
   for(const r of R){const h=lh(r);const mid=y+h/2;
-    if(r.k==='l'){x.setLineDash([8,6]);x.lineWidth=2;x.beginPath();x.moveTo(P,mid);x.lineTo(W-P,mid);x.stroke();x.setLineDash([])}
+    if(r.k==='img'){x.drawImage(r.im,(W-r.w)/2,y,r.w,r.h)}
+    else if(r.k==='l'){x.setLineDash([8,6]);x.lineWidth=2;x.beginPath();x.moveTo(P,mid);x.lineTo(W-P,mid);x.stroke();x.setLineDash([])}
     else if(r.k==='c'){x.font=font(r.sz,r.b);x.direction='rtl';x.textAlign='center';x.fillText(r.t,W/2,mid)}
     else if(r.k==='p'){x.font=font(r.sz,r.b);x.fillStyle=r.mut?'#444444':'#000000';x.direction='rtl';x.textAlign='right';x.fillText(r.r,W-P,mid);if(r.l){x.direction='ltr';x.textAlign='left';x.fillText(r.l,P,mid)}x.fillStyle='#000000'}
     y+=h}
@@ -1620,9 +1632,11 @@ function sheetRepWs(wid){const r=computeReport();if(!r)return;const x=r.W[wid];c
    <button type="button" class="btn block" data-act="go" data-v="charges">💼 دخل ولا بدل المصاريف</button>`)}
 function sheetReceiptCfg(){if(!isMgr())return;const c=S.cfg||{};
   openSheet('🧾 شكل الوصل',`${inp('rtitle','🏷️ سمية المخبزة',c.title||'','text','autocomplete="off"')}${inp('raddr','📍 العنوان (اختياري)',c.address||'','text','autocomplete="off"')}${inp('rphone','☎ التيليفون (اختياري)',c.phone||'','tel','autocomplete="off"')}${inp('rfoot','💛 الكلمة اللخر',c.footer||'شكراً على الزيارة','text','autocomplete="off"')}
+   <div class="field"><span class="lbl">🖼️ اللوغو ديال المخبزة (كيبان فالوصل)</span><div class="prow" style="gap:10px"><img id="rlogoimg" src="${esc(c.logo||'icon-192.png')}" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:12px;background:#fff"><input id="rlogo" type="file" accept="image/*" aria-label="اللوغو"></div><input type="hidden" id="rlogov" name="rlogov" value=""></div>
    ${choice('rwidth','عرض الورقة ديال الطابعة',[{v:'80',l:'80 مم',i:'🧾'},{v:'58',l:'58 مم',i:'🧻'}],c.width||'80',2)}
    <button type="button" class="btn" data-act="rprev">👀 شوف مثال</button><div id="rprevbox" style="text-align:center"></div>${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,async f=>{
-    const d={title:f.rtitle.value.trim(),address:f.raddr.value.trim(),phone:f.rphone.value.trim(),footer:f.rfoot.value.trim(),width:f.rwidth.value};busy(f,true);try{await db.doc('config/receipt').set(d);S.cfg=d;closeSheet();toast('✅ تحفظ شكل الوصل')}catch(e){fail(f,e)}})}
+    const d={title:f.rtitle.value.trim(),address:f.raddr.value.trim(),phone:f.rphone.value.trim(),footer:f.rfoot.value.trim(),width:f.rwidth.value,logo:f.rlogov.value||c.logo||''};busy(f,true);try{await db.doc('config/receipt').set(d);S.cfg=d;LOGOIMG=null;closeSheet();toast('✅ تحفظ شكل الوصل')}catch(e){fail(f,e)}},
+   f=>{$('#rlogo',f).addEventListener('change',e=>{const fl=e.target.files?.[0];if(!fl)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const M=320,k=Math.min(1,M/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(im,0,0,cv.width,cv.height);const u=cv.toDataURL('image/png');f.rlogov.value=u;$('#rlogoimg',f).src=u};im.src=rd.result};rd.readAsDataURL(fl)})})}
 function sheetClose(){
   const p=S.pos,sh=openShift(p);if(!sh)return;const m=stockMap(p);const sold={};(sh.tickets||[]).forEach(t=>t.lines.forEach(l=>sold[l.item]=1));
   const ids=itemsArr().filter(i=>i.kind==='final'&&((m[i.id]||0)!==0||sold[i.id]||(sh.opening||{})[i.id])).map(i=>i.id);const mgrs=[...userOpts('admin'),...userOpts('manager')];
@@ -2919,7 +2933,7 @@ const ACT={
   printr:()=>{if(LASTR)printReceipt(LASTR.sh,LASTR.t)},
   printt:el=>{const sh=S.shifts.find(x=>x.id===el.dataset.sh);const t=sh&&(sh.tickets||[]).find(x=>x.n===+el.dataset.n);if(t)printReceipt(sh,t)},
   rcfg:()=>sheetReceiptCfg(),
-  rprev:async()=>{const f=$('#sf');const keep=S.cfg;S.cfg={title:f.rtitle.value.trim(),address:f.raddr.value.trim(),phone:f.rphone.value.trim(),footer:f.rfoot.value.trim(),width:f.rwidth.value};
+  rprev:async()=>{const f=$('#sf');const keep=S.cfg;S.cfg={title:f.rtitle.value.trim(),address:f.raddr.value.trim(),phone:f.rphone.value.trim(),footer:f.rfoot.value.trim(),width:f.rwidth.value,logo:f.rlogov?.value||keep?.logo||''};LOGOIMG=null;
     const b=await receiptBlob({pos:S.pos,seller:meName()},{n:1,ts:Date.now(),lines:itemsArr().filter(i=>i.kind==='final'&&+i.price>0).slice(0,3).map(i=>({item:i.id,qty:2,price:+i.price})),total:itemsArr().filter(i=>i.kind==='final'&&+i.price>0).slice(0,3).reduce((s,i)=>s+2*i.price,0),given:200,change:0});S.cfg=keep;
     const u=URL.createObjectURL(b);$('#rprevbox').innerHTML=`<img alt="مثال ديال الوصل" src="${u}" style="max-width:280px;width:100%;border:1px solid var(--line);border-radius:8px;background:#FFFFFF">`},
   newpreq:el=>sheetNewPreq(el?.dataset?.k),prpur:el=>{S.prp=el.dataset.id;render()},preq:el=>sheetPreq(el.dataset.id),prfilter:el=>{S.prf=el.dataset.id;render()},
