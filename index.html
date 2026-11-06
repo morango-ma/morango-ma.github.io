@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106174433"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261106175852"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1191,7 +1191,7 @@ let LOGOIMG=null,LOGOSRC='';async function receiptLogo(){const src=(S.cfg||{}).l
 const receiptHtml=(sh,t)=>`<div class="receipt">${(S.cfg||{}).logo?`<div style="text-align:center"><img src="${esc(S.cfg.logo)}" alt="" style="max-width:140px;max-height:80px;object-fit:contain"></div>`:''}<div class="head"><b class="disp">${esc((S.cfg||{}).title||'Morango')} · ${esc(LOC[sh.pos])}</b><span class="muted num">وصل رقم ${esc(rNo(t))}</span></div><div class="muted num">🕒 ${dhms(t.ts)} · ${esc(sh.seller)}</div>
   <div class="tw"><table class="t"><tbody>${t.lines.map(l=>`<tr><td>${ico(l.item)} ${esc(iname(l.item))}</td><td>${rQtyU(l)} × ${money(l.price)}</td><td class="num">${money(l.qty*l.price)}</td></tr>`).join('')}</tbody></table></div>${t.discount?`<div class="muted num">خصم الوفاء −${money(t.discount)}</div>`:''}<div class="tot"><span>المجموع</span><span>${money(t.total)}</span></div>${t.client?`<div class="muted">⭐ ${esc(t.client.name)} · +${fmt(t.client.earned)} نقطة · الرصيد ${fmt(t.client.balance)}</div>`:''}${t.given!=null?`<div class="prow num" style="border:0;padding:2px 0"><span>💵 عطى الزبون</span><b>${money(t.given)}</b></div><div class="prow num" style="border:0;padding:2px 0"><span>🪙 الصرف اللي رجع ليه</span><b>${money(t.change)}</b></div>`:''}<div class="muted">💵 كاش · شكراً على الزيارة 💛</div></div>`;
 /* ---------- receipt image for thermal printers (58mm = 384px, 80mm = 576px wide) ---------- */
-async function receiptBlob(sh,t){
+async function receiptBlob(sh,t,copy){
   const cfg=S.cfg||{};const W=cfg.width==='58'?384:576;const P=W>400?22:14;const F=W>400?24:19;const FONT='"IBM Plex Sans Arabic",Tahoma,sans-serif';
   try{await Promise.all([document.fonts.load(`600 ${F}px "IBM Plex Sans Arabic"`),document.fonts.load(`400 ${F}px "IBM Plex Sans Arabic"`)])}catch(_){}
   const cv=document.createElement('canvas');const x=cv.getContext('2d');const font=(sz,b)=>`${b?700:400} ${sz}px ${FONT}`;
@@ -1201,7 +1201,7 @@ async function receiptBlob(sh,t){
   const line=()=>R.push({k:'l'}),gap=h=>R.push({k:'g',h});
   let LG=null;try{LG=await receiptLogo()}catch(_){}if(LG){const lw=Math.round(W*.32);R.push({k:'img',im:LG,w:lw,h:Math.round(lw*LG.height/LG.width)});gap(6)}
   center(cfg.title||'MORANGO',Math.round(F*1.45),true);if(cfg.address)center(cfg.address,Math.round(F*.8));if(cfg.phone)center('☎ '+cfg.phone,Math.round(F*.8));
-  center(LOC[sh.pos],Math.round(F*.85));gap(6);line();
+  center(LOC[sh.pos],Math.round(F*.85));if(copy)center(copy==='shop'?'📋 نسخة المحل · تتسلم فآخر النهار':'🧾 نسخة الزبون',Math.round(F*.85),true);gap(6);line();
   pair('وصل رقم '+rNo(t),dhms(t.ts),Math.round(F*.85),true);pair('البائعة: '+sh.seller,'',Math.round(F*.8));line();
   t.lines.forEach(l=>{pair(iname(l.item),money(l.qty*l.price).replace(' د.م',''),F,true);R.push({k:'p',r:rQtyU(l)+' × '+money(l.price)+' ('+(unitLbl(l.item)==='كيلو'?'ثمن الكيلو':'ثمن الحبة')+')',l:'',sz:Math.round(F*.78),b:false,mut:true})});
   line();if(t.discount)pair('خصم الوفاء','-'+money(t.discount),Math.round(F*.85));pair('المجموع',money(t.total),Math.round(F*1.35),true);
@@ -1221,12 +1221,25 @@ async function receiptBlob(sh,t){
 async function printReceipt(sh,t){
   let dl=null;try{dl=window.claude?.use?await window.claude.use('downloads'):null}catch(_){}
   if(!dl)return toast('الطبع ما متاحش فهاد الجهاز',true);
-  try{const b=await receiptBlob(sh,t);await dl.save({filename:`wasl-${sh.pos}-${dstr(new Date(t.ts))}-${t.n}.png`,data:b});toast('🖨️ الوصل واجد، حلو بتطبيق الطابعة')}
+  try{const b=await receipt2(sh,t);await dl.save({filename:`wasl-${sh.pos}-${dstr(new Date(t.ts))}-${(t.no||t.n)}.png`,data:b});toast('🖨️ جوج نسخ واجدين (الزبون + المحل)، حلهم بتطبيق الطابعة')}
   catch(e){if(e?.code==='declined')return;toast('ما قدرناش نوجدو الوصل',true)}
 }
+/* client copy + shop copy stacked in one image, with a cut line between them */
+async function receipt2(sh,t){const [a,b]=await Promise.all([receiptBlob(sh,t,'client'),receiptBlob(sh,t,'shop')]);const load=bl=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(bl)});const [ia,ib]=await Promise.all([load(a),load(b)]);
+  const cut=60;const cv=document.createElement('canvas');cv.width=ia.width;cv.height=ia.height+cut+ib.height;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(ia,0,0);
+  const y=ia.height+cut/2;x.strokeStyle='#000';x.setLineDash([10,8]);x.lineWidth=2;x.beginPath();x.moveTo(10,y);x.lineTo(cv.width-10,y);x.stroke();x.setLineDash([]);x.fillStyle='#000';x.font='700 22px Tahoma,sans-serif';x.textBaseline='middle';x.fillText('✂',8,y);
+  x.drawImage(ib,0,ia.height+cut);return await new Promise(res=>cv.toBlob(res,'image/png'))}
 let LASTR=null;
 function sheetReceipt(sh,t){LASTR={sh,t};openSheet('🧾 الوصل',receiptHtml(sh,t)+'<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ طبع الوصل</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>')}
-function sheetTickets(){const sh=openShift(S.pos);if(!sh)return;const tk=[...(sh.tickets||[])].reverse();openSheet('🧾 وصولات النوبة',tk.length?tk.map(t=>receiptHtml(sh,t)+`<button type="button" class="btn small" data-act="printt" data-sh="${sh.id}" data-n="${t.n}">🖨️ طبع الوصل ${t.n}</button>`).join(''):emptyB('🧾','مازال ما تسجل حتى بيع.'))}
+const tkKey=t=>String(t.no||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+function sheetTickets(){const sh=openShift(S.pos);if(!sh)return;const tk=[...(sh.tickets||[])].reverse();const p=S.pos;
+  const card=(x,t)=>`<div data-tk="${esc(tkKey(t))}" data-tn="${t.n}" data-sh0="${x.id===sh.id?1:0}">${receiptHtml(x,t)}<button type="button" class="btn small" data-act="printt" data-sh="${x.id}" data-n="${t.n}">🖨️ طبع الوصل ${esc(rNo(t))} (نسخة الزبون + نسخة المحل)</button></div>`;
+  const older=S.shifts.filter(x=>x.pos===p&&x.id!==sh.id).flatMap(x=>[...(x.tickets||[])].reverse().map(t=>({x,t})));
+  openSheet('🧾 وصولات النوبة',`${inp('tkq','🔍 قلب بنمرة الوصل','','search','autocomplete="off" placeholder="مثلاً KTBT-EW3"')}<p class="muted" id="tkinfo" style="margin:0"></p>
+   <div id="tkcur">${tk.length?tk.map(t=>card(sh,t)).join(''):emptyB('🧾','مازال ما تسجل حتى بيع.')}</div><div id="tkold" hidden>${older.map(o=>card(o.x,o.t)).join('')}</div>`,null,
+   f=>{const go=()=>{const q=String(f.tkq.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const old=$('#tkold',f);old.hidden=!q;let n=0;
+     $$('[data-tk]',f).forEach(d=>{const ok=!q||d.dataset.tk.includes(q)||(/^\d+$/.test(q)&&d.dataset.sh0==='1'&&d.dataset.tn===q);d.style.display=ok?'':'none';if(ok&&q)n++});
+     $('#tkinfo',f).textContent=q?(n?'🔎 '+n+' وصل':'❌ ما لقينا حتى وصل بهاد النمرة (14 يوم الأخيرة)'):''};f.addEventListener('input',go)})}
 function sheetClient(back){
   openSheet('⭐ زبون الوفاء',`${fld('cph','📞 نمرة التيليفون ديال الزبون','<input id="cph" name="cph" class="big-in" type="tel" inputmode="numeric" autocomplete="off" placeholder="06 00 00 00 00">')}<div id="cres"></div>${errP}<button class="btn primary block" type="submit">✅ اختار</button>`,async f=>{
     const id=phoneId(f.cph.value);if(id.length<10)return ferr('دخل النمرة كاملة.');busy(f,true);
@@ -1654,7 +1667,8 @@ function sheetReceiptCfg(){if(!isMgr())return;const c=S.cfg||{};
 function sheetClose(){
   const p=S.pos,sh=openShift(p);if(!sh)return;const m=stockMap(p);const sold={};(sh.tickets||[]).forEach(t=>t.lines.forEach(l=>sold[l.item]=1));
   const ids=itemsArr().filter(i=>i.kind==='final'&&((m[i.id]||0)!==0||sold[i.id]||(sh.opening||{})[i.id])).map(i=>i.id);const mgrs=[...userOpts('admin'),...userOpts('manager')];
-  openSheet('🔒 إغلاق النوبة',`<p class="muted">حسبي اللي بقى فالمحل بيدك. الأرقام النظرية ما كتبانش دابا، غادي تبان من بعد المقارنة.</p>
+  const TKs=sh.tickets||[];
+  openSheet('🔒 إغلاق النوبة',`<p class="muted">حسبي اللي بقى فالمحل بيدك. الأرقام النظرية ما كتبانش دابا، غادي تبان من بعد المقارنة.</p>${TKs.length?`<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📋</span><div><b>سلمي للمسير ${TKs.length} نسخة ديال الوصولات (نسخة المحل)</b><div class="muted">${TKs[0].no?'من '+esc(rNo(TKs[0]))+' حتى '+esc(rNo(TKs[TKs.length-1])):''} · المجموع ${money(sumTickets(sh))}</div></div></div></div>`:''}
    <div>${ids.length?ids.map(id=>prow(id,'',stepper('data-cnt',id,'',iunit(id)))).join(''):emptyB('🧺','ما كاين حتى منتوج.')}</div>
    ${moneyIn('ccash','💵 الفلوس اللي فالصندوق دابا (مع fond de caisse)')}
    ${mgrs.length?choice('cmgr','📊 المسير اللي استلم الفلوس',mgrs,mgrs[0].v,3):inp('cmgr','المسير اللي استلم الفلوس')}${sigField('csig','توقيع المسير (استلم الصندوق)')}${errP}<button class="btn primary block" type="submit">🔒 سد النوبة</button>`,async f=>{
