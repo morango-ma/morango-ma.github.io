@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261107025932"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261107032705"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -380,16 +380,54 @@ async function fetchAll(c,F,O,N){const out=[];let from=0;const page=1000;for(;;)
   if(O)q=q.order('data->'+O[0],{ascending:O[1]!=='desc',nullsFirst:false});const lim=N?Math.min(N-out.length,page):page;q=q.range(from,from+lim-1);const {data,error}=await q;if(error)throw error;out.push(...data);if(data.length<lim||(N&&out.length>=N))break;from+=data.length}
   return out.map(r=>snap(r.id,r.data))}
 async function retry(fn){let last;for(let i=0;i<4;i++){try{const r=await fn();if(r&&r.error&&/fetch|load failed|network/i.test(r.error.message||'')){last=r.error;throw r.error}return r}catch(e){last=e;if(!/fetch|load failed|network|timeout/i.test(String(e&&e.message||e)))throw e;await new Promise(z=>setTimeout(z,800*(i+1)))}}throw last}
+/* ===== offline: local mirror (IndexedDB) + queue of writes sent when the internet is back ===== */
+const isNet=e=>/fetch|load failed|network|timeout|offline|Failed to fetch|NetworkError/i.test(String(e&&(e.message||e)||''));
+let IDB=null;function idb(){if(IDB)return IDB;IDB=new Promise((res,rej)=>{const r=indexedDB.open('morango-offline',1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('docs'))d.createObjectStore('docs');if(!d.objectStoreNames.contains('queue'))d.createObjectStore('queue',{autoIncrement:true})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}).catch(()=>null);return IDB}
+async function tx(store,mode,fn){const d=await idb();if(!d)return null;return new Promise((res,rej)=>{const t=d.transaction(store,mode);const st=t.objectStore(store);let out;Promise.resolve(fn(st)).then(v=>out=v);t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error)})}
+const req=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const mirPut=(c,rows)=>tx('docs','readwrite',st=>{rows.forEach(r=>st.put({col:c,id:r.id,data:r.data},c+'/'+r.id))}).catch(()=>{});
+const mirReplaceCol=(c,rows)=>tx('docs','readwrite',async st=>{const keys=await req(st.getAllKeys(IDBKeyRange.bound(c+'/',c+'/\uffff')));const keep=new Set(rows.map(r=>c+'/'+r.id));keys.forEach(k=>{if(!keep.has(k))st.delete(k)});rows.forEach(r=>st.put({col:c,id:r.id,data:r.data},c+'/'+r.id))}).catch(()=>{});
+const mirGet=(c,id)=>tx('docs','readonly',st=>req(st.get(c+'/'+id))).then(r=>r?r.data:null).catch(()=>null);
+const mirCol=c=>tx('docs','readonly',st=>req(st.getAll(IDBKeyRange.bound(c+'/',c+'/\uffff')))).then(a=>a||[]).catch(()=>[]);
+const mirDel=(c,id)=>tx('docs','readwrite',st=>{st.delete(c+'/'+id)}).catch(()=>{});
+const isObj=o=>o&&typeof o==='object'&&!Array.isArray(o);const dmerge=(a,b)=>{if(isObj(a)&&isObj(b)){const o={...a};for(const k in b)o[k]=dmerge(a[k],b[k]);return o}return clone(b)};
+function localQuery(rows,F,O,N){const g=(d,f)=>{const v=f.split('.').reduce((x,k)=>x==null?x:x[k],d);return v==null?null:(typeof v==='object'?JSON.stringify(v):String(v))};
+  let r=rows.filter(x=>F.every(([f,op,v])=>{const a=g(x.data,f);if(op==='in')return v.map(String).includes(a);if(a==null)return op==='!=';const b=String(v);return op==='=='?a===b:op==='!='?a!==b:op==='>='?a>=b:op==='<='?a<=b:op==='>'?a>b:op==='<'?a<b:true}));
+  if(O){const [f,d]=O;r.sort((x,y)=>{const a=x.data?.[f],b=y.data?.[f];if(a==null)return 1;if(b==null)return -1;const c2=typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b));return d==='desc'?-c2:c2})}
+  if(N)r=r.slice(0,N);return r.map(x=>snap(x.id,x.data))}
+let offline=false,qLen=0,flushing=false;
+function setOff(v){if(offline!==v){offline=v;badge()}}
+function badge(){let b=document.getElementById('mg-off');if(!offline&&!qLen){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='mg-off';b.style.cssText='position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:9998;padding:8px 12px;border-radius:999px;font:700 13px "IBM Plex Sans Arabic",Tahoma,sans-serif;direction:rtl;box-shadow:0 4px 14px rgba(0,0,0,.18)';document.body.appendChild(b)}
+  b.style.background=offline?'#b91c1c':'#1d4ed8';b.style.color='#fff';b.textContent=offline?('📴 بلا أنترنيت'+(qLen?' · '+qLen+' عملية كتسنا':' · كنخدمو بلا أنترنيت')):('🔄 كنصيفطو '+qLen+' عملية…')}
+async function qCount(){qLen=await tx('queue','readonly',st=>req(st.count())).catch(()=>0)||0;badge();return qLen}
+async function enqueue(op){await tx('queue','readwrite',st=>{st.add({...op,ts:Date.now()})});await qCount();setTimeout(flush,4000)}
+async function sendOp(op){if(op.k==='set')return sb.rpc('doc_set',{p_col:op.c,p_id:op.id,p_data:op.d});if(op.k==='merge')return sb.rpc('doc_merge',{p_col:op.c,p_id:op.id,p_patch:op.d});if(op.k==='del')return sb.from('docs').delete().eq('col',op.c).eq('id',op.id);if(op.k==='move')return sb.rpc('stock_move',{p_loc:op.loc,p_deltas:op.deltas,p_costs:op.costs||null});return{}}
+async function flush(){if(flushing||!sb)return;flushing=true;try{for(;;){const first=await tx('queue','readonly',st=>new Promise(res=>{const r=st.openCursor();r.onsuccess=()=>{const cu=r.result;res(cu?{key:cu.key,op:cu.value}:null)}}));if(!first)break;
+    let r;try{r=await sendOp(first.op)}catch(e){r={error:e}}if(r&&r.error){if(isNet(r.error)){setOff(true);break}console.warn('queued op dropped',first.op,r.error)}
+    await tx('queue','readwrite',st=>{st.delete(first.key)});await qCount()}
+  if(!qLen){setOff(false);fireAll()}}finally{flushing=false;badge()}}
+setInterval(()=>{if(qLen&&navigator.onLine)flush()},10000);window.addEventListener('online',()=>{setTimeout(flush,1000)});window.addEventListener('offline',()=>setOff(true));
+async function writeOp(op,local){await ensure();if(!qLen&&navigator.onLine!==false){try{const r=await retry(()=>sendOp(op));if(r&&r.error)throw r.error;setOff(false);await local();return r}catch(e){if(!isNet(e))throw e;setOff(true)}}
+  await local();await enqueue(op);return{queued:true}}
+window.morangoStockMove=async(loc,deltas,costs)=>{const local=async res=>{const cur=(await mirGet('stock',loc))||{items:{}};const items={...(cur.items||{})},av={...(cur.avg||{})};const before={},after={};
+    for(const k in deltas){const q0=+items[k]||0,q=+deltas[k];before[k]=q0;if(costs&&costs[k]!=null&&q>0){const base=Math.max(q0,0);const a0=av[k]!=null?+av[k]:+costs[k];av[k]=Math.round(((base*a0+q*costs[k])/(base+q))*10000)/10000}items[k]=Math.round((q0+q)*100)/100;after[k]=items[k]}
+    if(res&&res.after){Object.assign(items,res.after)}await mirPut('stock',[{id:loc,data:{...cur,items,avg:av}}]);fire('stock',loc);return{before,after}};
+  await ensure();if(!qLen&&navigator.onLine!==false){try{const {data,error}=await retry(()=>sb.rpc('stock_move',{p_loc:loc,p_deltas:deltas,p_costs:costs||null}));if(error)throw error;setOff(false);await local(data);return data}catch(e){if(!isNet(e))throw e;setOff(true)}}
+  const r=await local(null);await enqueue({k:'move',loc,deltas,costs:costs||null});return r};
+window.morangoOffline=()=>({offline,queue:qLen});
+idb();setTimeout(()=>{qCount().then(n=>{if(n)flush()})},2000);
+async function fetchQ(c,F,O,N){if(!qLen&&navigator.onLine!==false){try{const docs=await fetchAll(c,F,O,N);setOff(false);const rows=docs.map(d=>({id:d.id,data:d.data()}));if(!F.length&&!N)mirReplaceCol(c,rows);else mirPut(c,rows);return docs}catch(e){if(!isNet(e))throw e;setOff(true)}}
+  return localQuery(await mirCol(c),F,O,N)}
 function query(c,F=[],O=null,N=null){const q={where:(f,op,v)=>query(c,[...F,[f,op,v]],O,N),orderBy:(f,d)=>query(c,F,[f,d||'asc'],N),limit:n=>query(c,F,O,n),
-  get:async()=>{await ensure();return{docs:await fetchAll(c,F,O,N)}},
-  onSnapshot(cb,err){let alive=true,t=null,busy=false,again=false;const run=async()=>{if(!alive)return;if(busy){again=true;return}busy=true;try{await ensure();const docs=await fetchAll(c,F,O,N);if(alive)cb({docs})}catch(e){console.warn('snap',c,e);err&&err(e)}busy=false;if(again){again=false;run()}};
+  get:async()=>{await ensure();return{docs:await fetchQ(c,F,O,N)}},
+  onSnapshot(cb,err){let alive=true,t=null,busy=false,again=false;const run=async()=>{if(!alive)return;if(busy){again=true;return}busy=true;try{await ensure();const docs=await fetchQ(c,F,O,N);if(alive)cb({docs})}catch(e){console.warn('snap',c,e);err&&err(e)}busy=false;if(again){again=false;run()}};
     const off=listen(c,()=>{clearTimeout(t);t=setTimeout(run,150)});run();return()=>{alive=false;off()}},
   doc:id=>docRef(c,id||rid()),add:async d=>{const id=rid();await docRef(c,id).set(d);return{id}}};return q}
 function docRef(c,id){return{id,
-  get:async()=>{await ensure();const {data,error}=await retry(()=>sb.from('docs').select('data').eq('col',c).eq('id',id).maybeSingle());if(error)throw error;return snap(id,data?data.data:null)},
-  set:async d=>{await ensure();const {error}=await retry(()=>sb.rpc('doc_set',{p_col:c,p_id:id,p_data:clone(d)}));if(error)throw error;fire(c,id)},
-  update:async d=>{await ensure();const {error}=await retry(()=>sb.rpc('doc_merge',{p_col:c,p_id:id,p_patch:clone(d)}));if(error)throw error;fire(c,id)},
-  delete:async()=>{await ensure();const {error}=await retry(()=>sb.from('docs').delete().eq('col',c).eq('id',id));if(error)throw error;fire(c,id)},
+  get:async()=>{await ensure();if(!qLen&&navigator.onLine!==false){try{const {data,error}=await retry(()=>sb.from('docs').select('data').eq('col',c).eq('id',id).maybeSingle());if(error)throw error;setOff(false);if(data)mirPut(c,[{id,data:data.data}]);else mirDel(c,id);return snap(id,data?data.data:null)}catch(e){if(!isNet(e))throw e;setOff(true)}}return snap(id,await mirGet(c,id))},
+  set:async d=>{const v=clone(d);await writeOp({k:'set',c,id,d:v},()=>mirPut(c,[{id,data:v}]));fire(c,id)},
+  update:async d=>{const v=clone(d);await writeOp({k:'merge',c,id,d:v},async()=>{const cur=await mirGet(c,id);await mirPut(c,[{id,data:dmerge(cur||{},v)}])});fire(c,id)},
+  delete:async()=>{await writeOp({k:'del',c,id},()=>mirDel(c,id));fire(c,id)},
   onSnapshot(cb,err){let alive=true,t=null;const run=async()=>{try{const s=await this.get();if(alive)cb(s)}catch(e){console.warn('doc snap',c,id,e);err&&err(e)}};const off=listen(c,x=>{if(x&&x!==id)return;clearTimeout(t);t=setTimeout(run,150)});run();return()=>{alive=false;off()}}}}
 const db={collection:c=>query(c),doc:p=>{const i=p.indexOf('/');return docRef(p.slice(0,i),p.slice(i+1))}};
 const downloads={save:async({filename,data})=>{const b=data instanceof Blob?data:new Blob([data]);const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=filename||'file';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),8000)}};
@@ -397,6 +435,7 @@ window.claude={use:async n=>n==='db'?(await ensure(),db):n==='downloads'?downloa
 window.morangoSeq=async k=>{await ensure();const {data,error}=await sb.rpc('next_seq',{p_key:k});if(error)throw error;return +data};
 window.morangoDev={code:async()=>{await ensure();const {data,error}=await sb.rpc('current_device_code');if(error)throw error;return data},list:async()=>{await ensure();const {data,error}=await sb.rpc('list_devices');if(error)throw error;return data},revoke:async id=>{const {data,error}=await sb.rpc('revoke_device',{p_id:id});if(error)throw error;return data},me:async()=>{await ensure();const {data,error}=await sb.rpc('my_device');if(error)throw error;return data},claim:async o=>{const {data,error}=await sb.rpc('claim_device',{p_owner:o});if(error)throw error;return data},setOwner:async(id,o)=>{const {data,error}=await sb.rpc('set_device_owner',{p_id:id,p_owner:o||''});if(error)throw error;return data},seen:async(x)=>{try{await ensure();await sb.rpc('device_seen',{p_info:Object.assign(devInfo(),x||{},{seen:Date.now()})})}catch(_){}},rename:async(id,l)=>{const {data,error}=await sb.rpc('rename_device',{p_id:id,p_label:l});if(error)throw error;return data}};
 window.morangoLogout=async()=>{try{await sb.auth.signOut()}catch(_){}try{localStorage.removeItem('morango-auth')}catch(_){}location.reload()};
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
 /* auto-update: reload when a new version is published (only when nothing is open) */
 const BUILD=CFG.build;async function chk(){try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.json()).build;if(v&&v!==BUILD){const idle=()=>{const sh=document.getElementById('sheet');const busy=(sh&&!sh.hidden)||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));return !busy};const go=()=>{try{const u=new URL(location.href);u.searchParams.set('v',v);location.replace(u.toString())}catch(_){location.reload()}};if(idle())go();else window.__morangoUpd=v}}catch(_){}}
 setInterval(chk,120000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});setInterval(()=>{if(window.__morangoUpd){const sh=document.getElementById('sheet');if(!(sh&&!sh.hidden)){try{const u=new URL(location.href);u.searchParams.set('v',String(window.__morangoUpd));location.replace(u.toString())}catch(_){location.reload()}}}},15000);
@@ -555,7 +594,7 @@ async function hashPin(uid,pin){const b=await crypto.subtle.digest('SHA-256',new
 
 /* ---------- data layer ---------- */
 /* moves quantities; for incoming lines with a unit cost, re-weights the CMUP: (old qty x old avg + new qty x new cost) / total qty */
-async function moveStock(loc,deltas,costs){deltas={...deltas};for(const k in deltas)if(noSt(k))delete deltas[k];const ref=db.doc('stock/'+loc);const snap=await ref.get();const dt=snap.exists?snap.data():{};const cur=dt.items||{},av=dt.avg||{};const items={},avg={};
+async function moveStock(loc,deltas,costs){deltas={...deltas};for(const k in deltas)if(noSt(k))delete deltas[k];if(window.morangoStockMove){if(!Object.keys(deltas).length)return{before:{},after:{}};return await window.morangoStockMove(loc,deltas,costs||null)}const ref=db.doc('stock/'+loc);const snap=await ref.get();const dt=snap.exists?snap.data():{};const cur=dt.items||{},av=dt.avg||{};const items={},avg={};
   for(const k in deltas){const q0=cur[k]||0,q=deltas[k];if(costs&&costs[k]!=null&&q>0){const base=Math.max(q0,0);const a0=av[k]!=null?+av[k]:+costs[k];avg[k]=Math.round(((base*a0+q*costs[k])/(base+q))*10000)/10000}items[k]=r2(q0+q)}
   const upd={items};if(Object.keys(avg).length)upd.avg=avg;if(snap.exists)await ref.update(upd);else await ref.set(upd);return{before:cur,after:items}}
 const bumpStock=(loc,deltas)=>moveStock(loc,deltas,null);
