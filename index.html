@@ -327,7 +327,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <header class="top">
   <div class="tleft"><button class="backbtn" id="backbtn" data-act="back" aria-label="رجوع" hidden>→</button><div class="brand"><span class="mmark" aria-hidden="true"><svg class="mlogo-svg" viewBox="0 0 100 132" aria-hidden="true"><path d="M50 34 C52 24 54 16 58 10" stroke="currentColor" stroke-width="6" stroke-linecap="round" fill="none"/><path fill="currentColor" d="M50 130 C33 124 9 100 7 66 C6 48 17 37 32 38 C40 38.5 45 41 50 41 C55 41 60 38.5 68 38 C83 37 94 48 93 66 C91 100 67 124 50 130 Z"/><path fill="currentColor" d="M20 43 L36 37 L39 26 L50 33 L61 26 L64 37 L80 43 L64 46 L58 55 L50 47 L42 55 L36 46 Z" stroke="var(--mseed,#fff)" stroke-width="2.6" stroke-linejoin="round"/><g fill="var(--mseed,#fff)"><ellipse cx="27" cy="66" rx="3.4" ry="4.8"/><ellipse cx="42" cy="64" rx="3.4" ry="4.8"/><ellipse cx="58" cy="64" rx="3.4" ry="4.8"/><ellipse cx="73" cy="66" rx="3.4" ry="4.8"/><ellipse cx="34" cy="84" rx="3.4" ry="4.8"/><ellipse cx="50" cy="83" rx="3.4" ry="4.8"/><ellipse cx="66" cy="84" rx="3.4" ry="4.8"/><ellipse cx="42" cy="102" rx="3.4" ry="4.8"/><ellipse cx="58" cy="102" rx="3.4" ry="4.8"/></g></svg></span><span class="mword"><b class="mname">MORANGO</b><small class="msub">مورانڭو</small></span></div></div>
-  <div class="tright"><button type="button" class="srchbtn" id="updbtn" data-act="appupd" aria-label="التحديث ديال التطبيق" title="Mise à jour" style="position:relative">🔄<span id="upddot" hidden style="position:absolute;top:2px;inset-inline-end:2px;width:11px;height:11px;border-radius:50%;background:#e11d48;box-shadow:0 0 0 2px var(--surface,#fff)"></span></button><button type="button" class="srchbtn" id="srchbtn" data-act="search" aria-label="قلب" hidden>🔍<span class="sl">قلب</span><kbd>/</kbd></button><div id="mewrap"></div></div>
+  <div class="tright"><button type="button" class="srchbtn" id="updbtn" data-act="appupd" aria-label="التحديث ديال التطبيق" title="Mise à jour" style="position:relative">🔄<span id="upddot" hidden style="position:absolute;top:2px;inset-inline-end:2px;width:11px;height:11px;border-radius:50%;background:#e11d48;box-shadow:0 0 0 2px var(--surface,#fff)"></span></button><button type="button" class="srchbtn" id="admbtn" data-act="admlogin" aria-label="دخول المدير" title="المدير" hidden>👑</button><button type="button" class="srchbtn" id="srchbtn" data-act="search" aria-label="قلب" hidden>🔍<span class="sl">قلب</span><kbd>/</kbd></button><div id="mewrap"></div></div>
 </header>
 <main id="main"><div class="empty"><span class="em">🥖</span>كيتحمل...</div></main>
 <div id="cartslot"></div>
@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261108214406"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261108221311"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -367,8 +367,14 @@ function devInfo(){const ua=navigator.userAgent;const touch=navigator.maxTouchPo
 function loginUI(err){return new Promise(res=>{let d=document.getElementById('sb-login');if(!d){d=document.createElement('div');d.id='sb-login';document.body.appendChild(d)}
   d.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg,#fff6f7);display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif';
   const inp='height:52px;border-radius:14px;border:2px solid #f2d8de;padding:0 14px;font-size:1.1rem;text-align:center';
-  d.innerHTML=`<form style="max-width:360px;width:100%;display:flex;flex-direction:column;gap:14px;text-align:center"><div style="font-size:3.4rem">🍓</div><div style="font-family:'Source Serif 4',Georgia,serif;font-weight:800;font-size:2rem;letter-spacing:.06em;direction:ltr">MORANGO</div><div style="color:#8c6670">جهاز جديد: طلب الكود من المسير<br><small>(☰ المزيد ← 📱 الأجهزة)</small></div><input name="pw" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="🔑 الكود (6 أرقام)" style="${inp};direction:ltr;letter-spacing:.3em;font-weight:800">${err?`<div style="color:#b8252f">${err}</div>`:''}<button style="height:52px;border-radius:14px;border:0;background:#e02843;color:#fff;font-weight:800;font-size:1.1rem">دخول</button></form>`;
+  d.innerHTML=`<form style="max-width:360px;width:100%;display:flex;flex-direction:column;gap:14px;text-align:center"><div style="font-size:3.4rem">🍓</div><div style="font-family:'Source Serif 4',Georgia,serif;font-weight:800;font-size:2rem;letter-spacing:.06em;direction:ltr">MORANGO</div><div style="color:#8c6670">جهاز جديد: طلب الكود من المسير<br><small>(☰ المزيد ← 📱 الأجهزة)</small></div><input name="pw" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="🔑 الكود (6 أرقام)" style="${inp};direction:ltr;letter-spacing:.3em;font-weight:800">${err?`<div style="color:#b8252f">${err}</div>`:''}<button style="height:52px;border-radius:14px;border:0;background:#e02843;color:#fff;font-weight:800;font-size:1.1rem">دخول</button><button type="button" id="sb-adm" style="background:none;border:0;color:#8c6670;text-decoration:underline;font-size:1rem;padding:8px">👑 المدير؟ دخل بالكود السري ديالك</button></form>`;
   const f=d.querySelector('form');f.pw.focus();
+  d.querySelector('#sb-adm').onclick=()=>{f.innerHTML=`<div style="font-size:3rem">👑</div><div style="font-weight:800;font-size:1.4rem">دخول المدير</div><div style="color:#8c6670">دخل الكود السري ديالك (اللي كتدخل بيه للتطبيق). ما خاصكش كود الجهاز.</div><input name="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="🔑 الكود السري" style="${inp};direction:ltr;letter-spacing:.3em;font-weight:800"><button style="height:52px;border-radius:14px;border:0;background:#e02843;color:#fff;font-weight:800;font-size:1.1rem">👑 دخول</button><button type="button" id="sb-back" style="background:none;border:0;color:#8c6670;text-decoration:underline;padding:8px">رجع</button>`;
+    f.pin.focus();f.querySelector('#sb-back').onclick=()=>res(loginUI());
+    f.onsubmit=async e=>{e.preventDefault();const pin=f.pin.value.replace(/\D/g,'');if(pin.length<4){res(loginUI('❌ الكود السري ناقص'));return}const b=f.querySelector('button');b.disabled=true;b.textContent='⏳';const di=devInfo();
+      try{const {data,error}=await sb.rpc('enroll_device_admin',{p_pin:pin,p_label:di.label,p_info:di});if(error)throw error;
+        if(!data||data.error){res(loginUI(data&&data.error==='locked'?'🔒 بزاف ديال المحاولات الغالطة. تسنى '+data.wait+' دقيقة':'❌ الكود السري غالط'));return}
+        const r=await sb.auth.signInWithPassword({email:data.email,password:data.password});if(r.error)throw r.error;try{localStorage.setItem('bk-uid',data.uid)}catch(_){}d.remove();res(true)}catch(e2){res(loginUI('❌ ما كاينش الأنترنيت ولا وقع مشكل، عاود'))}}};
   f.onsubmit=async e=>{e.preventDefault();const code=f.pw.value.replace(/\D/g,''),di=devInfo(),nm=di.label;
     if(code.length!==6){res(loginUI('❌ الكود خاصو 6 أرقام'));return}const b=f.querySelector('button');b.disabled=true;b.textContent='⏳';
     try{const {data,error}=await sb.rpc('enroll_device',{p_code:code,p_label:nm,p_info:di});if(error)throw error;if(!data||data.error){res(loginUI(data&&data.error==='bad'?'❌ الكود غالط ولا تخدم من قبل. طلب الكود الجديد':'❌ ما كاينش كود، طلب من المسير يحل 📱 الأجهزة'));return}
@@ -686,6 +692,7 @@ function drawTabs(){const nav=$('#tabs');if(!me){nav.hidden=true;nav.innerHTML='
 function draw(){
   {const sb=$('#srchbtn');if(sb)sb.hidden=!me||me.role==='kiosk';const mm=$('#main');if(mm&&mm.dataset.v!==S.view){mm.dataset.v=S.view;mm.classList.add('anim');clearTimeout(mm._at);mm._at=setTimeout(()=>mm.classList.remove('anim'),600)}}
   $('#mewrap').innerHTML=me?`<button class="mebtn" data-act="profile"><span>${esc(me.name)}</span>${avatar(me,32)}</button>`:'';
+  {const ab=$('#admbtn');if(ab)ab.hidden=!(me&&me.role!=='admin'&&usersArr().some(u=>u.role==='admin'&&u.active!==false))}
   drawTabs();$('#cartslot').innerHTML='';$('#backbtn').hidden=!((me&&(S.hist.length||S.view!=='home'))||(!me&&S.loginUser));document.body.classList.toggle('wide',S.view==='pos'&&!!me);document.body.classList.toggle('kiosk',me?.role==='kiosk');try{document.body.classList.toggle('fsmode',!!me&&localStorage.getItem('bk-fs')==='1'&&S.view==='pos')}catch(_){}
   if(!S.usersLoaded){$('#main').innerHTML=emptyB('🥖','كيتحمل...');return}
   if(!usersArr().length){if(!$('#setpin'))$('#main').innerHTML=vSetup();mountPins();return}
@@ -721,11 +728,12 @@ async function doSetup(){
 }
 function vLogin(){
   if(window.morangoDev&&S.devOwner===undefined){devOwnerLoad();return `<div class="login">${MLOCK(.8)}<p class="muted">⏳</p></div>`}
-  const own=S.devOwner&&S.users[S.devOwner]&&S.users[S.devOwner].active!==false?S.devOwner:null;if(own&&!S.loginUser)S.loginUser=own;
+  const own=S.devOwner&&S.users[S.devOwner]&&S.users[S.devOwner].active!==false?S.devOwner:null;if(own&&!S.loginUser&&!S.admPick)S.loginUser=own;
+  if(S.admPick&&!S.loginUser){const A=usersArr().filter(u=>u.role==='admin'&&u.active!==false);return `<div class="login">${MLOCK(.8)}<h1>👑 المدير</h1><div class="people">${A.map(u=>`<button class="person" data-act="pickuser" data-id="${u.id}">${avatar(u)}<b>${esc(u.name)}</b></button>`).join('')}</div><button class="link" data-act="loginback">رجع</button></div>`}
   const u=S.loginUser&&S.users[S.loginUser];
   if(u){const locked=S.lockUntil>Date.now();
     return `<div class="login">${avatar(u,72)}<div><h1>${esc(u.name)}</h1><p class="muted">${ROLES[u.role]?.[1]||''} ${esc(roleLabel(u))}</p></div><p class="disp" style="font-size:1.1rem">🔑 دخل الكود ديالك</p>
-    ${bioHas(u.id)?`<button class="btn primary block" data-act="biologin" style="min-height:58px;font-size:1.15rem">👆 دخل ب${bioName()}</button><p class="muted">ولا دخل الكود:</p>`:''}${pinPad('loginpin',{onDone:v=>tryLogin(u,v)})}<p class="err" id="loginerr" ${locked?'':'hidden'}>${locked?'بزاف ديال المحاولات. تسنى شوية وعاود.':''}</p>${own?`<p class="muted" style="font-size:.85rem">🔒 هاد الجهاز خاص بـ ${esc(u.name)}</p>`:'<button class="link" data-act="loginback">ماشي أنا؟ رجع</button>'}</div>`}
+    ${bioHas(u.id)?`<button class="btn primary block" data-act="biologin" style="min-height:58px;font-size:1.15rem">👆 دخل ب${bioName()}</button><p class="muted">ولا دخل الكود:</p>`:''}${pinPad('loginpin',{onDone:v=>tryLogin(u,v)})}<p class="err" id="loginerr" ${locked?'':'hidden'}>${locked?'بزاف ديال المحاولات. تسنى شوية وعاود.':''}</p>${own&&u.id===own?`<p class="muted" style="font-size:.85rem">🔒 هاد الجهاز خاص بـ ${esc(u.name)}</p>${usersArr().some(x=>x.role==='admin'&&x.active!==false&&x.id!==own)?'<button class="link" data-act="admlogin">👑 دخول المدير</button>':''}`:'<button class="link" data-act="loginback">ماشي أنا؟ رجع</button>'}</div>`}
   const us=usersArr();
   return `<div class="login">${MLOCK(.8)}<div><h1>${greet()}!</h1><p class="muted">شكون نتا؟ ضغط على السمية ديالك.</p>${window.morangoDev?'<p class="muted" style="font-size:.85rem">📱 أول واحد يدخل فهاد الجهاز، الجهاز غادي يتربط بالحساب ديالو، وما غادي يبان فيه غير هو.</p>':''}</div>
   <div class="people">${us.map(u=>`<button class="person" data-act="pickuser" data-id="${u.id}">${avatar(u)}<b>${esc(u.name)}</b><span>${ROLES[u.role]?.[1]||''} ${esc(ROLES[u.role]?.[0]||'')}</span></button>`).join('')}</div>
@@ -734,7 +742,7 @@ function vLogin(){
 async function tryLogin(u,pin){
   const e=$('#loginerr');if(S.lockUntil>Date.now()){pinReset('loginpin',true);return}
   const h=await hashPin(u.id,pin);
-  if(h===u.hash){devClaim(u);S.tries=0;try{localStorage.setItem('bk-uid',u.id)}catch(_){}S.loginUser=null;S.view='home';setMe();render();toast(greet()+' '+u.name+' 👋')}
+  if(h===u.hash){devClaim(u);S.admPick=false;S.tries=0;try{localStorage.setItem('bk-uid',u.id)}catch(_){}S.loginUser=null;S.view='home';setMe();render();toast(greet()+' '+u.name+' 👋')}
   else{S.tries++;if(S.tries>=5){S.lockUntil=Date.now()+30000;S.tries=0}pinReset('loginpin',true);if(e){e.textContent=S.lockUntil>Date.now()?'بزاف ديال المحاولات. تسنى 30 ثانية وعاود.':'الكود غالط، عاود.';e.hidden=false}}
 }
 /* in-app back: photo viewer, then open sheet, then previous screen, then home. Never leaves the app. */
@@ -748,6 +756,7 @@ function doBack(){
 /* the phone's own back button: keep one guard entry so back stays inside the app */
 function guardBack(){try{history.pushState({bk:1},'')}catch(_){}}
 window.addEventListener('popstate',()=>{doBack();guardBack()});
+function admLogin(){const A=usersArr().filter(u=>u.role==='admin'&&u.active!==false);if(!A.length)return;const go=()=>{S.hist=[];try{localStorage.removeItem('bk-uid')}catch(_){}me=null;S.cart={};closeSheet();S.loginUser=A.length===1?A[0].id:null;S.admPick=A.length>1;render()};if(me&&me.role==='seller'&&Object.values(cartOf(S.pos)||{}).some(q=>q>0)&&!confirm('كاين شي حاجة فالسلة. نخرجو ويدخل المدير؟'))return;go()}
 function logout(){S.hist=[];try{localStorage.removeItem('bk-uid')}catch(_){}me=null;S.loginUser=null;S.cart={};closeSheet();render()}
 
 /* ---------- HOME ---------- */
@@ -3394,8 +3403,8 @@ const ACT={
   back:()=>doBack(),
   go:el=>{if(el.dataset.v==='report')S.rep.data=null;if(S.view!==el.dataset.v){S.hist.push(S.view);if(S.hist.length>30)S.hist.shift()}if(el.dataset.v==='home')S.hist=[];S.view=el.dataset.v;closeSheet();window.scrollTo(0,0);render()},
   close:()=>closeSheet(),closeviewer:()=>{$('#viewer').hidden=true},
-  profile:()=>sheetProfile(),logout:()=>logout(),user:el=>sheetUser(el.dataset.id),
-  setup:()=>doSetup(),pickuser:el=>{S.loginUser=el.dataset.id;render()},biologin:()=>bioLogin(),bioon:()=>bioOn(),biooff:()=>bioOff(),loginback:()=>{S.loginUser=null;render()},
+  profile:()=>sheetProfile(),logout:()=>logout(),admlogin:()=>admLogin(),user:el=>sheetUser(el.dataset.id),
+  setup:()=>doSetup(),pickuser:el=>{S.loginUser=el.dataset.id;render()},biologin:()=>bioLogin(),bioon:()=>bioOn(),biooff:()=>bioOff(),loginback:()=>{S.loginUser=null;S.admPick=false;render()},
   pk:el=>pinKey(el.dataset.pin,el.dataset.k),
   pick:el=>{const box=el.parentNode;$$('.opt',box).forEach(b=>b.setAttribute('aria-pressed',String(b===el)));const h=box.parentNode.querySelector('input[type=hidden]');h.value=el.dataset.v;h.dispatchEvent(new Event('change',{bubbles:true}))},
   emo:el=>{const box=el.parentNode;const h=$('#iicon');const on=el.getAttribute('aria-pressed')!=='true';$$('button',box).forEach(b=>b.setAttribute('aria-pressed','false'));el.setAttribute('aria-pressed',String(on));h.value=on?el.dataset.v:''},
