@@ -61,6 +61,13 @@ main{padding-inline:16px;padding-block:8px calc(var(--nav) + 96px);max-width:760
 .head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .muted{color:var(--muted);font-size:.85rem}
 .acts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.dash{display:flex;flex-direction:column;gap:12px}.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dgrid2{display:grid;grid-template-columns:1fr;gap:12px}
+.stat.dk{border:1px solid var(--line);text-align:start;font:inherit;color:inherit;gap:2px;cursor:pointer}.stat.dk b{font-size:1.25rem}.stat.dk small{font-size:.78rem}.stat.dk.good{border-color:color-mix(in srgb,var(--good,#16a34a) 45%,var(--line))}.stat.dk.warn{border-color:color-mix(in srgb,#f59e0b 55%,var(--line))}.stat.dk.bad{border-color:color-mix(in srgb,var(--bad,#dc2626) 60%,var(--line));background:color-mix(in srgb,var(--bad,#dc2626) 7%,var(--surface))}
+@media (max-width:699px){.stat.dk{padding:9px 11px}.stat.dk b{font-size:1.08rem}.stat.dk small{font-size:.72rem}.dgrid{gap:8px}}
+#tgrid .act{min-height:104px;padding:12px 10px;gap:6px}#tgrid .act .big{width:46px;height:46px;font-size:1.7rem;border-radius:14px}#tgrid .act b{font-size:.92rem}
+@media (min-width:430px){.acts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:700px){.acts{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.dgrid{grid-template-columns:repeat(4,minmax(0,1fr))}.dgrid2{grid-template-columns:1fr 1fr}main{max-width:1000px}}
+@media (min-width:1100px){main{max-width:1240px}.acts{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.dgrid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}}
 .act{position:relative;border:0;border-radius:var(--r);padding:16px 14px;min-height:116px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;cursor:pointer;text-align:start;transition:transform .12s;color:var(--ink)}
 .act:active{transform:scale(.97)}
 .act .big{font-size:2.3rem;line-height:1}
@@ -337,7 +344,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109012118"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109012416"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -684,6 +691,25 @@ async function boot(){
 }
 
 /* ---------- shell ---------- */
+/* admin dashboard (first thing on the home screen) */
+function adminDash(){const t=today(),y=addD(t,-1),m=ym(t);const sh=S.shifts||[];const day=(d,p)=>sh.filter(x=>x.date===d&&(!p||x.pos===p));const sum=L=>L.reduce((a,x)=>a+sumTickets(x),0);const nT=L=>L.reduce((a,x)=>a+(x.tickets||[]).filter(k=>!k.void).length,0);
+  const tot=sum(day(t)),toty=sum(day(y)),nt=nT(day(t));const pct=toty?Math.round((tot-toty)/toty*100):null;
+  const MS=monthSales(m)||{};const mt=POS.reduce((a,p)=>a+(MS[p.id]?.total||0),0);const ob=POS.reduce((a,p)=>a+objOf(p.id,m),0);
+  const d7=[...Array(7)].map((_,i)=>addD(t,i-6));const v7=d7.map(d=>sum(day(d)));const mx=Math.max(1,...v7);
+  const open=POS.map(p=>({p,sh:openShift(p.id)}));const outs=POS.reduce((a,p)=>a+openOuts(p.id).filter(o=>stockOf(p.id,o.item)<=0).length,0),lows=POS.reduce((a,p)=>a+lowItems(p.id).length,0);
+  const bw=(S.bons||[]).filter(b=>b.status==='open').length,bu=bonIssues().length;const pr=typeof preqOpenCount==='function'?preqOpenCount():0;const od=(S.orders||[]).filter(o=>o.status!=='delivered'&&o.due===t).length;const vf=sh.filter(x=>x.status==='verif').length;
+  const K=(ic,l,v,sub,cls,act)=>`<button type="button" class="stat dk ${cls||''}" ${act?`data-act="go" data-v="${act}"`:'style="cursor:default"'}><span>${ic} ${l}</span><b class="num">${v}</b>${sub?`<small class="muted">${sub}</small>`:''}</button>`;
+  return `<section class="dash"><div class="dgrid">
+   ${K('💰','البيع ديال اليوم',money(tot),(pct==null?'':(pct>=0?'▲ ':'▼ ')+Math.abs(pct)+'% على البارح · ')+nt+' وصل'+(nt?' · '+money(tot/nt)+' للزبون':''),pct!=null&&pct<0?'warn':'good','objectifs')}
+   ${POS.map(p=>K(p.i,esc(p.name),money(sum(day(t,p.id))),nT(day(t,p.id))+' وصل','',null)).join('')}
+   ${K('🗓️','الشهر حتى لدابا',money(mt),ob?Math.round(mt/ob*100)+'% من الهدف ('+money(ob)+')':'ما كاينش هدف','','objectifs')}
+   ${K('🚨','الريبتير دابا',outs,lows+' قرب يساليو',outs?'bad':lows?'warn':'','vitrine')}
+   ${K('🧾','البونات',bw+' كيتسنا',bu?bu+' ما دازوش فلاكيس':'',bu?'bad':'',null)}
+   ${K('📥','طلبات الشراء',pr,'',pr?'warn':'','preqs')}
+   ${K('🎂','طلبيات اليوم',od,'',od?'warn':'','orders')}
+  </div>
+  <div class="dgrid2"><div class="card" style="gap:6px"><h3 style="margin:0">📊 البيع ديال 7 أيام</h3><div style="display:flex;align-items:flex-end;gap:6px;height:110px">${v7.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end;height:100%"><small class="muted" style="font-size:.7rem">${v?Math.round(v):''}</small><div title="${money(v)}" style="width:100%;border-radius:6px 6px 0 0;background:${d7[i]===t?'var(--accent,#e02843)':'color-mix(in srgb,var(--accent,#e02843) 35%,transparent)'};height:${Math.max(2,Math.round(v/mx*80))}px"></div><small style="font-size:.72rem">${d7[i]===t?'اليوم':d7[i].slice(8)+'/'+d7[i].slice(5,7)}</small></div>`).join('')}</div></div>
+   <div class="card" style="gap:6px"><h3 style="margin:0">🛍️ النوبات دابا</h3>${open.map(({p,sh})=>`<div class="prow"><div class="lead"><span class="em">${p.i}</span><div><b>${esc(p.name)}</b><div class="muted">${sh?(sh.team==='مسائية'?'🌙':'☀️')+' '+esc(sh.seller)+' · من '+hm(sh.openTs):'🔒 مسدودة'}</div></div></div>${sh?`<b class="num">${money(sumTickets(sh))}</b>`:''}</div>`).join('')}${vf?`<div class="alert bad" data-act="go" data-v="pos"><div class="lead"><span class="em">🔎</span><b>${vf} نوبة فالتحقق</b></div></div>`:''}</div></div></section>`}
 /* home launcher: every available icon at once, with a search bar (no «more» menu) */
 function allTiles(){const seen=new Set(),out=[];const add=t=>{const a=t.a||'go';const k=a+'|'+(t.v||'')+'|'+(t.k||'');if(seen.has(k))return;seen.add(k);out.push({...t,a})};
   homeTiles(true).forEach(add);(ROLETABS0[me.role]||[]).filter(k=>k!=='home'&&k!=='more').forEach(k=>add({i:TABDEF[k][1],l:TABDEF[k][0],a:'go',v:k,c:1}));if(['admin','manager','prod','ws','seller','buyer'].includes(me.role))vMore(true).forEach(add);add({i:'🙂',l:'الحساب ديالي',a:'profile',c:4});return out}
@@ -845,7 +871,7 @@ function vHome(){if(me.role==='worker')return vWorkerHome();
     dash=`<div class="stats"><div class="stat"><span>🏪 ${LOC.p1} اليوم</span><b>${money(sales('p1'))}</b></div><div class="stat"><span>🏬 ${LOC.p2} اليوم</span><b>${money(sales('p2'))}</b></div></div>`}
   const invTop=me.role==='ws'?invCard(me.loc):'';
   const invMgr=(isMgr()||isProd())&&INVC().on?(()=>{const late=WS.filter(w=>invState(w.id)==='late'),done=WS.filter(w=>invState(w.id)==='done').length;return `<div class="alert ${late.length?'bad':done===WS.length?'acc':''}" data-act="go" data-v="inv"><div class="lead"><span class="em">📋</span><div><b>الجرد الأسبوعي: ${done}/${WS.length} ورشات</b><div class="muted">${late.length?'⛔ متأخرين: '+late.map(w=>esc(w.name)).join('، '):'آخر أجل '+DAYS_AR[INVC().day]+' '+invDueDate()}</div></div></div><span class="tag">شوف</span></div>`})():'';
-  return `<div class="hello"><h1>${greet()}، ${esc(me.name)} 👋</h1><p>${ROLES[me.role]?.[1]||''} ${esc(roleLabel(me))}</p></div>${locSwitch()}${invTop}${dash}${rosterTodayCard()}${launcher()}${(isMgr()||me.role==='seller')?bdayCard(7):''}${invMgr}
+  return `<div class="hello"><h1>${greet()}، ${esc(me.name)} 👋</h1><p>${ROLES[me.role]?.[1]||''} ${esc(roleLabel(me))}</p></div>${locSwitch()}${invTop}${isAdmin()?"":dash}${isAdmin()?adminDash():''}${rosterTodayCard()}${launcher()}${(isMgr()||me.role==='seller')?bdayCard(7):''}${invMgr}
   ${A.length?`<section class="card"><div class="head"><h2>🔔 خاصو انتباه</h2><span class="tag acc">${A.length}</span></div>${A.join('')}</section>`:`<section class="card">${emptyB('✨','كلشي مزيان، ما كاين حتى تنبيه.')}</section>`}`;
 }
 
@@ -922,7 +948,7 @@ const goalOf=it=>+it?.sgoal||0;
 /* monthly sales objectives per shop + follow-up (sales of the month are fetched, the live data only covers 14 days) */
 const objOf=(p,m)=>+((S.obj||{})[m]||{})[p]||0;
 function monthSales(m){const C=S.mSales;if(C&&C.m===m&&(C.busy||Date.now()-C.at<120000))return C.data;S.mSales={m,at:Date.now(),busy:true,data:C?.m===m?C.data:null};
-  db.collection('shifts').where('date','>=',m+'-01').get().then(q=>{const D={};q.docs.map(d=>d.data()).filter(x=>(x.date||'').slice(0,7)===m).forEach(x=>{const o=D[x.pos]=D[x.pos]||{total:0,byDay:{},bySeller:{},tickets:0};(x.tickets||[]).forEach(t=>{const v=+t.total||0;o.total+=v;o.tickets++;o.byDay[x.date]=(o.byDay[x.date]||0)+v;o.bySeller[x.seller]=(o.bySeller[x.seller]||0)+v})});S.mSales={m,at:Date.now(),busy:false,data:D};if(S.view==='objectifs'||S.view==='pos'||S.view==='charges')render()}).catch(()=>{S.mSales={m,at:Date.now(),busy:false,data:{}}});return S.mSales.data}
+  db.collection('shifts').where('date','>=',m+'-01').get().then(q=>{const D={};q.docs.map(d=>d.data()).filter(x=>(x.date||'').slice(0,7)===m).forEach(x=>{const o=D[x.pos]=D[x.pos]||{total:0,byDay:{},bySeller:{},tickets:0};(x.tickets||[]).forEach(t=>{const v=+t.total||0;o.total+=v;o.tickets++;o.byDay[x.date]=(o.byDay[x.date]||0)+v;o.bySeller[x.seller]=(o.bySeller[x.seller]||0)+v})});S.mSales={m,at:Date.now(),busy:false,data:D};if(['objectifs','pos','charges','home'].includes(S.view))render()}).catch(()=>{S.mSales={m,at:Date.now(),busy:false,data:{}}});return S.mSales.data}
 const objBar=(pc,c)=>`<div style="height:10px;border-radius:6px;background:var(--line);overflow:hidden"><div style="height:100%;width:${Math.max(0,Math.min(100,pc))}%;background:${c}"></div></div>`;
 const objCol=pc=>pc>=100?'var(--good,#16a34a)':pc>=80?'var(--acc,#f59e0b)':'var(--bad,#dc2626)';
 function objShopBlock(p,m,D,full){const g=objOf(p,m);const o=(D||{})[p]||{total:0,byDay:{},bySeller:{},tickets:0};const md=monthDays(m);const isCur=m===ym(today());const dn=isCur?+today().slice(8,10):md;const pace=g?g*dn/md:0;const pc=g?Math.round(o.total/g*100):0;const pcp=pace?Math.round(o.total/pace*100):0;const daily=g?g/md:0;const left=Math.max(0,g-o.total);const perDay=isCur&&md-dn+1>0?left/(md-dn+1):0;
