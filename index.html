@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109010743"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109011208"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -693,6 +693,7 @@ function drawTabs(){const nav=$('#tabs');if(!me){nav.hidden=true;nav.innerHTML='
 function draw(){
   {const sb=$('#srchbtn');if(sb)sb.hidden=!me||me.role==='kiosk';const mm=$('#main');if(mm&&mm.dataset.v!==S.view){mm.dataset.v=S.view;mm.classList.add('anim');clearTimeout(mm._at);mm._at=setTimeout(()=>mm.classList.remove('anim'),600)}}
   $('#mewrap').innerHTML=me?`<button class="mebtn" data-act="profile"><span>${esc(me.name)}</span>${avatar(me,32)}</button>`:'';
+  if(me?.role==='seller'&&['lots','lot'].includes(S.view)){S.view='home';S.hist=[]}
   if(me&&vendOnly()&&!['pos','orders'].includes(S.view)){S.view='pos';S.pos=me.loc;S.hist=[]}
   {const ab=$('#admbtn');if(ab)ab.hidden=!(me&&me.role!=='admin'&&usersArr().some(u=>u.role==='admin'&&u.active!==false))}
   drawTabs();$('#cartslot').innerHTML='';$('#backbtn').hidden=!((me&&(S.hist.length||S.view!=='home'))||(!me&&S.loginUser));document.body.classList.toggle('wide',S.view==='pos'&&!!me);document.body.classList.toggle('kiosk',me?.role==='kiosk');try{document.body.classList.toggle('fsmode',!!me&&localStorage.getItem('bk-fs')==='1'&&S.view==='pos')}catch(_){}
@@ -986,7 +987,7 @@ function vMore(){const r=me.role;const T=[];
   if(isMgr()||r==='seller'||r==='buyer')T.push({i:'📦',l:r==='seller'?'التغليف واللوازم':'التغليف ديال المحلات',v:'pack',c:4});
   if(isMgr())T.unshift({i:'📊',l:'لوحة القيادة',v:'dash',c:4});
   if(isMgr()||isProd()||canBuy()||r==='ws')T.unshift({i:'🧮',l:'الحاجيات ديال السيمانة',v:'needs',c:1});
-  if(r!=='driver'&&r!=='worker'&&r!=='kiosk'){const lb=lotsActive().filter(l=>(isMgr()||isProd()||l.loc===me.loc)&&ld(l)!=null&&ld(l)<=2).length;T.unshift({i:'🏷️',l:'التتبع والصلاحية',v:'lots',c:3,b:lb})}
+  if(r!=='driver'&&r!=='worker'&&r!=='kiosk'&&r!=='seller'){const lb=lotsActive().filter(l=>(isMgr()||isProd()||l.loc===me.loc)&&ld(l)!=null&&ld(l)<=2).length;T.unshift({i:'🏷️',l:'التتبع والصلاحية',v:'lots',c:3,b:lb})}
   if(isMgr()||r==='driver')T.unshift({i:'🚚',l:'مصاريف سيارة التوصيل',v:'vehicle',c:2});
   if(isMgr())T.unshift({i:'🔄',l:'تحويل المواد بين الورشات',a:'xfhome',c:6,b:xfList().filter(o=>o.status==='sent').length});
   if(r==='admin')T.unshift({i:'💰',l:'الأثمنة والهامش الصافي',v:'pricing',c:4},{i:'🎯',l:'الأهداف وتتبع البيع',v:'objectifs',c:5},{i:'📅',l:'النوبات والأدوار ديال البائعات',v:'roster',c:2},{i:'📈',l:'الأرباح حسب الورشة',v:'report',c:5},{i:'💼',l:'المصاريف',v:'charges',c:1});
@@ -2652,7 +2653,7 @@ function sheetFreeze(loc0,fromId){const locs=WS.filter(w=>canLot(w.id));if(!locs
   },f=>{const draw=()=>{if(src){$('#fwrap',f).innerHTML='';return}const c=cands();$('#fwrap',f).innerHTML=c.length?`<div class="field"><span class="lbl">شنو؟</span><select name="fitem" class="big-in">${c.map(i=>`<option value="${i.id}">${i.frz?'❄️ ':''}${i.icon||KICON[i.kind]} ${esc(i.name)} · ${KIND[i.kind]} (${fmt(stockOf(loc,i.id))} ${esc(i.unit)})</option>`).join('')}</select></div>`:emptyB('📦','ما كاين والو فالمخزون ديال هاد الورشة.')};
     const preps=()=>{const ws=[...new Set([...S.workers.filter(x=>x.ws===loc&&x.active!==false).map(x=>x.name),...Object.values(S.users).filter(u=>u.active!==false&&((u.role==='ws'&&u.loc===loc)||u.role==='prod')).map(u=>u.name)])];const cur=f.fprep.value;f.fprep.innerHTML=`<option value="">— اختار —</option>${ws.map(n=>`<option ${n===cur?'selected':''}>${esc(n)}</option>`).join('')}<option ${cur===meName()&&!ws.includes(cur)?'selected':''}>${esc(meName())}</option>`};
     f.addEventListener('change',e=>{if(e.target.name==='fws'){loc=e.target.value;draw();preps()}if(e.target.name==='fitem'){const it=S.items[e.target.value];if(it?.frzDays)f.fexp.value=dtAdd(f.ffab.value,+it.frzDays)}});$$('[data-fd]',f).forEach(b=>b.onclick=()=>{f.fexp.value=dtAdd(f.ffab.value,+b.dataset.fd)});draw();preps()})}
-function lotAlertHtml(){const r=me.role;if(!(isMgr()||isProd()||r==='ws'||r==='buyer'||r==='seller'))return '';const act=lotsActive().filter(l=>isMgr()||isProd()||l.loc===me.loc);
+function lotAlertHtml(){const r=me.role;if(!(isMgr()||isProd()||r==='ws'||r==='buyer'))return '';const act=lotsActive().filter(l=>isMgr()||isProd()||l.loc===me.loc);
   const ex=act.filter(l=>ld(l)!=null&&ld(l)<0),so=act.filter(l=>{const n=ld(l);return n!=null&&n>=0&&n<=2});if(!ex.length&&!so.length)return '';
   return `<div class="alert ${ex.length?'bad':''}" data-act="go" data-v="lots"><div class="lead"><span class="em">${ex.length?'⛔':'⚠️'}</span><div><b>${ex.length?ex.length+' حاجة فات التاريخ ديالها':''}${ex.length&&so.length?' · ':''}${so.length?so.length+' كيسالي ف 2 يام':''}</b><div class="muted">${[...ex,...so].slice(0,4).map(l=>esc(iname(l.item))+' ('+esc(LOC[l.loc]||'')+')').join('، ')}</div></div></div><span class="tag ${ex.length?'bad':'warn'}">شوف</span></div>`}
 
