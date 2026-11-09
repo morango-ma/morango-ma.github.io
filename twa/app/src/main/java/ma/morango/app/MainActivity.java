@@ -17,6 +17,12 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.net.Uri;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -168,7 +174,35 @@ public class MainActivity extends Activity {
         String cur;
 
         @JavascriptInterface
-        public String version() { return "2"; }
+        public String version() { return "3"; }
+
+        /* alert: always vibrate; when the phone is not on silent, also play the alarm sound (loud) */
+        @JavascriptInterface
+        public String alarm() {
+            runOnUiThread(() -> {
+                try {
+                    Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                    long[] pat = {0, 600, 250, 600, 250, 900};
+                    if (v != null && v.hasVibrator()) {
+                        if (Build.VERSION.SDK_INT >= 26) v.vibrate(VibrationEffect.createWaveform(pat, -1)); else v.vibrate(pat, -1);
+                    }
+                } catch (Exception e) { }
+                try {
+                    AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                    if (am != null && am.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
+                        Uri u = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                        if (u == null) u = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                        final Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), u);
+                        if (r != null) {
+                            r.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
+                            r.play();
+                            wv.postDelayed(() -> { try { r.stop(); } catch (Exception e) { } }, 3500);
+                        }
+                    }
+                } catch (Exception e) { }
+            });
+            return "ok";
+        }
 
         @JavascriptInterface
         public String listPrinters() {
