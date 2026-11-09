@@ -344,7 +344,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109163325"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109220717"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -448,6 +448,7 @@ const db={collection:c=>query(c),doc:p=>{const i=p.indexOf('/');return docRef(p.
 const downloads={save:async({filename,data})=>{const b=data instanceof Blob?data:new Blob([data]);if(window.MorangoNative){const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=rej;r.readAsDataURL(b)});const out=window.MorangoNative.saveFile(filename||'file',b.type||'application/octet-stream',b64);if(!String(out).startsWith('ok'))throw new Error(out);try{window.toast&&toast('📥 تحفظ فـ Download/Morango')}catch(_){}return}const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=filename||'file';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),8000)}};
 window.claude={use:async n=>n==='db'?(await ensure(),db):n==='downloads'?downloads:null};
 window.morangoSeq=async k=>{await ensure();const {data,error}=await sb.rpc('next_seq',{p_key:k});if(error)throw error;return +data};
+window.morangoPin={check:async(u,p)=>{await ensure();const {data,error}=await sb.rpc('check_pin',{p_uid:u,p_pin:p});if(error)throw error;return data},role:async(p,r)=>{await ensure();const {data,error}=await sb.rpc('check_pin_role',{p_pin:p,p_roles:r});if(error)throw error;return data},set:async(u,p)=>{await ensure();const {data,error}=await sb.rpc('set_pin',{p_uid:u,p_pin:p});if(error)throw error;if(data&&data.error)throw new Error(data.error==='forbidden'?'ما عندكش الحق تبدل هاد الكود':data.error);return data},end:async()=>{try{await ensure();await sb.rpc('end_session')}catch(_){}}};
 window.morangoDev={code:async()=>{await ensure();const {data,error}=await sb.rpc('current_device_code');if(error)throw error;return data},list:async()=>{await ensure();const {data,error}=await sb.rpc('list_devices');if(error)throw error;return data},revoke:async id=>{const {data,error}=await sb.rpc('revoke_device',{p_id:id});if(error)throw error;return data},me:async()=>{await ensure();const {data,error}=await sb.rpc('my_device');if(error)throw error;return data},claim:async o=>{const {data,error}=await sb.rpc('claim_device',{p_owner:o});if(error)throw error;return data},setOwner:async(id,o)=>{const {data,error}=await sb.rpc('set_device_owner',{p_id:id,p_owner:o||''});if(error)throw error;return data},seen:async(x)=>{try{await ensure();await sb.rpc('device_seen',{p_info:Object.assign(devInfo(),x||{},{seen:Date.now()})})}catch(_){}},rename:async(id,l)=>{const {data,error}=await sb.rpc('rename_device',{p_id:id,p_label:l});if(error)throw error;return data}};
 window.morangoLogout=async()=>{try{await sb.auth.signOut()}catch(_){}try{localStorage.removeItem('morango-auth')}catch(_){}location.reload()};
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
@@ -821,7 +822,7 @@ function vSetup(){
 async function doSetup(){
   const name=$('#setname').value.trim(),pin=$('#setpin').value;const e=$('#seterr');
   if(!name){e.textContent='كتب السمية ديالك.';e.hidden=false;return}if(pin.length!==4){e.textContent='الكود خاصو 4 أرقام.';e.hidden=false;return}
-  try{const ref=db.collection('users').doc();await ref.set({name,role:'admin',loc:'',color:0,active:true,ts:Date.now(),hash:await hashPin(ref.id,pin)});try{localStorage.setItem('bk-uid',ref.id)}catch(_){}S.view='home';S.users[ref.id]={id:ref.id,name,role:'admin',loc:'',color:0,active:true};setMe();render();toast('مرحبا '+name+' 🎉')}catch(er){e.textContent='ما تسجلش الحساب: '+(er.code||er.message);e.hidden=false}
+  try{const ref=db.collection('users').doc();await ref.set({name,role:'admin',loc:'',color:0,active:true,ts:Date.now()});await window.morangoPin.set(ref.id,pin);try{localStorage.setItem('bk-uid',ref.id)}catch(_){}S.view='home';S.users[ref.id]={id:ref.id,name,role:'admin',loc:'',color:0,active:true};setMe();render();toast('مرحبا '+name+' 🎉')}catch(er){e.textContent='ما تسجلش الحساب: '+(er.code||er.message);e.hidden=false}
 }
 function vLogin(){
   if(window.morangoDev&&S.devOwner===undefined){devOwnerLoad();return `<div class="login">${MLOCK(.8)}<p class="muted">⏳</p></div>`}
@@ -838,8 +839,11 @@ function vLogin(){
 }
 async function tryLogin(u,pin){
   const e=$('#loginerr');if(S.lockUntil>Date.now()){pinReset('loginpin',true);return}
-  const h=await hashPin(u.id,pin);
-  if(h===u.hash){devClaim(u);S.admPick=false;S.tries=0;try{localStorage.setItem('bk-uid',u.id)}catch(_){}S.loginUser=null;S.view='home';setMe();render();toast(greet()+' '+u.name+' 👋')}
+  let ok=false,why='';const P=window.morangoPin;const ck='bk-ph-'+u.id;
+  if(P&&navigator.onLine!==false){try{const r=await P.check(u.id,pin);ok=!!r?.ok;why=r?.error==='locked'?'بزاف ديال المحاولات الغالطة. تسنى '+r.wait+' دقيقة وعاود.':'';if(ok&&!['admin','manager'].includes(u.role))try{localStorage.setItem(ck,await hashPin(u.id,pin))}catch(_){}}catch(x){why='';try{ok=!!localStorage.getItem(ck)&&localStorage.getItem(ck)===await hashPin(u.id,pin)}catch(_){}}}
+  else{try{ok=!!localStorage.getItem(ck)&&localStorage.getItem(ck)===await hashPin(u.id,pin)}catch(_){}if(!ok)why='ما كاينش الأنترنيت. إلا ما عمرك دخلتي فهاد الجهاز، خاصك الأنترنيت.'}
+  if(why){pinReset('loginpin',true);if(e){e.textContent=why;e.hidden=false}return}
+  if(ok){devClaim(u);S.admPick=false;S.tries=0;try{localStorage.setItem('bk-uid',u.id)}catch(_){}S.loginUser=null;S.view='home';setMe();render();toast(greet()+' '+u.name+' 👋')}
   else{S.tries++;if(S.tries>=5){S.lockUntil=Date.now()+30000;S.tries=0}pinReset('loginpin',true);if(e){e.textContent=S.lockUntil>Date.now()?'بزاف ديال المحاولات. تسنى 30 ثانية وعاود.':'الكود غالط، عاود.';e.hidden=false}}
 }
 /* in-app back: photo viewer, then open sheet, then previous screen, then home. Never leaves the app. */
@@ -854,7 +858,7 @@ function doBack(){
 function guardBack(){try{history.pushState({bk:1},'')}catch(_){}}
 window.addEventListener('popstate',()=>{doBack();guardBack()});
 function admLogin(){const A=usersArr().filter(u=>u.role==='admin'&&u.active!==false);if(!A.length)return;const go=()=>{S.hist=[];try{localStorage.removeItem('bk-uid')}catch(_){}me=null;S.cart={};closeSheet();S.loginUser=A.length===1?A[0].id:null;S.admPick=A.length>1;render()};if(me&&me.role==='seller'&&Object.values(cartOf(S.pos)||{}).some(q=>q>0)&&!confirm('كاين شي حاجة فالسلة. نخرجو ويدخل المدير؟'))return;go()}
-function logout(){S.hist=[];try{localStorage.removeItem('bk-uid')}catch(_){}me=null;S.loginUser=null;S.cart={};closeSheet();render()}
+function logout(){try{window.morangoPin&&window.morangoPin.end()}catch(_){}S.hist=[];try{localStorage.removeItem('bk-uid')}catch(_){}me=null;S.loginUser=null;S.cart={};closeSheet();render()}
 
 /* ---------- HOME ---------- */
 function lowList(){const low=[];itemsArr().filter(i=>isRC(i.kind)&&+i.min>0).forEach(i=>WS.forEach(w=>{const m=stockMap(w.id);if(i.id in m&&m[i.id]<+i.min)low.push({i,w,q:m[i.id]})}));return low}
@@ -1249,7 +1253,7 @@ const mediaBtns=(ids,label,em='📷')=>(ids||[]).filter(Boolean).map((id,i,a)=>`
 function sheetProfile(){openSheet('🙂 الحساب ديالي',`<div class="lead">${avatar(me,56)}<div><h2>${esc(me.name)}</h2><div class="muted">${ROLES[me.role]?.[1]||''} ${esc(roleLabel(me))}</div></div></div>
   <button type="button" class="btn danger block" data-act="logout">🚪 خروج (باش يدخل شي واحد آخر)</button>${BIO_OK?(bioHas(me.id)?`<button type="button" class="btn block" data-act="biooff">✋ حيّد الدخول ب${bioName()} فهاد الجهاز</button>`:`<button type="button" class="btn primary block" data-act="bioon">👆 فعّل الدخول ب${bioName()} فهاد الجهاز</button><p class="muted" style="font-size:.85rem">من بعد غير تضغط على سميتك وتحط صبعك ولا وجهك، بلا كود.</p>`):''}
   <span class="lbl">🔑 بدل الكود ديالك</span>${pinPad('newpin',{show:true})}${errP}<button class="btn primary block" type="submit">حفظ الكود الجديد</button>`,async f=>{
-  const pin=f.newpin.value;if(pin.length!==4)return ferr('الكود خاصو 4 أرقام.');busy(f,true);try{await db.doc('users/'+me.id).update({hash:await hashPin(me.id,pin)});closeSheet();toast('🔑 الكود تبدل')}catch(e){fail(f,e)}})}
+  const pin=f.newpin.value;if(pin.length!==4)return ferr('الكود خاصو 4 أرقام.');busy(f,true);try{await window.morangoPin.set(me.id,pin);try{localStorage.removeItem('bk-ph-'+me.id)}catch(_){}closeSheet();toast('🔑 الكود تبدل')}catch(e){fail(f,e)}})}
 function sheetUser(id){
   if(!isAdmin())return;const u=id?{...S.users[id]}:{name:'',role:'seller',loc:'p1',active:true};const self=id===me.id;
   const roleOpts=Object.entries(ROLES).map(([k,v])=>({v:k,l:v[0],i:v[1]}));
@@ -1259,10 +1263,10 @@ function sheetUser(id){
     const name=f.uname.value.trim(),role=f.urole.value,loc=f.uloc?f.uloc.value:'',pin=f.upin.value;const extra=(role==='ws'||role==='worker')?$$('[data-act="mtog"][data-g="ulocs"][aria-pressed="true"]',f).map(b=>b.dataset.id).filter(x=>x!==loc):[];
     if(!name)return ferr('كتب السمية.');if(!id&&pin.length!==4)return ferr('عطيه كود ديال 4 أرقام.');if(pin&&pin.length!==4)return ferr('الكود خاصو 4 أرقام.');
     if((role==='ws'||role==='seller'||role==='worker'||role==='kiosk')&&!loc)return ferr('اختار البلاصة ديالو.');if(self&&role!=='admin')return ferr('ما تقدرش تحيد على راسك دور المشرف العام.');
-    busy(f,true);try{const ref=id?db.doc('users/'+id):db.collection('users').doc();const doc={name,role,locs:role==='ws'&&loc?[loc,...extra]:[],loc:(role==='ws'||role==='seller'||role==='worker'||role==='kiosk')?loc:'',workerId:u.workerId||null,active:f.uact?f.uact.value==='1':true,color:id?(u.color||0):Object.keys(S.users).length%6,ts:u.ts||Date.now(),hash:pin?await hashPin(ref.id,pin):u.hash};
+    busy(f,true);try{const ref=id?db.doc('users/'+id):db.collection('users').doc();const doc={name,role,locs:role==='ws'&&loc?[loc,...extra]:[],loc:(role==='ws'||role==='seller'||role==='worker'||role==='kiosk')?loc:'',workerId:u.workerId||null,active:f.uact?f.uact.value==='1':true,color:id?(u.color||0):Object.keys(S.users).length%6,ts:u.ts||Date.now()};const __pin=pin;
       if(role==='worker'&&!doc.workerId){const ex=S.workers.find(x=>x.ws===loc&&x.name.trim()===name&&!x.userId);if(ex){doc.workerId=ex.id;await db.doc('workers/'+ex.id).update({userId:ref.id})}else{const wr=await db.collection('workers').add({name,post:'',phone:'',ws:loc,active:true,ts:Date.now(),userId:ref.id});doc.workerId=wr.id}}
       if(role==='worker'){doc.locs=[];if(doc.workerId)await db.doc('workers/'+doc.workerId).update({ws:loc,wsx:extra})}
-      await ref.set(doc);closeSheet();toast(id?'✅ تحفظ':'🎉 مرحبا بـ'+name+' فالفريق')}catch(e){fail(f,e)}
+      await ref.set(doc);if(__pin)await window.morangoPin.set(ref.id,__pin);closeSheet();toast(id?'✅ تحفظ':'🎉 مرحبا بـ'+name+' فالفريق')}catch(e){fail(f,e)}
   },f=>{const upd=()=>{const r=f.urole.value;$('#ulocw',f).innerHTML=(r==='ws'||r==='worker')?choice('uloc',r==='ws'?'الورشة الأساسية':'الورشة',WS.map(x=>({v:x.id,l:x.name,i:x.i})),u.loc&&u.loc[0]==='w'?u.loc:'',3)+((r==='ws'||r==='worker')?(()=>{const wk=u.workerId&&S.workers.find(x=>x.id===u.workerId);const on=r==='ws'?(u.locs||[]):(wk?.wsx||[]);return `<div class="field"><span class="lbl">${r==='ws'?'➕ مسؤول حتى على (اختياري، قد ما بغيتي)':'➕ كيخدم حتى فـ (اختياري، قد ما بغيتي)'}</span><div class="choice" style="--cols:3">${WS.map(x=>`<button type="button" class="opt" data-act="mtog" data-g="ulocs" data-id="${x.id}" aria-pressed="${on.includes(x.id)&&x.id!==u.loc}"><span class="ico">${x.i}</span><span>${esc(x.name)}</span></button>`).join('')}</div></div>`})():''):(r==='seller'||r==='kiosk')?choice('uloc','نقطة البيع',POS.map(x=>({v:x.id,l:x.name,i:x.i})),u.loc&&u.loc[0]==='p'?u.loc:'',2):''};f.addEventListener('change',e=>{if(e.target.id==='urole')upd()});upd()});
 }
 
@@ -3089,7 +3093,7 @@ async function kSubmit(){const K=S.kf;ksync();const kind=K.kind||'rating';const 
     S.kf={step:'thanks',reward};render()}catch(e){if(btn)btn.disabled=false;toast('ما تصيفطش، عاود',true)}}
 let KIDLE=0;function kTouch(){clearTimeout(KIDLE);if(me?.role!=='kiosk')return;KIDLE=setTimeout(()=>{if(me?.role==='kiosk'&&!['idle','thanks'].includes(S.kf.step)&&$('#sheet').hidden){if(S.kf.vurl)try{URL.revokeObjectURL(S.kf.vurl)}catch(_){}S.kf={step:'idle'};render()}},60000)}
 ['pointerdown','keydown','input'].forEach(ev=>document.addEventListener(ev,kTouch,true));
-function sheetKioskExit(){openSheet('⚙️ خروج المسؤول',`<p class="muted">دخل الكود ديال المسير ولا المشرف العام باش تخرج من وضع الطابليت.</p>${pinPad('kxpin',{onDone:async v=>{for(const u of usersArr().filter(x=>x.role==='admin'||x.role==='manager')){if(await hashPin(u.id,v)===u.hash){closeSheet();logout();return}}pinReset('kxpin',true);toast('الكود غالط',true)}})}`)}
+function sheetKioskExit(){openSheet('⚙️ خروج المسؤول',`<p class="muted">دخل الكود ديال المسير ولا المشرف العام باش تخرج من وضع الطابليت.</p>${pinPad('kxpin',{onDone:async v=>{try{const r=await window.morangoPin.role(v,['admin','manager']);if(r?.ok){closeSheet();logout();return}toast(r?.error==='locked'?'بزاف ديال المحاولات. تسنى '+r.wait+' دقيقة':'الكود غالط',true)}catch(_){toast('ما كاينش الأنترنيت',true)}pinReset('kxpin',true)}})}`)}
 const FBA=f=>f.ws?LOCI[f.ws]+' '+LOC[f.ws]:f.about==='service'?'🛍️ الخدمة فالمحل':f.about==='general'?'📋 عام':'';
 const myFb=()=>me.role==='ws'?S.fb.filter(f=>f.ws===me.loc):isProd()?S.fb.filter(f=>f.ws):S.fb;
 const WFS={new:['جديد للورشة','🆕','warn'],seen:['الورشة شافتو','👀','acc'],handled:['الورشة عالجاتو','✅','good']};
