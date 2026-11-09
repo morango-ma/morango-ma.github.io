@@ -344,7 +344,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109012416"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109012845"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -691,6 +691,23 @@ async function boot(){
 }
 
 /* ---------- shell ---------- */
+/* break-even: monthly fixed charges / margin on materials (minus sales commissions) */
+function breakEven(){const m=ym(today());const fm=FCM();const L=S.chg.filter(c=>c.month===fm&&!String(c.id||'').includes('_comm'));const F=L.reduce((a,c)=>a+(+c.amount||0),0);
+  const cp=COMMS().reduce((a,c)=>a+(+c.pct||0),0)/100;let sv=0,sc=0;(S.shifts||[]).forEach(x=>(x.tickets||[]).forEach(t=>{if(t.void)return;(t.lines||[]).forEach(l=>{const q=+l.qty||0,pr=+l.price||0;sv+=q*pr;sc+=q*(+costOf(l.item)||0)})}));
+  let mr=sv>0?(sv-sc)/sv:null,src='sales';if(mr==null){const P=itemsArr().filter(i=>i.kind==='final'&&i.active!==false&&+i.price>0);const r=P.map(i=>(+i.price-(+costOf(i.id)||0))/+i.price).filter(x=>isFinite(x));mr=r.length?r.reduce((a,b)=>a+b,0)/r.length:null;src='catalog'}
+  const cr=mr==null?null:mr-cp;const BE=cr>0?F/cr:null;const MS=monthSales(m)||{};const mt=POS.reduce((a,p)=>a+(MS[p.id]?.total||0),0);
+  const dim=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate(),dn=+today().slice(8);const byDay={};POS.forEach(p=>Object.entries(MS[p.id]?.byDay||{}).forEach(([d,v])=>byDay[d]=(byDay[d]||0)+v));
+  let cum=0,cross=null;Object.keys(byDay).sort().forEach(d=>{cum+=byDay[d];if(!cross&&BE&&cum>=BE)cross=d});const pace=dn?mt/dn:0;const proj=pace*dim;const eta=BE&&pace>0&&mt<BE?Math.ceil((BE-mt)/pace):null;
+  return{F,fm,cp,mr,cr,src,BE,mt,dim,dn,cross,pace,proj,eta,profit:BE&&mt>BE?(mt-BE)*cr:0}}
+function beCard(){const b=breakEven();const pc=b.BE?Math.min(100,Math.round(b.mt/b.BE*100)):0;const ok=b.BE&&b.mt>=b.BE;
+  if(!b.F)return `<div class="card" style="gap:6px"><h3 style="margin:0">⚖️ عتبة المردودية</h3><p class="muted" style="margin:0">دخل المصاريف ديال الشهر (الأجور، الكرا، الضو...) باش نحسبو شحال خاص نبيعو باش نغطيوها.</p><button type="button" class="btn small" data-act="go" data-v="charges">💼 المصاريف ←</button></div>`;
+  if(!b.BE)return `<div class="card" style="gap:6px"><h3 style="margin:0">⚖️ عتبة المردودية</h3><p class="muted" style="margin:0">ما قدرناش نحسبو الهامش: خاص الأثمنة والتكلفة ديال المنتوجات.</p></div>`;
+  const endD=b.eta!=null?addD(today(),b.eta):null;
+  return `<div class="card" style="gap:8px;${ok?'border:2px solid var(--good,#16a34a)':''}"><div class="head"><h3 style="margin:0">⚖️ عتبة المردودية · ${mLabel(ym(today()))}</h3><span class="tag ${ok?'good':pc>=70?'warn':'bad'}">${ok?'✅ دخلنا فالربح':pc+'%'}</span></div>
+   <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><div class="muted" style="font-size:.8rem">بعنا حتى لدابا</div><b class="num" style="font-size:1.3rem">${money(b.mt)}</b></div><div style="text-align:end"><div class="muted" style="font-size:.8rem">خاص نبيعو فالشهر باش نغطيو كلشي</div><b class="num" style="font-size:1.3rem">${money(b.BE)}</b></div></div>
+   ${objBar(pc,ok?'var(--good,#16a34a)':objCol(pc))}
+   <div class="muted" style="font-size:.85rem">${ok?`🎉 غطينا المصاريف${b.cross?' نهار '+b.cross.slice(8)+'/'+b.cross.slice(5,7):''}. الربح التقريبي حتى لدابا: <b>${money(b.profit)}</b>`:`باقي <b>${money(b.BE-b.mt)}</b>${endD&&endD.slice(0,7)===ym(today())?' · بهاد الريتم غادي نوصلو ليها نهار <b>'+endD.slice(8)+'/'+endD.slice(5,7)+'</b>':b.pace>0?' · ⚠️ بهاد الريتم ما غاديش نوصلو ليها هاد الشهر (التوقع: '+money(b.proj)+')':''}`}</div>
+   <div class="muted" style="font-size:.8rem">💼 المصاريف ديال ${mLabel(b.fm)}: ${money(b.F)} · 📈 الهامش على المواد: ${Math.round(b.mr*100)}%${b.cp?' − عمولة '+Math.round(b.cp*100)+'%':''}${b.src==='catalog'?' (من الكتالوج)':' (من البيع)'} · 📅 فالنهار خاص: ${money(b.BE/b.dim)}</div></div>`}
 /* admin dashboard (first thing on the home screen) */
 function adminDash(){const t=today(),y=addD(t,-1),m=ym(t);const sh=S.shifts||[];const day=(d,p)=>sh.filter(x=>x.date===d&&(!p||x.pos===p));const sum=L=>L.reduce((a,x)=>a+sumTickets(x),0);const nT=L=>L.reduce((a,x)=>a+(x.tickets||[]).filter(k=>!k.void).length,0);
   const tot=sum(day(t)),toty=sum(day(y)),nt=nT(day(t));const pct=toty?Math.round((tot-toty)/toty*100):null;
@@ -708,7 +725,7 @@ function adminDash(){const t=today(),y=addD(t,-1),m=ym(t);const sh=S.shifts||[];
    ${K('📥','طلبات الشراء',pr,'',pr?'warn':'','preqs')}
    ${K('🎂','طلبيات اليوم',od,'',od?'warn':'','orders')}
   </div>
-  <div class="dgrid2"><div class="card" style="gap:6px"><h3 style="margin:0">📊 البيع ديال 7 أيام</h3><div style="display:flex;align-items:flex-end;gap:6px;height:110px">${v7.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end;height:100%"><small class="muted" style="font-size:.7rem">${v?Math.round(v):''}</small><div title="${money(v)}" style="width:100%;border-radius:6px 6px 0 0;background:${d7[i]===t?'var(--accent,#e02843)':'color-mix(in srgb,var(--accent,#e02843) 35%,transparent)'};height:${Math.max(2,Math.round(v/mx*80))}px"></div><small style="font-size:.72rem">${d7[i]===t?'اليوم':d7[i].slice(8)+'/'+d7[i].slice(5,7)}</small></div>`).join('')}</div></div>
+  ${beCard()}<div class="dgrid2"><div class="card" style="gap:6px"><h3 style="margin:0">📊 البيع ديال 7 أيام</h3><div style="display:flex;align-items:flex-end;gap:6px;height:110px">${v7.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end;height:100%"><small class="muted" style="font-size:.7rem">${v?Math.round(v):''}</small><div title="${money(v)}" style="width:100%;border-radius:6px 6px 0 0;background:${d7[i]===t?'var(--accent,#e02843)':'color-mix(in srgb,var(--accent,#e02843) 35%,transparent)'};height:${Math.max(2,Math.round(v/mx*80))}px"></div><small style="font-size:.72rem">${d7[i]===t?'اليوم':d7[i].slice(8)+'/'+d7[i].slice(5,7)}</small></div>`).join('')}</div></div>
    <div class="card" style="gap:6px"><h3 style="margin:0">🛍️ النوبات دابا</h3>${open.map(({p,sh})=>`<div class="prow"><div class="lead"><span class="em">${p.i}</span><div><b>${esc(p.name)}</b><div class="muted">${sh?(sh.team==='مسائية'?'🌙':'☀️')+' '+esc(sh.seller)+' · من '+hm(sh.openTs):'🔒 مسدودة'}</div></div></div>${sh?`<b class="num">${money(sumTickets(sh))}</b>`:''}</div>`).join('')}${vf?`<div class="alert bad" data-act="go" data-v="pos"><div class="lead"><span class="em">🔎</span><b>${vf} نوبة فالتحقق</b></div></div>`:''}</div></div></section>`}
 /* home launcher: every available icon at once, with a search bar (no «more» menu) */
 function allTiles(){const seen=new Set(),out=[];const add=t=>{const a=t.a||'go';const k=a+'|'+(t.v||'')+'|'+(t.k||'');if(seen.has(k))return;seen.add(k);out.push({...t,a})};
