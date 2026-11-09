@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109011208"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109011530"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -628,7 +628,7 @@ function loyRedeemUnused(points,total){const L=LOY();if(!L.on||!(+L.redeemPts>0)
 async function newOp(o){o.ts=Date.now();o.date=o.date||today();o.by=o.by||meName();o.byId=me?.id||'';const ref=db.collection('ops').doc();await ref.set(o);return ref.id}
 async function saveMedia(list,tag){const ids=[];for(const data of list||[]){const r=await db.collection('media').add({data,tag,ts:Date.now()});ids.push(r.id)}return ids}
 
-const BOOT_T=Date.now();let rq=0;let RDEF=0;function render(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;const ae=document.activeElement;if(ae&&ae.closest&&ae.closest('[data-ir]')&&(ae.tagName==='INPUT'||ae.tagName==='SELECT')){if(!RDEF){RDEF=1;ae.addEventListener('blur',()=>{RDEF=0;setTimeout(render,50)},{once:true})}return}draw();setTimeout(()=>runAutoNeeds(false),0)})}
+const BOOT_T=Date.now();let rq=0;let RDEF=0;function render(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;const ae=document.activeElement;if(ae&&ae.closest&&(ae.closest('[data-ir]')||ae.id==='tq')&&(ae.tagName==='INPUT'||ae.tagName==='SELECT')){if(!RDEF){RDEF=1;ae.addEventListener('blur',()=>{RDEF=0;setTimeout(render,50)},{once:true})}return}draw();setTimeout(()=>runAutoNeeds(false),0)})}
 
 function setMe(){setTimeout(()=>{if(me&&window.morangoDev&&window.__seenFor!==me.id){window.__seenFor=me.id;window.morangoDev.seen({user:me.name})}},1500);
   let uid=null;try{uid=localStorage.getItem('bk-uid')}catch(e){}
@@ -684,8 +684,15 @@ async function boot(){
 }
 
 /* ---------- shell ---------- */
+/* home launcher: every available icon at once, with a search bar (no «more» menu) */
+function allTiles(){const seen=new Set(),out=[];const add=t=>{const a=t.a||'go';const k=a+'|'+(t.v||'')+'|'+(t.k||'');if(seen.has(k))return;seen.add(k);out.push({...t,a})};
+  homeTiles(true).forEach(add);(ROLETABS0[me.role]||[]).filter(k=>k!=='home'&&k!=='more').forEach(k=>add({i:TABDEF[k][1],l:TABDEF[k][0],a:'go',v:k,c:1}));if(['admin','manager','prod','ws','seller','buyer'].includes(me.role))vMore(true).forEach(add);add({i:'🙂',l:'الحساب ديالي',a:'profile',c:4});return out}
+function launcher(){const T=allTiles();return `<div class="field" style="margin:4px 0 0"><input id="tq" type="search" placeholder="🔍 قلب على شي خدمة (مثلاً: شراء، الوصل، المعدات...)" autocomplete="off" aria-label="قلب" style="background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px 14px;font-size:1.05rem;width:100%"></div>
+  <div class="acts" id="tgrid">${T.map(t=>`<button class="act c${t.c||1}" data-act="${t.a}"${t.v?` data-v="${t.v}"`:''}${t.k?` data-k="${t.k}"`:''} data-lbl="${esc(nrm(t.l))}"><span class="big">${t.i}</span><b>${t.l}</b>${t.b?`<span class="badge">${t.b}</span>`:''}</button>`).join('')}</div><p class="muted" id="tnone" hidden style="text-align:center">ما لقينا والو.</p>`}
+document.addEventListener('input',e=>{if(e.target?.id!=='tq')return;const q=nrm(e.target.value.trim());let n=0;document.querySelectorAll('#tgrid .act').forEach(b=>{const ok=!q||b.dataset.lbl.includes(q);b.style.display=ok?'':'none';if(ok)n++});const z=document.getElementById('tnone');if(z)z.hidden=n>0});
 const TABDEF={tickets:['الطلبات','💬'],home:['الرئيسية','🏠'],prod:['الإنتاج','🧁'],send:['الإرسال','🚚'],pos:['البيع','🛍️'],orders:['الطلبيات','📝'],purchases:['المشتريات','🛒'],more:['المزيد','☰']};
-const ROLETABS={admin:['home','prod','send','pos','orders','more'],manager:['home','prod','send','pos','orders','more'],prod:['home','prod','send','orders','more'],ws:['home','prod','send','orders','more'],seller:['home','pos','orders','more'],driver:['home','send','orders'],buyer:['home','purchases','more'],worker:['home','tickets'],kiosk:[]};
+const ROLETABS0={admin:['home','prod','send','pos','orders','more'],manager:['home','prod','send','pos','orders','more'],prod:['home','prod','send','orders','more'],ws:['home','prod','send','orders','more'],seller:['home','pos','orders','more'],driver:['home','send','orders'],buyer:['home','purchases','more'],worker:['home','tickets'],kiosk:[]};
+const ROLETABS=Object.fromEntries(Object.entries(ROLETABS0).map(([k,v])=>[k,v.filter(x=>x!=='more')]));
 const SUB={needs:'more',lots:'more',dash:'more',plan:'more',vitrine:'more',pack:'more',cands:'more',posreqs:'more',feedback:'more',tickets:'more',workers:'more',inv:'more',charges:'more',report:'more',loyalty:'more',returns:'more',catalog:'more',journal:'more',hist:'prod',team:'more',purchases:'more'};
 function drawTabs(){const nav=$('#tabs');if(!me){nav.hidden=true;nav.innerHTML='';return}const tabs=vendOnly()?['pos','orders']:(ROLETABS[me.role]||ROLETABS.manager);const cur=tabs.includes(S.view)?S.view:(SUB[S.view]||S.view);
   nav.hidden=false;nav.style.gridTemplateColumns=`repeat(${tabs.length},1fr)`;nav.innerHTML=tabs.map(k=>`<button data-act="go" data-v="${k}" ${cur===k?'aria-current="page"':''}><span class="ti">${TABDEF[k][1]}</span>${TABDEF[k][0]}</button>`).join('')}
@@ -764,7 +771,7 @@ function logout(){S.hist=[];try{localStorage.removeItem('bk-uid')}catch(_){}me=n
 
 /* ---------- HOME ---------- */
 function lowList(){const low=[];itemsArr().filter(i=>isRC(i.kind)&&+i.min>0).forEach(i=>WS.forEach(w=>{const m=stockMap(w.id);if(i.id in m&&m[i.id]<+i.min)low.push({i,w,q:m[i.id]})}));return low}
-function homeTiles(){
+function homeTiles(arr){
   const r=me.role,T=[];const pendT=S.pend.filter(o=>o.type==='transfer'),pendR=S.pend.filter(o=>o.type==='return');const act=S.orders.filter(o=>o.status!=='delivered');
   if(r==='seller'){const p=me.loc||S.pos,sh=openShift(p);
     T.push(sh?{i:'🛍️',l:'البيع',a:'go',v:'pos',c:1}:{i:'🔓',l:'فتح النوبة',a:'openshift',c:5});T.push({i:'✅',l:'المهام ديالي',a:'mytasks',c:5,b:helperPending(me.id).length},{i:'📅',l:'البلانينگ ديالي',a:'myplan',c:3});if(frOf(p).length)T.push({i:'🌡️',l:'الحرارة ديال الفيترينات',a:'tempin',b:tempDue(p).length,c:4});
@@ -787,6 +794,7 @@ function homeTiles(){
   if(r==='admin'||r==='manager')T.push({i:'🛍️',l:'نقاط البيع',a:'go',v:'pos',c:1},{i:'🧁',l:'الإنتاج',a:'go',v:'prod',c:2},{i:'🚚',l:'الإرسال',a:'go',v:'send',b:pendT.length,c:4},{i:'📝',l:'الطلبيات',a:'go',v:'orders',b:act.length,c:3});
   if(r==='admin')T.push({i:'📈',l:'الأرباح حسب الورشة',a:'go',v:'report',c:5},{i:'📒',l:'الكتالوج والوصفات',a:'go',v:'catalog',c:6});
   {const k=T.findIndex(t=>t.a==='porders');if(k>0)T.unshift(...T.splice(k,1))}
+  if(arr)return T;
   return `<div class="acts">${T.map(t=>`<button class="act c${t.c}" data-act="${t.a}"${t.v?` data-v="${t.v}"`:''}${t.k?` data-k="${t.k}"`:''}><span class="big">${t.i}</span><b>${t.l}</b>${t.b?`<span class="badge">${t.b}</span>`:''}</button>`).join('')}</div>`;
 }
 function alertsFor(){
@@ -834,7 +842,7 @@ function vHome(){if(me.role==='worker')return vWorkerHome();
     dash=`<div class="stats"><div class="stat"><span>🏪 ${LOC.p1} اليوم</span><b>${money(sales('p1'))}</b></div><div class="stat"><span>🏬 ${LOC.p2} اليوم</span><b>${money(sales('p2'))}</b></div></div>`}
   const invTop=me.role==='ws'?invCard(me.loc):'';
   const invMgr=(isMgr()||isProd())&&INVC().on?(()=>{const late=WS.filter(w=>invState(w.id)==='late'),done=WS.filter(w=>invState(w.id)==='done').length;return `<div class="alert ${late.length?'bad':done===WS.length?'acc':''}" data-act="go" data-v="inv"><div class="lead"><span class="em">📋</span><div><b>الجرد الأسبوعي: ${done}/${WS.length} ورشات</b><div class="muted">${late.length?'⛔ متأخرين: '+late.map(w=>esc(w.name)).join('، '):'آخر أجل '+DAYS_AR[INVC().day]+' '+invDueDate()}</div></div></div><span class="tag">شوف</span></div>`})():'';
-  return `<div class="hello"><h1>${greet()}، ${esc(me.name)} 👋</h1><p>${ROLES[me.role]?.[1]||''} ${esc(roleLabel(me))}</p></div>${locSwitch()}${invTop}${dash}${rosterTodayCard()}${(isMgr()||me.role==='seller')?bdayCard(7):''}${homeTiles()}${invMgr}
+  return `<div class="hello"><h1>${greet()}، ${esc(me.name)} 👋</h1><p>${ROLES[me.role]?.[1]||''} ${esc(roleLabel(me))}</p></div>${locSwitch()}${invTop}${dash}${rosterTodayCard()}${launcher()}${(isMgr()||me.role==='seller')?bdayCard(7):''}${invMgr}
   ${A.length?`<section class="card"><div class="head"><h2>🔔 خاصو انتباه</h2><span class="tag acc">${A.length}</span></div>${A.join('')}</section>`:`<section class="card">${emptyB('✨','كلشي مزيان، ما كاين حتى تنبيه.')}</section>`}`;
 }
 
@@ -967,7 +975,7 @@ function vOrders(){
 }
 
 /* ---------- MORE ---------- */
-function vMore(){const r=me.role;const T=[];
+function vMore(arr){const r=me.role;const T=[];
   if(r!=='seller'&&r!=='driver')T.push({i:'📥',l:'طلبات الشراء',v:'preqs',c:2,b:preqOpenCount()});if(r!=='seller'&&r!=='driver'&&r!=='buyer')T.push({i:'🛒',l:'المشتريات',v:'purchases',c:1});
   T.push({i:'↩️',l:'المرتجعات',v:'returns',c:6,b:S.pend.filter(o=>o.type==='return'&&(r!=='ws'||o.ws===me.loc)).length});
   if(isMgr()||r==='prod'||r==='ws')T.unshift({i:'🗓️',l:'برنامج الإنتاج اليومي',v:'plan',c:2,b:(r==='ws'&&!S.plans?.[me.loc+'_'+daysAgo(-1)])?'!':0});
@@ -993,6 +1001,7 @@ function vMore(){const r=me.role;const T=[];
   if(r==='admin')T.unshift({i:'💰',l:'الأثمنة والهامش الصافي',v:'pricing',c:4},{i:'🎯',l:'الأهداف وتتبع البيع',v:'objectifs',c:5},{i:'📅',l:'النوبات والأدوار ديال البائعات',v:'roster',c:2},{i:'📈',l:'الأرباح حسب الورشة',v:'report',c:5},{i:'💼',l:'المصاريف',v:'charges',c:1});
   if(r==='admin')T.push({i:'👥',l:'الفريق',v:'team',c:5});if(isMgr()&&window.morangoDev)T.unshift({i:'📱',l:'الأجهزة وكود الدخول',v:'devices',c:6});
   if(isAdmin())T.push({i:'💾',l:'النسخ الاحتياطية',a:'backup',c:2});if(isMgr())T.push({i:'🗓️',l:'السجل اليومي',v:'journal',c:3},{i:'🧾',l:'شكل الوصل',a:'rcfg',c:1},{i:'🔍',l:'فك رمز الوصل',a:'rcdec',c:2});
+  if(arr)return T;
   return `<h1>☰ المزيد</h1><div class="acts">${T.map(t=>`<button class="act c${t.c}" data-act="${t.a||'go'}" ${t.v?`data-v="${t.v}"`:''}><span class="big">${t.i}</span><b>${t.l}</b>${t.b?`<span class="badge">${t.b}</span>`:''}</button>`).join('')}<button class="act c4" data-act="profile"><span class="big">🙂</span><b>الحساب ديالي</b></button></div>`}
 function vPurchases(){const l=S.ops.filter(o=>o.type==='purchase');return `${canBuy()?'<button class="act c1" data-act="newpurchase" style="min-height:90px"><span class="big">🛒</span><b>شراء جديد</b></button>':''}
   <section class="card"><div class="head"><h2>📋 المشتريات (14 يوم)</h2><b class="num">${money(l.reduce((s,o)=>s+(+o.total||0),0))}</b></div>${l.length?`<ul class="list">${l.map(o=>`<li class="clk" data-act="opdetail" data-id="${o.id}"><div class="lead"><span class="em">${LOCI[o.ws]}</span><div><b>${esc(o.supplier||'مورد')}</b><div class="muted">${o.date} · ${esc(LOC[o.ws])} · ${o.lines.length} مادة${o.feesTotal?` · 💸 ${money(o.feesTotal)} (${[o.fees?.commission?'🤝 '+money(o.fees.commission):'',o.fees?.tip?'🪙 '+money(o.fees.tip):'',o.fees?.handling?'💪 '+money(o.fees.handling):''].filter(Boolean).join(' · ')})`:''}</div></div></div><b class="num">${money(o.total)}</b></li>`).join('')}</ul>`:emptyB('🛒','مازال ما تسجل حتى شراء.')}</section>${(()=>{const F=l.reduce((a,o)=>({c:a.c+(+o.fees?.commission||0),t:a.t+(+o.fees?.tip||0),h:a.h+(+o.fees?.handling||0)}),{c:0,t:0,h:0});return F.c+F.t+F.h>0?`<section class="card"><h2>💸 المصاريف الإضافية ديال الشرا (14 يوم)</h2><div class="stats"><div class="stat"><span>🤝 الكوميسيون</span><b>${money(F.c)}</b></div><div class="stat"><span>🪙 البوربوار</span><b>${money(F.t)}</b></div><div class="stat"><span>💪 الحمالة</span><b>${money(F.h)}</b></div></div></section>`:''})()}`}
