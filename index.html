@@ -337,7 +337,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109003403"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261109003950"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -2672,21 +2672,31 @@ function sheetRefill(){const p=me.loc?.[0]==='p'?me.loc:S.pos;const outs=openOut
         for(const o of openOuts(p).filter(o=>lines.some(l=>l.item===o.item)&&!o.reqTs))await db.doc('stockouts/'+o.id).update({reqTs:Date.now(),reqId:r.id})}
       closeSheet();toast('📤 الطلب وصل للورشات')}catch(e){fail(f,e)}})}
 /* photos of the shop window: one round = one photo per section, every VC().interval minutes during an open shift */
-function vitSections(p){const has=new Set(itemsArr().filter(i=>i.kind==='final').map(i=>i.ws));return WS.filter(w=>has.has(w.id))}
+const VAREA=[{id:'cor',name:'الكولوار ديال الخدمة (اللور ديال الكونطوار)',i:'🚶',area:true},{id:'cli',name:'البلاصة ديال الزبناء (القدام والأرض)',i:'🛍️',area:true}];
+const vsIcon=w=>VAREA.find(a=>a.id===w)?.i||LOCI[w]||'';
+function vitSections(p){const has=new Set(itemsArr().filter(i=>i.kind==='final').map(i=>i.ws));return [...WS.filter(w=>has.has(w.id)),...VAREA]}
 function vitDue(p){const C=VC();if(!C.on)return null;const sh=openShift(p);if(!sh)return null;const last=S.vit.find(v=>v.pos===p&&v.date===today())?.ts||null;const from=Math.max(last||0,sh.openTs);const el=Date.now()-from;const iv=C.interval*60000;
   if(el<iv)return null;const late=el>=iv+(+C.grace||10)*60000;return{last,late,lock:late&&C.lock!==false,lateMs:el-iv,lockAt:from+iv+(+C.grace||10)*60000}}
 const vitLocked=p=>!!vitDue(p)?.lock;
 function sheetVitShot(){const p=me.loc?.[0]==='p'?me.loc:S.pos;const secs=vitSections(p);if(!secs.length)return toast('ما كاين حتى منتوج فالكتالوج',true);
-  openSheet('📸 تصوير الفيترينة · '+LOC[p],`<p class="muted" style="margin:0">صوري كل جزء من الفيترينة: السلعة مرتبة، معمرة، ونقية. الصور كتوصل للمسير.</p>
+  openSheet('📸 تصوير الفيترينة · '+LOC[p],`<p class="muted" style="margin:0">صوري كل جزء من الفيترينة (السلعة مرتبة، معمرة، ونقية)، والكولوار فين كتخدمي، والبلاصة فين كيوقف الزبون. الصور كتوصل للمسير.</p>
    ${secs.map(w=>`<div class="box">${photoField('vt_'+w.id,w.i+' '+w.name+' (إجبارية)')}
-     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="vn_${w.id}" style="width:22px;height:22px"> 🧺 السلعة مرتبة ومعمرة</label>
-     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="vc_${w.id}" style="width:22px;height:22px"> 🧽 الفيترينة نقية (الزاج، الرفوف، التيكيتات)</label>
+     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="vn_${w.id}" style="width:22px;height:22px"> ${w.area?'🗂️ منظم، ما فيه حتى حاجة فغير بلاصتها':'🧺 السلعة مرتبة ومعمرة'}</label>
+     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="vc_${w.id}" style="width:22px;height:22px"> ${w.area?'🧽 نقي (الأرض، الحيوط، الزاج، الكونطوار)':'🧽 الفيترينة نقية (الزاج، الرفوف، التيكيتات)'}</label>
      <input class="big-in" name="vx_${w.id}" placeholder="📝 إلا كاين شي مشكل، كتبيه هنا" autocomplete="off"></div>`).join('')}${errP}<button class="btn primary block" type="submit">✅ صيفط الصور</button>`,async f=>{
     const miss=secs.find(w=>!PH['vt_'+w.id]?.length);if(miss)return ferr('📸 صوري '+miss.name+'.');
     const checks={};for(const w of secs){const neat=!!f['vn_'+w.id]?.checked,clean=!!f['vc_'+w.id]?.checked,note=(f['vx_'+w.id]?.value||'').trim();if((!neat||!clean)&&!note)return ferr('⚠️ '+w.name+': إلا ماشي مرتبة ولا ماشي نقية، رتبيها ونقيها، ولا كتبي علاش.');checks[w.id]={neat,clean,note:note||null}}
     const ok=Object.values(checks).every(c=>c.neat&&c.clean);
     busy(f,true);try{const photos={};for(const w of secs)photos[w.id]=await saveImg(PH['vt_'+w.id],'vitrine');await db.collection('vitrine').add({pos:p,ts:Date.now(),date:today(),by:meName(),byId:me.id,photos,checks,ok});closeSheet();toast(ok?'📸 الصور تصيفطو، شكراً':'⚠️ الصور تصيفطو · المسير غادي يتنبه');render()}catch(e){fail(f,e)}})}
 
+/* ---------- recurring reminders for the sellers: tidy and clean the showcases, check the shop ---------- */
+const RMD=[['🧺','رتبي الفيترينات وعمريهم','السلعة قدام، التيكيتات ديال الثمن فبلاصتهم، والخاوي عمريه ولا طلبيه.'],['🧽','نقي الفيترينات','الزاج، الرفوف، والصواني: ما يبقاش فيهم البقع ولا الفتات.'],['🧹','شوفي النظافة ديال المحل','الأرض، الكونطوار، الكولوار، والبلاصة ديال الزبناء.'],['🗑️','شوفي الزبالة','فرغيها إلا عمرات، وبدلي الميكة.'],['🙂','الزبون أولاً','سلمي، ابتسمي، وعرضي عليه المنتوجات الجداد.']];
+const RMD_MIN=()=>+(S.vitcfg?.remind??45)||0;
+function remindTick(){try{if(!me||me.role!=='seller'||!RMD_MIN())return;const p=me.loc;if(!p||p[0]!=='p'||!openShift(p))return;const k='bk-rmd-'+me.id;const last=+localStorage.getItem(k)||0;
+  if(Date.now()-last<RMD_MIN()*60000)return;if(!$('#sheet').hidden)return;localStorage.setItem(k,String(Date.now()));const i=(+localStorage.getItem(k+'-i')||0)%RMD.length;localStorage.setItem(k+'-i',String(i+1));const r=RMD[i];beep(2);
+  openSheet('🔔 تذكير',`<div style="text-align:center;font-size:3.4rem">${r[0]}</div><h2 style="text-align:center;margin:0">${r[1]}</h2><p class="muted" style="text-align:center;margin:0">${r[2]}</p>
+   <div class="box" style="gap:4px">${RMD.map(x=>`<div>${x[0]} ${x[1]}</div>`).join('')}</div><button type="button" class="btn primary block" data-act="close">✅ واخا، دابا</button>`)}catch(_){}}
+setInterval(remindTick,60000);setTimeout(remindTick,20000);
 /* ---------- refrigerated showcases: temperature + photo every hour, sales lock if late ---------- */
 const TC=()=>({on:false,interval:60,grace:10,fr:{},...(S.tcfg||{})});
 const frOf=p=>(TC().fr?.[p]||[]).filter(x=>x&&x.id);
@@ -2757,13 +2767,14 @@ function vitPhotos(){const day=S.vday||today();const P=S.vpos==='all'?POS.map(x=
   const C=VC();
   return `${inp('vday','🗓️ النهار',day,'date')}${P.map(p=>{const L=list.filter(v=>v.pos===p);const sh=S.shifts.filter(x=>x.pos===p&&x.date===day);let exp=0;sh.forEach(x=>{exp+=Math.floor(((x.close?.ts||Date.now())-x.openTs)/(C.interval*60000))});
     return `<section class="card"><div class="head"><h2>${LOCI[p]} ${esc(LOC[p])}</h2><span class="tag ${exp&&L.length>=exp?'good':'warn'}">📸 ${L.length}${exp?' / '+exp+' متوقعة':''}</span></div>
-     ${L.length?L.map(v=>`<div class="box" style="gap:6px"><div class="prow" style="border:0;padding:0"><div class="muted">${hm(v.ts)} · ${esc(v.by)}${v.ok===false?' · <b class="neg">⚠️ فيها مشكل</b>':''}</div>${v.review?`<span class="tag ${v.review.ok?'good':'bad'}">${v.review.ok?'👍 مزيان':'👎 ماشي مزيان'} · ${esc(v.review.by||'')}</span>`:(isMgr()?`<div class="btns" style="flex-wrap:nowrap"><button class="btn small" data-act="vitrev" data-id="${v.id}" data-v="1">👍</button><button class="btn small danger" data-act="vitrev" data-id="${v.id}" data-v="0">👎</button></div>`:'')}</div>${v.checks?`<div class="muted" style="font-size:.85rem">${Object.entries(v.checks).map(([w,c])=>`${LOCI[w]||''} ${c.neat?'🧺✅':'🧺❌'} ${c.clean?'🧽✅':'🧽❌'}${c.note?' · 📝 '+esc(c.note):''}`).join('<br>')}</div>`:''}${v.review?.note?`<div class="muted">💬 ${esc(v.review.note)}</div>`:''}<div style="display:flex;gap:6px;overflow-x:auto">${Object.entries(v.photos||{}).map(([w,ids])=>(ids||[]).map(id=>String(id).startsWith('a:')?`<button type="button" data-act="media" data-id="${id}" style="border:0;padding:0;background:none;flex:none;text-align:center"><img src="/_blob/${String(id).slice(2)}" alt="" style="width:92px;height:92px;object-fit:cover;border-radius:10px;display:block"><span class="muted" style="font-size:.7rem">${LOCI[w]}</span></button>`:`<button type="button" class="btn small" data-act="media" data-id="${id}">${LOCI[w]} 📷</button>`).join('')).join('')}</div></div>`).join(''):emptyB('📸','ما كاينة حتى تصويرة.')}</section>`}).join('')}`}
+     ${L.length?L.map(v=>`<div class="box" style="gap:6px"><div class="prow" style="border:0;padding:0"><div class="muted">${hm(v.ts)} · ${esc(v.by)}${v.ok===false?' · <b class="neg">⚠️ فيها مشكل</b>':''}</div>${v.review?`<span class="tag ${v.review.ok?'good':'bad'}">${v.review.ok?'👍 مزيان':'👎 ماشي مزيان'} · ${esc(v.review.by||'')}</span>`:(isMgr()?`<div class="btns" style="flex-wrap:nowrap"><button class="btn small" data-act="vitrev" data-id="${v.id}" data-v="1">👍</button><button class="btn small danger" data-act="vitrev" data-id="${v.id}" data-v="0">👎</button></div>`:'')}</div>${v.checks?`<div class="muted" style="font-size:.85rem">${Object.entries(v.checks).map(([w,c])=>`${vsIcon(w)} ${c.neat?'🧺✅':'🧺❌'} ${c.clean?'🧽✅':'🧽❌'}${c.note?' · 📝 '+esc(c.note):''}`).join('<br>')}</div>`:''}${v.review?.note?`<div class="muted">💬 ${esc(v.review.note)}</div>`:''}<div style="display:flex;gap:6px;overflow-x:auto">${Object.entries(v.photos||{}).map(([w,ids])=>(ids||[]).map(id=>String(id).startsWith('a:')?`<button type="button" data-act="media" data-id="${id}" style="border:0;padding:0;background:none;flex:none;text-align:center"><img src="/_blob/${String(id).slice(2)}" alt="" style="width:92px;height:92px;object-fit:cover;border-radius:10px;display:block"><span class="muted" style="font-size:.7rem">${LOCI[w]}</span></button>`:`<button type="button" class="btn small" data-act="media" data-id="${id}">${LOCI[w]} 📷</button>`).join('')).join('')}</div></div>`).join(''):emptyB('📸','ما كاينة حتى تصويرة.')}</section>`}).join('')}`}
 function sheetVitCfg(){if(!isAdmin())return;const C=VC();
   openSheet('⚙️ تصوير الفيترينة',`${choice('vcon','التصوير الإجباري',[{v:'1',l:'خدام',i:'✅'},{v:'0',l:'موقوف',i:'⛔'}],C.on?'1':'0',2)}
    ${choice('vciv','كل شحال؟',[30,60,90,120,180,240].map(m=>({v:String(m),l:m<60?m+' دقيقة':m===60?'ساعة':m===90?'ساعة ونص':(m/60)+' ساعات',i:'⏰'})),String(C.interval),3)}
    ${choice('vclk','إلا تأخرات البايعة',[{v:'1',l:'البيع كيتسد',i:'🔒'},{v:'0',l:'غير تنبيه',i:'🔔'}],C.lock!==false?'1':'0',2)}
-   ${choice('vcgr','كيتسد من بعد',[5,10,15,30].map(m=>({v:String(m),l:m+' دقيقة',i:'⏳'})),String(C.grace||10),4)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,async f=>{
-    busy(f,true);try{await db.doc('config/vitrine').set({on:f.vcon.value==='1',interval:+f.vciv.value,lock:f.vclk.value==='1',grace:+f.vcgr.value});closeSheet();toast('✅ تحفظ')}catch(e){fail(f,e)}})}
+   ${choice('vcgr','كيتسد من بعد',[5,10,15,30].map(m=>({v:String(m),l:m+' دقيقة',i:'⏳'})),String(C.grace||10),4)}
+   ${choice('vcrm','🔔 تذكير البايعات (رتبي، نقي، شوفي النظافة)',[0,30,45,60,90].map(m=>({v:String(m),l:m?'كل '+m+' دقيقة':'موقوف',i:m?'🔔':'⛔'})),String(RMD_MIN()),3)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,async f=>{
+    busy(f,true);try{await db.doc('config/vitrine').set({on:f.vcon.value==='1',interval:+f.vciv.value,lock:f.vclk.value==='1',grace:+f.vcgr.value,remind:+f.vcrm.value});closeSheet();toast('✅ تحفظ')}catch(e){fail(f,e)}})}
 /* ---------- shop packaging & supplies: stock per shop, requests to purchasing, inventory (consumption = expected - counted) ---------- */
 const packPos=()=>me.role==='seller'?me.loc:(S.ppos||S.pos);
 function vPack(){const p=packPos();const m=stockMap(p);const items=itemsArr().filter(i=>i.kind==='pack');const canSw=me.role!=='seller';
