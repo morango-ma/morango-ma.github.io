@@ -124,6 +124,7 @@ public class MainActivity extends Activity {
         });
         ArrayList<String> need = new ArrayList<>();
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.CAMERA);
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.RECORD_AUDIO);
         if (Build.VERSION.SDK_INT < 29 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (!need.isEmpty()) requestPermissions(need.toArray(new String[0]), REQ_PERM);
         if (b != null) wv.restoreState(b); else wv.loadUrl(HOME);
@@ -174,7 +175,7 @@ public class MainActivity extends Activity {
         String cur;
 
         @JavascriptInterface
-        public String version() { return "3"; }
+        public String version() { return "4"; }
 
         /* alert: always vibrate; when the phone is not on silent, also play the alarm sound (loud) */
         @JavascriptInterface
