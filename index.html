@@ -383,7 +383,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110234950"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110235202"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -2235,13 +2235,14 @@ function sheetClose0(){
    ${choice('cnext','🤝 شكون غادي تستلم المحل من بعدك؟',nexts.length?nexts:[{v:'-',l:'ما كاينة حتى بائعة أخرى',i:'—'}],nexts[0]?.v||'-',3)}`}${TKs.length?`<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📋</span><div><b>🧾 ${TKs.length} وصل فهاد النوبة</b><div class="muted">${TKs[0].no?'من '+esc(rNo(TKs[0]))+' حتى '+esc(rNo(TKs[TKs.length-1])):''} · المجموع ${money(sumTickets(sh))}</div></div></div></div>`:''}
    <h3 style="margin:0">🧺 السلعة</h3><div>${ids.length?ids.map(id=>prow(id,'',stepper('data-cnt',id,'',iunit(id)))).join(''):emptyB('🧺','ما كاين حتى منتوج.')}</div>
    ${packs.length?`<h3 style="margin:0">📦 التغليف واللوازم</h3><div>${packs.map(id=>prow(id,'',stepper('data-cnt',id,'',iunit(id)))).join('')}</div>`:''}
+   <div class="lbl" style="font-weight:700">💵 الفلوس اللي فالصندوق: كتبي شحال من درهم كاين من كل نوع، والتطبيق كيحسب القطع</div>${cashCountHtml('cc')}
    ${moneyIn('ccash','💵 الفلوس اللي فالصندوق دابا (مع fond de caisse)')}
    ${mgrs.length?choice('cmgr','📊 المسير اللي استلم الفلوس',mgrs,mgrs[0].v,3):inp('cmgr','المسير اللي استلم الفلوس')}${sigField('csig','توقيع المسير (استلم الصندوق)')}
    ${night?photoField('nret','📷 صور السلعة اللي رجعات (retour) · إجبارية'):''}<label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="nok" style="width:22px;height:22px"> ✅ حسبت بيدي وكنأكد بلي هادي هي الأرقام الصحيحة</label><p class="muted" style="margin:0">${night?'':'🤝 البائعة اللي غادي تستلم كتأكد الاستلام من الحساب ديالها.'}</p>${errP}<button class="btn primary block" type="submit">🔒 سد النوبة</button>`,async f=>{
     const ins=$$('input[data-cnt]',f);if(ins.some(i=>!(num(i.value)>=0)))return ferr('دخلي العدد ديال كل منتوج وكل تغليف، حتى إلا كان 0.');
     if(night&&ins.some(i=>S.items[i.dataset.cnt]?.kind==='final'&&num(i.value)>0)&&!(PH.nret||[]).length)return ferr('📷 صوري السلعة اللي غادي ترجع (retour).');
     const nx=night?'-':(f.cnext?.value||'-');if(!f.nok?.checked)return ferr('✅ أكدي بلي حسبتي وبلي الأرقام صحيحة.');
-    const cash=num(f.ccash.value);if(!(cash>=0))return ferr('دخلي المبلغ اللي فالصندوق.');
+    const CC=cashCountRead(f,'cc');if(CC.bad.length)return ferr('⚠️ المبلغ ديال '+CC.bad.join('، ')+' د.م ما كيتقسمش على القطعة/الورقة. صححو.');const cash=num(f.ccash.value);if(!(cash>=0))return ferr('دخلي المبلغ اللي فالصندوق.');if(CC.total>0&&Math.abs(CC.total-cash)>0.009)return ferr('⚠️ المجموع ديال القطع والأوراق ('+money(CC.total)+') ماشي هو المبلغ اللي كتبتي ('+money(cash)+').');
     const counted={},theo={};ins.forEach(i=>{counted[i.dataset.cnt]=num(i.value);theo[i.dataset.cnt]=r2(m[i.dataset.cnt]||0)});
     const {stockDiff,packDiff}=closeDiffs(counted,theo);
     const salesCost=Math.round((sh.tickets||[]).reduce((s,t)=>s+t.lines.reduce((a,l)=>a+l.qty*(+l.unitCost||0)+(+l.packCost||0),0),0)*100)/100;const salesT=r2(sumTickets(sh)),expected=r2((+sh.float||0)+salesT),cashDiff=r2(cash-expected);
@@ -2255,11 +2256,11 @@ function sheetClose0(){
           ${nx!=='-'?`<p class="muted">🛍️ ${esc(nx)} تقدر تحل النوبة ديالها وتبيع من دابا. ملي يسالي التحقق، السلعة اللي باعت كتنقص بوحدها.</p>`:''}
           <button type="button" class="btn primary block" data-act="close">مفهوم</button>`);render()}catch(e){fail(f,e)}return}
     const mgr=(f.cmgr.value||'').trim();if(!mgr)return ferr('اختاري المسير.');if(!sigData('csig'))return ferr('خاص توقيع المسير.');
-    busy(f,true);try{const sig=await sigSave('csig','cash');await setStockVals(p,counted);const close={ts:Date.now(),counted,theo,stockDiff,packDiff,cash,expected,cashDiff,sales:salesT,salesCost,handedTo:mgr,sig,by:meName(),passation:night?{night:true,ts:Date.now()}:{to:nx==='-'?null:nx,status:nx==='-'?null:'pending',ts:Date.now()}};
+    busy(f,true);try{const sig=await sigSave('csig','cash');await setStockVals(p,counted);const close={ts:Date.now(),counted,theo,stockDiff,packDiff,cash,cashDetail:CC.detail,expected,cashDiff,sales:salesT,salesCost,handedTo:mgr,sig,by:meName(),passation:night?{night:true,ts:Date.now()}:{to:nx==='-'?null:nx,status:nx==='-'?null:'pending',ts:Date.now()}};
       if(night){const rl=Object.entries(counted).filter(([id,q])=>q>0&&S.items[id]?.kind==='final').map(([item,qty])=>({item,qty}));if(rl.length){const photos=await saveMedia(PH.nret||[],'return');const by={};rl.forEach(l=>{const w=S.items[l.item]?.ws||'w1';(by[w]=by[w]||[]).push(l)});for(const w in by)await newOp({type:'return',pos:p,ws:w,lines:by[w],photos,status:'pending',night:true,shift:sh.id});const d={};rl.forEach(l=>d[l.item]=-l.qty);await bumpStock(p,d)}close.passation.returned=rl}
       await db.doc('shifts/'+sh.id).update({status:'closed',close});
       if(sh.team==='مسائية')for(const o of S.outs.filter(o=>o.status==='open'&&o.pos===p))await db.doc('stockouts/'+o.id).update({status:'eod',closeTs:Date.now(),endOfDay:true});if(stockDiff.length||packDiff.length)await newOp({type:'count',pos:p,shift:sh.id,diffs:[...stockDiff,...packDiff]});sheetShiftResult({...sh,status:'closed',close})}catch(e){fail(f,e)}
-  });
+  },f=>cashCountWire(f,'cc',r=>{if(r.total>0)f.ccash.value=r.total.toFixed(2)}));
 }
 const passPending=p=>S.shifts.filter(x=>x.pos===p&&x.status==='closed'&&x.close?.passation?.status==='pending'&&!x.passRecv&&x.close.passation.to===meName());
 function sheetRecvPass(id){const x=S.shifts.find(s=>s.id===id);if(!x?.close)return;const c=x.close;const ids=Object.keys(c.counted||{}).filter(k=>c.counted[k]>0);
