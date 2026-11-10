@@ -5,12 +5,19 @@ const WIN = process.platform === 'win32';
 const fs = require('fs'), path = require('path'), os = require('os');
 const HOME = 'https://morango-ma.github.io/';
 let win = null, printer = null;
+const CFG = () => path.join(app.getPath('userData'), 'settings.json');
+const cfgGet = () => { try { return JSON.parse(fs.readFileSync(CFG(), 'utf8')); } catch (_) { return {}; } };
+const cfgSet = (k, v) => { const c = cfgGet(); c[k] = v; try { fs.writeFileSync(CFG(), JSON.stringify(c)); } catch (_) {} };
 
 function create() {
   win = new BrowserWindow({
     width: 1280, height: 860, minWidth: 820, minHeight: 600, title: 'Morango', backgroundColor: '#ffffff', autoHideMenuBar: WIN,
     icon: path.join(__dirname, 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: false }
+  });
+  if (cfgGet().fullscreen) win.setFullScreen(true);
+  win.webContents.on('before-input-event', (ev, input) => {
+    if (input.type === 'keyDown' && input.key === 'F11') { ev.preventDefault(); const on = !win.isFullScreen(); win.setFullScreen(on); cfgSet('fullscreen', on); }
   });
   win.loadURL(HOME);
   win.webContents.setWindowOpenHandler(({ url }) => { if (url.startsWith(HOME)) return { action: 'allow' }; shell.openExternal(url); return { action: 'deny' }; });
@@ -41,7 +48,9 @@ function printers() {
 
 ipcMain.on('mn', (e, cmd, a) => {
   try {
-    if (cmd === 'version') { e.returnValue = 'mac-1'; return; }
+    if (cmd === 'version') { e.returnValue = 'desktop-2'; return; }
+    if (cmd === 'fs') { const on = String(a[0]) === '1'; win.setFullScreen(on); cfgSet('fullscreen', on); e.returnValue = 'ok'; return; }
+    if (cmd === 'isfs') { e.returnValue = win && win.isFullScreen() ? '1' : '0'; return; }
     if (cmd === 'list') {
       if (!WIN) { e.returnValue = JSON.stringify(printers().map(n => ({ id: 'cups:' + n, name: n.replace(/_/g, ' ') + ' (Mac)' }))); return; }
       win.webContents.getPrintersAsync().then(L => { e.returnValue = JSON.stringify(L.map(p => ({ id: 'win:' + p.name, name: (p.displayName || p.name) + ' (Windows)' }))); }).catch(() => { e.returnValue = '[]'; });
