@@ -383,7 +383,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110232048"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110232853"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1391,14 +1391,23 @@ function sheetTransfer(id,ov){
 }
 
 /* --- POS --- */
+/* cash counter by denomination (coins and notes, Moroccan names) */
+const DENOMS=[['c',0.05,'ريال'],['c',0.1,'2 د ريال'],['c',0.2,'4 د ريال'],['c',0.5,'10 د ريال'],['c',1,'درهم'],['c',2,'2 دراهم'],['c',5,'5 دراهم'],['c',10,'10 دراهم'],['n',20,'20 درهم'],['n',25,'25 درهم'],['n',50,'50 درهم'],['n',100,'100 درهم'],['n',200,'200 درهم']];
+const denKey=v=>String(v).replace('.','_');
+function cashCountHtml(pfx,init){init=init||{};const row=([t,v,l])=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--line);border-radius:10px;background:var(--surface)"><span style="font-size:1.05rem">${t==='c'?'🪙':'💵'}</span><div style="flex:1;min-width:0;line-height:1.15"><b class="num">${fmt(v)} د.م</b><div class="muted" style="font-size:.72rem">${l}</div></div><span class="muted">×</span><input class="qty" data-den="${pfx}" data-v="${v}" name="${pfx}_${denKey(v)}" inputmode="numeric" value="${init[denKey(v)]||''}" placeholder="0" style="width:56px;height:38px;text-align:center"><b class="num" data-dsub="${pfx}_${denKey(v)}" style="min-width:58px;text-align:end;font-size:.85rem">—</b></div>`;
+  return `<div class="box" style="gap:8px"><b>🪙 القطع</b><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px">${DENOMS.filter(d=>d[0]==='c').map(row).join('')}</div><b>💵 الأوراق</b><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px">${DENOMS.filter(d=>d[0]==='n').map(row).join('')}</div>
+   <div class="receipt"><div class="tot"><span>المجموع</span><span class="num" id="${pfx}_tot">0.00 د.م</span></div></div></div>`}
+function cashCountRead(f,pfx){const o={};let t=0;$$(`input[data-den="${pfx}"]`,f).forEach(x=>{const n=Math.max(0,Math.floor(num(x.value)||0));if(n){o[denKey(x.dataset.v)]=n;t+=n*(+x.dataset.v)}});return{detail:o,total:r2(t)}}
+function cashCountWire(f,pfx,onTotal){const upd=()=>{$$(`input[data-den="${pfx}"]`,f).forEach(x=>{const n=Math.floor(num(x.value)||0);const e=$(`[data-dsub="${x.name}"]`,f);if(e)e.textContent=n?money(n*(+x.dataset.v)):'—'});const r=cashCountRead(f,pfx);const e=$('#'+pfx+'_tot',f);if(e)e.textContent=money(r.total);onTotal&&onTotal(r)};f.addEventListener('input',e=>{if(e.target.dataset?.den===pfx)upd()});upd()}
 function sheetOpenShift(){
   const p=S.pos;const h=new Date().getHours();
   openSheet('🔓 فتح النوبة · '+LOC[p],`${choice('steam','النوبة',[{v:'صباحية',l:'الصباح',i:'☀️'},{v:'مسائية',l:'العشية',i:'🌙'}],h<13?'صباحية':'مسائية',2)}
    <div class="lead">${avatar(me)}<div><b>${esc(me.name)}</b><div class="muted">البائعة المسؤولة (لاكيس)</div></div></div>${posRoleOf(me)==='v'&&me.role==='seller'?'<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">💵</span><div><b>نتي مسجلة فوندوز</b><div class="muted">إلا فتحتي النوبة، غادي تخدمي فوندوز كيسيير: الفلوس، الباساسيون والإغلاق عليك.</div></div></div></div>':''}
-   ${moneyIn('sfloat','💵 الفلوس اللي فالصندوق فالبداية (fond de caisse)')}${errP}<button class="btn primary block" type="submit">🚀 يلاه نبداو</button>`,async f=>{
-    const fl=num(f.sfloat.value);if(!(fl>=0))return ferr('دخلي المبلغ ديال fond de caisse.');if(openShift(p))return ferr('كاينة نوبة مفتوحة من قبل.');if(S.shifts.some(x=>x.pos===p&&x.status==='verif'&&(x.sellerId===me.id||x.seller===meName())))return ferr('🔎 النوبة ديالك مازال فالتحقق مع المسؤول.');{const pp=passPending(p);if(pp.length){closeSheet();setTimeout(()=>sheetRecvPass(pp[0].id),250);return}}
-    busy(f,true);try{await db.collection('shifts').add({pos:p,date:today(),team:f.steam.value,seller:meName(),sellerId:me.id,float:fl,openTs:Date.now(),status:'open',tickets:[],opening:{...stockMap(p)}});closeSheet();S.view='pos';render();toast('بالتوفيق! 🍀')}catch(e){fail(f,e)}
-  });
+   <div class="lbl" style="font-weight:700">💵 Fond de caisse: حسبي القطع والأوراق اللي فالصندوق</div>${cashCountHtml('fc')}
+   ${moneyIn('sfloat','💵 المجموع ديال fond de caisse (كيتعمر بوحدو)')}${errP}<button class="btn primary block" type="submit">🚀 يلاه نبداو</button>`,async f=>{
+    const CC=cashCountRead(f,'fc');const fl=num(f.sfloat.value);if(CC.total>0&&Math.abs(CC.total-fl)>0.009)return ferr('⚠️ المجموع ديال القطع والأوراق ('+money(CC.total)+') ماشي هو المبلغ اللي كتبتي ('+money(fl)+').');if(!(fl>=0))return ferr('دخلي المبلغ ديال fond de caisse.');if(openShift(p))return ferr('كاينة نوبة مفتوحة من قبل.');if(S.shifts.some(x=>x.pos===p&&x.status==='verif'&&(x.sellerId===me.id||x.seller===meName())))return ferr('🔎 النوبة ديالك مازال فالتحقق مع المسؤول.');{const pp=passPending(p);if(pp.length){closeSheet();setTimeout(()=>sheetRecvPass(pp[0].id),250);return}}
+    busy(f,true);try{await db.collection('shifts').add({pos:p,date:today(),team:f.steam.value,seller:meName(),sellerId:me.id,float:fl,floatDetail:CC.detail,openTs:Date.now(),status:'open',tickets:[],opening:{...stockMap(p)}});closeSheet();S.view='pos';render();toast('بالتوفيق! 🍀')}catch(e){fail(f,e)}
+  },f=>cashCountWire(f,'fc',r=>{if(r.total>0)f.sfloat.value=r.total.toFixed(2)}));
 }
 /* default packaging for the cart: per product line, ceil(qty x per-unit rule) */
 function cartPackDefault(p){const c=cartOf(p);const tot={},by={};Object.keys(c).filter(id=>c[id]>0).forEach(id=>(S.items[id]?.pack||[]).forEach(r=>{const q=Math.ceil(c[id]*(+r.qty||0)-1e-9);if(q>0){tot[r.item]=(tot[r.item]||0)+q;(by[r.item]=by[r.item]||{})[id]=(by[r.item][id]||0)+q}}));return{tot,by}}
