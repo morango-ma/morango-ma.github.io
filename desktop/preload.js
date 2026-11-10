@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld('MorangoNative', {
   listPrinters: () => call('list'),
   connect: (id) => call('connect', id),
   write: (b64) => call('write', b64),
-  saveFile: (name, mime, b64) => call('save', name, mime, b64)
+  saveFile: (name, mime, b64) => call('save', name, mime, b64),
+  printImage: (dataUrl, wmm, hmm) => call('printimg', dataUrl, wmm, hmm)
 });

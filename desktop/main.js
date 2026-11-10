@@ -82,6 +82,18 @@ ipcMain.on('mn', (e, cmd, a) => {
       finally { try { fs.unlinkSync(f); } catch (_) {} }
       return;
     }
+    if (cmd === 'printimg') {
+      if (!printer) { e.returnValue = 'الطابعة ما مربوطاش'; return; }
+      const [du, wmm, hmm] = a; const W = Math.max(40, +wmm || 72), H = Math.max(30, +hmm || 200);
+      const pw = new BrowserWindow({ show: false, width: 600, height: 800, webPreferences: { offscreen: false } });
+      const html = '<html><head><style>@page{size:' + W + 'mm ' + H + 'mm;margin:0}html,body{margin:0;padding:0}img{width:' + W + 'mm;display:block}</style></head><body><img src="' + du + '"></body></html>';
+      pw.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html)).then(() => {
+        pw.webContents.print({ silent: true, deviceName: printer, printBackground: true, margins: { marginType: 'none' }, pageSize: { width: Math.round(W * 1000), height: Math.round(H * 1000) } }, (ok, why) => {
+          e.returnValue = ok ? 'ok' : 'الطبع ما مشاش: ' + (why || ''); try { pw.destroy(); } catch (_) {}
+        });
+      }).catch(x => { e.returnValue = 'error: ' + x.message; try { pw.destroy(); } catch (_) {} });
+      return;
+    }
     if (cmd === 'save') {
       const [name, , b64] = a;
       const dir = path.join(app.getPath('downloads'), 'Morango');
