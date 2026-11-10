@@ -125,6 +125,7 @@ public class MainActivity extends Activity {
         ArrayList<String> need = new ArrayList<>();
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.CAMERA);
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.RECORD_AUDIO);
+        if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission("android.permission.BLUETOOTH_CONNECT") != PackageManager.PERMISSION_GRANTED) need.add("android.permission.BLUETOOTH_CONNECT");
         if (Build.VERSION.SDK_INT < 29 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (!need.isEmpty()) requestPermissions(need.toArray(new String[0]), REQ_PERM);
         if (b != null) wv.restoreState(b); else wv.loadUrl(HOME);
@@ -175,7 +176,7 @@ public class MainActivity extends Activity {
         String cur;
 
         @JavascriptInterface
-        public String version() { return "4"; }
+        public String version() { return "5"; }
 
         /* alert: always vibrate; when the phone is not on silent, also play the alarm sound (loud) */
         @JavascriptInterface
@@ -268,7 +269,7 @@ public class MainActivity extends Activity {
                     for (UsbDevice d : um.getDeviceList().values()) if (d.getVendorId() == vid && d.getProductId() == pid) dev = d;
                     if (dev == null) return "الطابعة USB ما مركباش";
                     if (!um.hasPermission(dev)) {
-                        PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, 0, new Intent("ma.morango.USB_PERMISSION"), Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
+                        PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, 0, new Intent("ma.morango.USB_PERMISSION").setPackage(getPackageName()), Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
                         um.requestPermission(dev, pi);
                         return "perm";
                     }
