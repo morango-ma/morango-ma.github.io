@@ -146,7 +146,7 @@ nav.tabs button[aria-current="page"] .ti{filter:none;opacity:1}
 .prow .lead div{min-width:0}
 .prow .lead b{display:block;font-size:.93rem;line-height:1.3}
 .err{color:var(--bad);font-size:.88rem;margin:0;font-weight:600}
-#sheet,#viewer{position:fixed;inset:0;z-index:20;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
+#sheet,#viewer{position:fixed;inset:0;bottom:var(--vkbh,0px);z-index:20;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
 .panel{background:var(--surface);width:100%;max-width:760px;max-height:94%;border-radius:24px 24px 0 0;display:flex;flex-direction:column;overflow:hidden}
 .panel .ph{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 10px}
 .panel .pb{overflow-y:auto;padding:4px 16px 16px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
@@ -353,7 +353,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110213946"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110214650"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -2800,13 +2800,13 @@ const vkbOn=()=>{try{const v=localStorage.getItem('bk-vkb');if(v==='1')return tr
 let VK={el:null,lay:null,shift:false,lang:(()=>{try{return localStorage.getItem('bk-vkl')||'ar'}catch(_){return 'ar'}})()};
 const vkbField=el=>{if(!el||el.disabled||el.readOnly)return false;if(el.tagName==='TEXTAREA')return true;if(el.tagName!=='INPUT')return false;return ['text','search','tel','number','email','password','url',''].includes((el.getAttribute('type')||'text').toLowerCase())};
 const vkbNumeric=el=>{const im=(el.dataset.vkim||el.getAttribute('inputmode')||'').toLowerCase();const t=(el.getAttribute('type')||'').toLowerCase();return im==='numeric'||im==='decimal'||t==='number'||t==='tel'};
-function vkbDraw(){let d=document.getElementById('vkb');if(!VK.el){if(d)d.remove();document.body.style.paddingBottom='';return}
+function vkbDraw(){let d=document.getElementById('vkb');if(!VK.el){if(d)d.remove();document.body.style.paddingBottom='';document.documentElement.style.removeProperty('--vkbh');return}
   if(!d){d=document.createElement('div');d.id='vkb';document.body.appendChild(d);d.addEventListener('pointerdown',e=>{e.preventDefault();const b=e.target.closest('[data-k]');if(b)vkbKey(b.dataset.k)})}
   const L=VKL[VK.lay];const num=VK.lay==='num';
   d.style.cssText=`position:fixed;left:0;right:0;bottom:0;z-index:9500;background:var(--sunk,#f4f1ee);color:var(--ink,#2a1a1e);border-top:2px solid var(--line,#ddd);box-shadow:0 -6px 24px rgba(0,0,0,.18);padding:8px;display:flex;flex-direction:column;gap:6px;direction:ltr;user-select:none;touch-action:manipulation;${num?'max-width:420px;margin:0 auto':''}`;
   d.innerHTML=L.map(r=>`<div style="display:flex;gap:6px">${r.map(k=>{const w=k==='␣'?6:['↵','⌫','⇧','#','abc','🌐','✕'].includes(k)?1.5:1;const lab=k==='␣'?(VK.lay==='ar'?'مسافة':'espace'):k==='#'?'?123':k==='🌐'?(VK.lang==='ar'?'FR':'ع'):k==='↵'?(VK.el.tagName==='TEXTAREA'?'↵':'✓'):k==='⇧'?(VK.shift?'⬆':'⇧'):(VK.shift&&VK.lay==='fr'?k.toUpperCase():k);
     return `<button type="button" data-k="${esc(k)}" style="flex:${w};min-width:0;height:${num?60:52}px;border-radius:10px;border:1px solid var(--line,#ddd);background:${k==='↵'?'#e02843':['⌫','⇧','#','abc','🌐','✕'].includes(k)?'var(--sunk,#ece6e2)':'var(--surface,#fff)'};color:${k==='↵'?'#fff':'var(--ink,#2a1a1e)'};font:inherit;font-size:${num?1.5:1.25}rem;font-weight:700">${esc(lab)}</button>`}).join('')}</div>`).join('');
-  requestAnimationFrame(()=>{document.body.style.paddingBottom=(d.offsetHeight+8)+'px';try{VK.el&&VK.el.scrollIntoView({block:'nearest'});const r=VK.el.getBoundingClientRect();if(r.bottom>innerHeight-d.offsetHeight)window.scrollBy(0,r.bottom-(innerHeight-d.offsetHeight)+20)}catch(_){}})}
+  requestAnimationFrame(()=>{document.body.style.paddingBottom=(d.offsetHeight+8)+'px';document.documentElement.style.setProperty('--vkbh',d.offsetHeight+'px');try{VK.el&&VK.el.scrollIntoView({block:'center'});const r=VK.el.getBoundingClientRect();if(r.bottom>innerHeight-d.offsetHeight)window.scrollBy(0,r.bottom-(innerHeight-d.offsetHeight)+20)}catch(_){}})}
 function vkbIns(t){const el=VK.el;if(!el)return;try{if(typeof el.selectionStart==='number'&&el.type!=='number'){const a=el.selectionStart,b=el.selectionEnd;el.setRangeText(t,a,b,'end')}else el.value=(el.value||'')+t}catch(_){el.value=(el.value||'')+t}
   const ml=+el.getAttribute('maxlength');if(ml>0&&el.value.length>ml)el.value=el.value.slice(0,ml);el.dispatchEvent(new Event('input',{bubbles:true}))}
 function vkbKey(k){const el=VK.el;if(!el)return;
