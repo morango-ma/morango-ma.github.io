@@ -13,19 +13,62 @@
   "build": {
     "appId": "ma.morango.desktop",
     "productName": "Morango",
-    "files": ["main.js", "preload.js", "icon.png"],
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png"
+    ],
     "afterPack": "./adhoc.js",
     "mac": {
       "category": "public.app-category.business",
       "icon": "icon.png",
       "identity": null,
       "hardenedRuntime": false,
-      "target": [{ "target": "dmg", "arch": ["universal"] }],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Morango kaysjel les notes vocales.",
         "NSCameraUsageDescription": "Morango kaysawwer l'vitrine w les documents."
       }
     },
-    "dmg": { "artifactName": "Morango.dmg", "title": "Morango" }
+    "dmg": {
+      "artifactName": "Morango.dmg",
+      "title": "Morango"
+    },
+    "extraResources": [
+      {
+        "from": "rawprint.ps1",
+        "to": "rawprint.ps1"
+      }
+    ],
+    "win": {
+      "icon": "icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Morango",
+      "artifactName": "Morango-Setup.exe",
+      "language": "1036"
+    }
   }
 }

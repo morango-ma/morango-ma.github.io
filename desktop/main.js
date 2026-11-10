@@ -1,13 +1,15 @@
 // Morango for Mac: the live site in its own window, with direct receipt printing through CUPS (raw ESC/POS)
 const { app, BrowserWindow, ipcMain, shell, session, Menu } = require('electron');
-const { execFileSync } = require('child_process');
+const { execFileSync, execFile } = require('child_process');
+const WIN = process.platform === 'win32';
 const fs = require('fs'), path = require('path'), os = require('os');
 const HOME = 'https://morango-ma.github.io/';
 let win = null, printer = null;
 
 function create() {
   win = new BrowserWindow({
-    width: 1280, height: 860, minWidth: 820, minHeight: 600, title: 'Morango', backgroundColor: '#ffffff',
+    width: 1280, height: 860, minWidth: 820, minHeight: 600, title: 'Morango', backgroundColor: '#ffffff', autoHideMenuBar: WIN,
+    icon: path.join(__dirname, 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: false }
   });
   win.loadURL(HOME);
@@ -40,9 +42,14 @@ function printers() {
 ipcMain.on('mn', (e, cmd, a) => {
   try {
     if (cmd === 'version') { e.returnValue = 'mac-1'; return; }
-    if (cmd === 'list') { e.returnValue = JSON.stringify(printers().map(n => ({ id: 'cups:' + n, name: n.replace(/_/g, ' ') + ' (Mac)' }))); return; }
+    if (cmd === 'list') {
+      if (!WIN) { e.returnValue = JSON.stringify(printers().map(n => ({ id: 'cups:' + n, name: n.replace(/_/g, ' ') + ' (Mac)' }))); return; }
+      win.webContents.getPrintersAsync().then(L => { e.returnValue = JSON.stringify(L.map(p => ({ id: 'win:' + p.name, name: (p.displayName || p.name) + ' (Windows)' }))); }).catch(() => { e.returnValue = '[]'; });
+      return;
+    }
     if (cmd === 'connect') {
-      const n = String(a[0] || '').replace(/^cups:/, '');
+      const n = String(a[0] || '').replace(/^(cups|win):/, '');
+      if (WIN) { win.webContents.getPrintersAsync().then(L => { if (L.some(p => p.name === n)) { printer = n; e.returnValue = 'ok'; } else e.returnValue = 'الطابعة ما كايناش فويندوز. زيدها من Paramètres → Imprimantes'; }).catch(x => { e.returnValue = 'error: ' + x.message; }); return; }
       if (!printers().includes(n)) { e.returnValue = 'الطابعة ما كايناش فالماك. زيدها من Réglages Système → Imprimantes'; return; }
       printer = n; e.returnValue = 'ok'; return;
     }
@@ -50,6 +57,16 @@ ipcMain.on('mn', (e, cmd, a) => {
       if (!printer) { e.returnValue = 'الطابعة ما مربوطاش'; return; }
       const f = path.join(os.tmpdir(), 'morango-' + Date.now() + '.bin');
       fs.writeFileSync(f, Buffer.from(String(a[0] || ''), 'base64'));
+      if (WIN) {
+        const ps = path.join(process.resourcesPath || __dirname, 'rawprint.ps1');
+        const script = fs.existsSync(ps) ? ps : path.join(__dirname, 'rawprint.ps1');
+        execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, printer, f], { windowsHide: true, timeout: 30000 }, (err, out, errOut) => {
+          try { fs.unlinkSync(f); } catch (_) {}
+          const r = String(out || '').trim();
+          e.returnValue = r === 'ok' ? 'ok' : 'الطبع ما مشاش: ' + (r || String(errOut || (err && err.message) || '')).slice(0, 200);
+        });
+        return;
+      }
       try { execFileSync('/usr/bin/lp', ['-d', printer, '-o', 'raw', f]); e.returnValue = 'ok'; }
       catch (x) { e.returnValue = 'الطبع ما مشاش: ' + String(x.stderr || x.message).slice(0, 200); }
       finally { try { fs.unlinkSync(f); } catch (_) {} }
