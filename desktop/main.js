@@ -25,7 +25,8 @@ function create() {
   win.webContents.on('did-fail-load', () => setTimeout(() => { try { win.loadURL(HOME); } catch (_) {} }, 5000));
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  try { await session.defaultSession.clearCache(); } catch (_) {} // always start on the latest version of the site
   const ok = ['media', 'notifications', 'clipboard-read', 'clipboard-sanitized-write', 'fullscreen', 'wakeLock'];
   session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(ok.includes(perm)));
   session.defaultSession.setPermissionCheckHandler((wc, perm) => ok.includes(perm));
