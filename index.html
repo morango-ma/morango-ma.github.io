@@ -146,6 +146,7 @@ nav.tabs button[aria-current="page"] .ti{filter:none;opacity:1}
 .prow .lead div{min-width:0}
 .prow .lead b{display:block;font-size:.93rem;line-height:1.3}
 .err{color:var(--bad);font-size:.88rem;margin:0;font-weight:600}
+input[type=date]::-webkit-calendar-picker-indicator,input[type=datetime-local]::-webkit-calendar-picker-indicator{cursor:pointer}
 #sheet,#viewer{position:fixed;inset:0;bottom:var(--vkbh,0px);z-index:20;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
 .panel{background:var(--surface);width:100%;max-width:760px;max-height:94%;border-radius:24px 24px 0 0;display:flex;flex-direction:column;overflow:hidden}
 .panel .ph{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 10px}
@@ -353,7 +354,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110214650"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110215025"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -2836,6 +2837,36 @@ function sheetDisplay(){let t='',f='',b='';try{t=localStorage.getItem('bk-theme'
    <div class="field"><span class="lbl">✍️ الكتابة</span><div class="choice" style="--cols:2">${o('bk-bold','',b,'a','عادية')}${o('bk-bold','1',b,'𝗮','غليظة')}</div></div>
    <p class="muted" style="margin:0">💡 للشاشات الضعيفة: «تباين قوي» + «كبير» + «غليظة».</p><button type="button" class="btn primary block" data-act="close">✅ واخا</button>`)}
 dispApply();
+/* ---------- easy date picker for every date field: type the date or pick it on a big calendar ---------- */
+const DPM=['يناير','فبراير','مارس','أبريل','ماي','يونيو','يوليوز','غشت','شتنبر','أكتوبر','نونبر','دجنبر'];const DPW=['الإث','الثلا','الأرب','الخم','الجم','السب','الأح'];
+const dpIso=(y,m,d)=>y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+let DP=null;
+function dpOpen(el){const dt=el.type==='datetime-local';const v=String(el.value||'');const d0=(v.slice(0,10)||today());const t0=dt?(v.slice(11,16)||'08:00'):'';
+  DP={el,dt,sel:d0,time:t0,y:+d0.slice(0,4),m:+d0.slice(5,7)-1,min:el.min?el.min.slice(0,10):'',max:el.max?el.max.slice(0,10):''};dpDraw()}
+function dpClose(){const o=document.getElementById('dpk');if(o)o.remove();DP=null}
+function dpSet(iso){if(DP.min&&iso<DP.min)return toast('⛔ قبل '+DP.min,true);if(DP.max&&iso>DP.max)return toast('⛔ من بعد '+DP.max,true);DP.sel=iso;DP.y=+iso.slice(0,4);DP.m=+iso.slice(5,7)-1;dpDraw()}
+function dpOk(){const el=DP.el;el.value=DP.dt?DP.sel+'T'+(DP.time||'00:00'):DP.sel;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));dpClose()}
+function dpDraw(){let o=document.getElementById('dpk');if(!o){o=document.createElement('div');o.id='dpk';document.body.appendChild(o);
+    o.addEventListener('click',e=>{if(e.target===o)return dpClose();const b=e.target.closest('[data-dp]');if(!b)return;const a=b.dataset.dp,v=b.dataset.v;
+      if(a==='day')dpSet(v);else if(a==='nav'){DP.m+=+v;if(DP.m<0){DP.m=11;DP.y--}if(DP.m>11){DP.m=0;DP.y++}dpDraw()}else if(a==='q')dpSet(v);else if(a==='ok')dpOk();else if(a==='x')dpClose();else if(a==='clr'){DP.el.value='';DP.el.dispatchEvent(new Event('input',{bubbles:true}));DP.el.dispatchEvent(new Event('change',{bubbles:true}));dpClose()}});
+    o.addEventListener('input',e=>{if(e.target.id==='dptype'){const q=e.target.value.replace(/[^0-9]/g,'');let d,m,y;if(q.length>=8){d=+q.slice(0,2);m=+q.slice(2,4);y=+q.slice(4,8)}else if(q.length===6){d=+q.slice(0,2);m=+q.slice(2,4);y=2000+ +q.slice(4,6)}else return;
+      const dt=new Date(y,m-1,d);if(dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d)dpSet(dpIso(y,m-1,d))}
+      if(e.target.id==='dptime'){const q=e.target.value.replace(/[^0-9]/g,'');if(q.length>=3){const h=Math.min(23,+q.slice(0,q.length-2)),mi=Math.min(59,+q.slice(-2));DP.time=String(h).padStart(2,'0')+':'+String(mi).padStart(2,'0');const z=document.getElementById('dptv');if(z)z.textContent=DP.time}}})}
+  const first=new Date(DP.y,DP.m,1),dim=new Date(DP.y,DP.m+1,0).getDate(),off=(first.getDay()+6)%7,td=today();const cells=[];for(let i=0;i<off;i++)cells.push('<span></span>');
+  for(let d=1;d<=dim;d++){const iso=dpIso(DP.y,DP.m,d);const dis=(DP.min&&iso<DP.min)||(DP.max&&iso>DP.max);const on=iso===DP.sel;
+    cells.push(`<button type="button" data-dp="day" data-v="${iso}" ${dis?'disabled':''} style="height:52px;border-radius:12px;border:${iso===td?'2px solid var(--accent)':'1px solid var(--line)'};background:${on?'var(--accent)':'var(--surface)'};color:${on?'var(--accent-ink,#fff)':dis?'var(--muted)':'var(--ink)'};font:inherit;font-size:1.15rem;font-weight:${on||iso===td?800:600};opacity:${dis?.35:1}">${d}</button>`)}
+  const q=(v,l)=>`<button type="button" data-dp="q" data-v="${v}" class="btn small" style="flex:1">${l}</button>`;const sd=new Date(DP.sel+'T12:00:00');
+  o.style.cssText='position:fixed;inset:0;bottom:var(--vkbh,0px);z-index:9400;background:rgba(20,8,12,.5);display:flex;align-items:center;justify-content:center;padding:12px';
+  o.innerHTML=`<div style="background:var(--surface);color:var(--ink);border-radius:20px;width:100%;max-width:440px;max-height:100%;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+   <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:1.25rem">📅 ${DOW[(sd.getDay()+6)%7]} ${sd.getDate()} ${DPM[sd.getMonth()]} ${sd.getFullYear()}${DP.dt?' · ⏰ <span id="dptv">'+DP.time+'</span>':''}</b><button type="button" data-dp="x" class="btn small">✕</button></div>
+   <input id="dptype" class="big-in" inputmode="numeric" autocomplete="off" placeholder="✍️ ولا كتب التاريخ: 25/12/2026" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px;text-align:center;font-size:1.15rem;direction:ltr">
+   ${DP.dt?`<input id="dptime" class="big-in" inputmode="numeric" autocomplete="off" placeholder="⏰ الساعة: 14:30" value="${DP.time}" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px;text-align:center;font-size:1.15rem;direction:ltr">`:''}
+   <div style="display:flex;gap:6px;flex-wrap:wrap">${q(addD(td,-1),'البارح')}${q(td,'اليوم')}${q(addD(td,1),'غدا')}${q(addD(td,7),'+ سيمانة')}</div>
+   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><button type="button" data-dp="nav" data-v="-1" class="btn" style="min-width:64px;font-size:1.2rem">→ اللي فات</button><b style="font-size:1.2rem">${DPM[DP.m]} ${DP.y}</b><button type="button" data-dp="nav" data-v="1" class="btn" style="min-width:64px;font-size:1.2rem">الجاي ←</button></div>
+   <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;direction:rtl">${DPW.map(w=>`<small style="text-align:center;font-weight:700;color:var(--muted)">${w}</small>`).join('')}${cells.join('')}</div>
+   <div style="display:flex;gap:8px"><button type="button" data-dp="ok" class="btn primary" style="flex:2;min-height:54px;font-size:1.15rem">✅ اختار</button>${DP.el.required?'':'<button type="button" data-dp="clr" class="btn" style="flex:1">🗑️ مسح</button>'}</div></div>`}
+document.addEventListener('click',e=>{const el=e.target.closest?.('input[type="date"],input[type="datetime-local"]');if(!el||el.disabled||el.readOnly)return;e.preventDefault();try{el.blur()}catch(_){}dpOpen(el)},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&DP)dpClose()});
 /* keep the screen on while someone is logged in (web: Screen Wake Lock) */
 let WAKE=null;async function wakeOn(){try{if(!me||WAKE||document.visibilityState!=='visible'||!navigator.wakeLock)return;WAKE=await navigator.wakeLock.request('screen');WAKE.addEventListener('release',()=>{WAKE=null})}catch(_){WAKE=null}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wakeOn()});document.addEventListener('click',()=>wakeOn(),{passive:true});setInterval(wakeOn,60000);
