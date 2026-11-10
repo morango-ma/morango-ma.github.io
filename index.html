@@ -346,6 +346,20 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 .posbar .pbb{display:flex;gap:4px;flex-wrap:wrap}.posbar .ib{position:relative;width:40px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:1.1rem;line-height:1;cursor:pointer;padding:0}
 .posbar .ib.hot{background:var(--accent-soft);border-color:var(--accent)}.posbar .ib.danger{border-color:var(--bad)}.posbar .ib .dot{position:absolute;top:4px;inset-inline-end:4px;width:8px;height:8px;border-radius:50%;background:var(--good)}
 .alert.cmp{padding:6px 10px;min-height:0}.alert.cmp .em{font-size:1.2rem}
+
+/* compact current-sale panel: products get the space */
+.posgrid{grid-template-columns:minmax(0,1fr) clamp(230px,23vw,290px)!important;gap:12px!important}
+.ticket{font-size:.9rem}.ticket .th{padding:8px 10px 2px!important}.ticket .tl{padding:0 10px!important;min-height:60px!important}.ticket .tf{padding:8px 10px!important}
+.ticket .th h2{font-size:1rem!important;margin:0}.ticket .th .link{font-size:.85rem}
+.ticket .tl .prow{padding:5px 0!important;gap:6px!important;min-height:0!important}
+.ticket .tl .prow .em,.ticket .tl .prow .lead>span:first-child{font-size:1.2rem!important;width:28px!important;height:28px!important;min-width:28px}
+.ticket .tl .prow b{font-size:.88rem!important;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ticket .tl .prow .muted{font-size:.78rem!important}
+.ticket .tl .prow input,.ticket .tl .prow .qty{width:46px!important;height:34px!important;font-size:1rem!important;padding:0 4px!important}
+.ticket .tl .prow button{min-width:30px!important;height:34px!important;padding:0 6px!important;font-size:.9rem!important}
+.ticket .tf{gap:6px!important}.ticket .tot{font-size:1.05rem!important}.ticket .tot .num{font-size:1.25rem!important}
+.ticket .paybtn{min-height:46px!important;font-size:1.05rem!important}
+.ticket .chip,.ticket .tf>.btn:not(.paybtn),.ticket .tf>button:not(.paybtn){min-height:36px!important;padding:6px 10px!important;font-size:.88rem!important}
 </style>
 
 <header class="top">
@@ -360,7 +374,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110231033"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110231601"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
