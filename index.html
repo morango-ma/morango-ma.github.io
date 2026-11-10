@@ -344,7 +344,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110003355"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261110204301"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1606,6 +1606,9 @@ function sheetDevices(){const H=HW(),sp=hwSupport();const ios=/iPhone|iPad|Macin
     ${choice('hww','📏 عرض الورقة',[{v:'58',l:'58 mm',i:'🧾'},{v:'80',l:'80 mm',i:'🧾'}],H.width,2)}
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="hwauto" ${H.auto?'checked':''} style="width:22px;height:22px"> 🖨️ اطبع الوصل بوحدو من بعد كل بيعة</label>
     <div class="btns"><button type="button" class="btn small" onclick="hwTest()">🧪 طبع تجربة</button></div></div>
+   <div class="box"><b>⌨️ الكلافيي ديال الشاشة</b><div class="muted">كيطلع بوحدو ملي تضغط على أي خانة باش تكتب (عربية / Français / أرقام). مزيان لـ POS بلا كلافيي.</div>
+    <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="vkbon" ${vkbOn()?'checked':''} onchange="try{localStorage.setItem('bk-vkb',this.checked?'1':'0')}catch(_){}" style="width:22px;height:22px"> ⌨️ طلع الكلافيي بوحدو فهاد الجهاز</label>
+    ${window.MorangoNative?.setFullscreen?`<label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" ${window.MorangoNative.isFullscreen?.()==='1'?'checked':''} onchange="window.MorangoNative.setFullscreen(this.checked?'1':'0')" style="width:22px;height:22px"> ⛶ شاشة كاملة ديما (كتخبي البار ديال Windows) · F11</label>`:''}</div>
    <div class="box"><b>💵 لاكيس ديال الفلوس (tiroir)</b><div class="muted">كتتربط بالطابعة (RJ11) وكتحل بوحدها.</div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="hwdr" ${H.drawer?'checked':''} style="width:22px;height:22px"> 💵 حل لاكيس ملي يكون الخلاص كاش</label><div class="btns"><button type="button" class="btn small" onclick="hwDrawer()">💵 حل لاكيس دابا</button></div></div>
    <div class="box"><b>🔫 قارئ الباركود (scanner)</b><div class="muted">ربطو بـ USB ولا Bluetooth كيف كلافيي، وزيد الباركود فالفيشة ديال كل منتوج (✏️ ← 🔫 الباركود). فلاكيس، ملي تسكاني المنتوج كيتزاد للسلة بوحدو.</div></div>
@@ -2764,6 +2767,38 @@ const minOfDay=ts=>{const d=new Date(ts);return d.getHours()*60+d.getMinutes()};
 const hhmm=m=>pad(Math.floor(m/60)%24)+':'+pad(Math.round(m)%60);
 async function saveImg(list,tag){const out=[];let as=null;try{as=window.claude?.use?await window.claude.use('assets'):null}catch(_){}
   for(const d of list||[]){if(as){try{const r=await as.upload(dataBlob(d),{type:'image/jpeg'});out.push('a:'+r.id);continue}catch(_){}}out.push(...await saveMedia([d],tag))}return out}
+/* ---------- on-screen keyboard (touch POS without a physical keyboard): opens by itself on any text field ---------- */
+const VKL={fr:[['1','2','3','4','5','6','7','8','9','0'],['a','z','e','r','t','y','u','i','o','p'],['q','s','d','f','g','h','j','k','l','m'],['⇧','w','x','c','v','b','n',',','.','⌫'],['#','🌐','␣','@','↵']],
+  ar:[['1','2','3','4','5','6','7','8','9','0'],['ض','ص','ث','ق','ف','غ','ع','ه','خ','ح','ج'],['ش','س','ي','ب','ل','ا','ت','ن','م','ك','ط'],['ئ','ء','ؤ','ر','لا','ى','ة','و','ز','ظ','د','⌫'],['#','🌐','␣','.','↵']],
+  sym:[['1','2','3','4','5','6','7','8','9','0'],['-','/',':',';','(',')','%','€','&','"'],['+','=','*','_','!','?','\'','#','°','×'],['abc','،','؟','.','@','⌫'],['🌐','␣','↵']],
+  num:[['7','8','9'],['4','5','6'],['1','2','3'],['.','0','⌫'],['✕','↵']]};
+const vkbOn=()=>{try{const v=localStorage.getItem('bk-vkb');if(v==='1')return true;if(v==='0')return false}catch(_){}return !!(window.MorangoNative?.platform==='win32')};
+let VK={el:null,lay:null,shift:false,lang:(()=>{try{return localStorage.getItem('bk-vkl')||'ar'}catch(_){return 'ar'}})()};
+const vkbField=el=>{if(!el||el.disabled||el.readOnly)return false;if(el.tagName==='TEXTAREA')return true;if(el.tagName!=='INPUT')return false;return ['text','search','tel','number','email','password','url',''].includes((el.getAttribute('type')||'text').toLowerCase())};
+const vkbNumeric=el=>{const im=(el.dataset.vkim||el.getAttribute('inputmode')||'').toLowerCase();const t=(el.getAttribute('type')||'').toLowerCase();return im==='numeric'||im==='decimal'||t==='number'||t==='tel'};
+function vkbDraw(){let d=document.getElementById('vkb');if(!VK.el){if(d)d.remove();document.body.style.paddingBottom='';return}
+  if(!d){d=document.createElement('div');d.id='vkb';document.body.appendChild(d);d.addEventListener('pointerdown',e=>{e.preventDefault();const b=e.target.closest('[data-k]');if(b)vkbKey(b.dataset.k)})}
+  const L=VKL[VK.lay];const num=VK.lay==='num';
+  d.style.cssText=`position:fixed;left:0;right:0;bottom:0;z-index:9500;background:var(--surface,#fff);border-top:2px solid var(--line,#ddd);box-shadow:0 -6px 24px rgba(0,0,0,.18);padding:8px;display:flex;flex-direction:column;gap:6px;direction:ltr;user-select:none;touch-action:manipulation;${num?'max-width:420px;margin:0 auto':''}`;
+  d.innerHTML=L.map(r=>`<div style="display:flex;gap:6px">${r.map(k=>{const w=k==='␣'?6:['↵','⌫','⇧','#','abc','🌐','✕'].includes(k)?1.5:1;const lab=k==='␣'?(VK.lay==='ar'?'مسافة':'espace'):k==='#'?'?123':k==='🌐'?(VK.lang==='ar'?'FR':'ع'):k==='↵'?(VK.el.tagName==='TEXTAREA'?'↵':'✓'):k==='⇧'?(VK.shift?'⬆':'⇧'):(VK.shift&&VK.lay==='fr'?k.toUpperCase():k);
+    return `<button type="button" data-k="${esc(k)}" style="flex:${w};min-width:0;height:${num?60:52}px;border-radius:10px;border:1px solid var(--line,#ddd);background:${['↵'].includes(k)?'var(--accent,#e02843)':['⌫','⇧','#','abc','🌐','✕'].includes(k)?'var(--bg,#f4f1ee)':'var(--card,#fff)'};color:${k==='↵'?'#fff':'inherit'};font:inherit;font-size:${num?1.5:1.25}rem;font-weight:700">${esc(lab)}</button>`}).join('')}</div>`).join('');
+  requestAnimationFrame(()=>{document.body.style.paddingBottom=(d.offsetHeight+8)+'px';try{VK.el&&VK.el.scrollIntoView({block:'nearest'});const r=VK.el.getBoundingClientRect();if(r.bottom>innerHeight-d.offsetHeight)window.scrollBy(0,r.bottom-(innerHeight-d.offsetHeight)+20)}catch(_){}})}
+function vkbIns(t){const el=VK.el;if(!el)return;try{if(typeof el.selectionStart==='number'&&el.type!=='number'){const a=el.selectionStart,b=el.selectionEnd;el.setRangeText(t,a,b,'end')}else el.value=(el.value||'')+t}catch(_){el.value=(el.value||'')+t}
+  const ml=+el.getAttribute('maxlength');if(ml>0&&el.value.length>ml)el.value=el.value.slice(0,ml);el.dispatchEvent(new Event('input',{bubbles:true}))}
+function vkbKey(k){const el=VK.el;if(!el)return;
+  if(k==='⌫'){try{if(typeof el.selectionStart==='number'&&el.type!=='number'){let a=el.selectionStart,b=el.selectionEnd;if(a===b&&a>0)a--;el.setRangeText('',a,b,'end')}else el.value=String(el.value||'').slice(0,-1)}catch(_){el.value=String(el.value||'').slice(0,-1)}el.dispatchEvent(new Event('input',{bubbles:true}));return}
+  if(k==='␣')return vkbIns(' ');
+  if(k==='⇧'){VK.shift=!VK.shift;return vkbDraw()}
+  if(k==='#'){VK.lay='sym';return vkbDraw()}
+  if(k==='abc'){VK.lay=VK.lang;return vkbDraw()}
+  if(k==='🌐'){VK.lang=VK.lang==='ar'?'fr':'ar';try{localStorage.setItem('bk-vkl',VK.lang)}catch(_){}VK.lay=VK.lang;return vkbDraw()}
+  if(k==='✕'){el.blur();return}
+  if(k==='↵'){if(el.tagName==='TEXTAREA')return vkbIns('\n');el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));el.blur();return}
+  vkbIns(VK.shift&&VK.lay==='fr'?k.toUpperCase():k);if(VK.shift){VK.shift=false;vkbDraw()}}
+document.addEventListener('focusin',e=>{const el=e.target;if(!vkbOn()||!vkbField(el))return;if(el.getAttribute('inputmode')!=='none'){el.dataset.vkim=el.getAttribute('inputmode')||'';el.setAttribute('inputmode','none')}VK.el=el;VK.shift=false;VK.lay=vkbNumeric(el)?'num':VK.lang;vkbDraw()});
+document.addEventListener('focusout',e=>{setTimeout(()=>{const a=document.activeElement;if(!vkbField(a)||!vkbOn()){VK.el=null;vkbDraw()}},60)});
+/* fullscreen (desktop app: real fullscreen that hides the taskbar, remembered) */
+function nativeFs(){const N=window.MorangoNative;if(!N?.setFullscreen)return false;const on=N.isFullscreen?.()!=='1';N.setFullscreen(on?'1':'0');toast(on?'⛶ شاشة كاملة · F11 باش تخرج':'🗗 خرجتي من الشاشة الكاملة');return true}
 /* keep the screen on while someone is logged in (web: Screen Wake Lock) */
 let WAKE=null;async function wakeOn(){try{if(!me||WAKE||document.visibilityState!=='visible'||!navigator.wakeLock)return;WAKE=await navigator.wakeLock.request('screen');WAKE.addEventListener('release',()=>{WAKE=null})}catch(_){WAKE=null}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wakeOn()});document.addEventListener('click',()=>wakeOn(),{passive:true});setInterval(wakeOn,60000);
@@ -3677,7 +3712,7 @@ const ACT={
   cdel:el=>{const c=cartOf(S.pos);delete c[el.dataset.id];render();if(!$('#sheet').hidden)Object.keys(c).length?sheetCart():closeSheet()},
   given:el=>{const i=$('#cgiven');if(i){i.value=fmt(el.dataset.v);i.dispatchEvent(new Event('input',{bubbles:true}))}},
   setpcat:el=>{S.pcat=el.dataset.id;render()},
-  fs:()=>{const el=document.documentElement;const on=!document.body.classList.contains('fsmode');const set=v=>{document.body.classList.toggle('fsmode',v);try{localStorage.setItem('bk-fs',v?'1':'')}catch(_){}};set(on);
+  fs:()=>{if(nativeFs())return;const el=document.documentElement;const on=!document.body.classList.contains('fsmode');const set=v=>{document.body.classList.toggle('fsmode',v);try{localStorage.setItem('bk-fs',v?'1':'')}catch(_){}};set(on);
     try{if(on){const rq=el.requestFullscreen||el.webkitRequestFullscreen;const r=rq&&rq.call(el);r&&r.catch&&r.catch(()=>{})}else{const fe=document.fullscreenElement||document.webkitFullscreenElement;if(fe){const ex=document.exitFullscreen||document.webkitExitFullscreen;ex&&ex.call(document)}}}catch(_){}
     if(on)toast('⛶ شاشة كاملة · ✕ فالركن باش تخرج')},
   cclear:()=>{S.cart[S.pos]={};S.packEdit[S.pos]={};if(S.bonPay)delete S.bonPay[S.pos];closeSheet();render()},
