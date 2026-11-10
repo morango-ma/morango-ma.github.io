@@ -1,0 +1,26 @@
+name: Build Mac app
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['desktop/**', '.github/workflows/mac.yml']
+permissions:
+  contents: write
+jobs:
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Build
+        working-directory: desktop
+        env: { CSC_IDENTITY_AUTO_DISCOVERY: 'false' }
+        run: |
+          npm install --no-audit --no-fund
+          npx electron-builder --mac dmg --universal --publish never
+      - name: Release
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          gh release delete mac-latest -y --cleanup-tag || true
+          gh release create mac-latest desktop/dist/Morango.dmg --title "Morango pour Mac" --notes "Build ${GITHUB_RUN_NUMBER}" --prerelease
