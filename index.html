@@ -385,7 +385,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111125415"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111125543"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -875,7 +875,7 @@ function vLogin(){
     return `<div class="login">${avatar(u,72)}<div><h1>${esc(u.name)}</h1><p class="muted">${ROLES[u.role]?.[1]||''} ${esc(roleLabel(u))}</p></div><p class="disp" style="font-size:1.1rem">🔑 دخل الكود ديالك</p>
     ${bioHas(u.id)?`<button class="btn primary block" data-act="biologin" style="min-height:58px;font-size:1.15rem">👆 دخل ب${bioName()}</button><p class="muted">ولا دخل الكود:</p>`:''}${pinPad('loginpin',{onDone:v=>tryLogin(u,v)})}<p class="err" id="loginerr" ${locked?'':'hidden'}>${locked?'بزاف ديال المحاولات. تسنى شوية وعاود.':''}</p>${own&&u.id===own?`<p class="muted" style="font-size:.85rem">🔒 هاد الجهاز خاص بـ ${esc(u.name)}</p>${usersArr().some(x=>x.role==='admin'&&x.active!==false&&x.id!==own)?'<button class="link" data-act="admlogin">👑 دخول المدير</button>':''}`:'<button class="link" data-act="loginback">ماشي أنا؟ رجع</button>'}</div>`}
   const us=usersArr();
-  return `<div class="login">${MLOCK(.8)}<div><h1>${greet()}!</h1><p class="muted">شكون نتا؟ ضغط على السمية ديالك.</p>${window.morangoDev?'<p class="muted" style="font-size:.85rem">📱 أول واحد يدخل فهاد الجهاز، الجهاز غادي يتربط بالحساب ديالو، وما غادي يبان فيه غير هو.</p>':''}</div>
+  return `<div class="login">${MLOCK(.8)}<div><h1>${greet()}!</h1><p class="muted">شكون نتا؟ ضغط على السمية ديالك.</p>${window.morangoDev?'':''}</div>
   <div class="people">${us.map(u=>`<button class="person" data-act="pickuser" data-id="${u.id}">${avatar(u)}<b>${esc(u.name)}</b><span>${ROLES[u.role]?.[1]||''} ${esc(ROLES[u.role]?.[0]||'')}</span></button>`).join('')}</div>
   <p class="muted">ما لقيتيش السمية ديالك؟ طلب من المسير يزيدك.</p></div>`;
 }
