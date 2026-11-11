@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Morango check</title>
+<style>body{font:20px sans-serif;padding:20px;background:#fff;color:#222}b{color:#e02843}li{margin:8px 0}</style></head><body>
+<h2>Morango · test</h2><ul id="o"></ul>
+<script>
+var o=document.getElementById('o');function add(t,ok){var li=document.createElement('li');li.innerHTML=(ok?'✅ ':'❌ ')+t;o.appendChild(li)}
+var ua=navigator.userAgent;var m=ua.match(/Chrome\/(\d+)/);var li=document.createElement('li');li.innerHTML='<b>'+ua+'</b>';o.appendChild(li);
+add('Chrome '+(m?m[1]:'?')+' (khass 80 wla kter)',m&&+m[1]>=80);
+function t(code){try{new Function(code);return true}catch(e){return false}}
+add('?. / ??',t('var a=null;return a?.b??1'));add('async',t('async function f(){await 1}'));
+add('IndexedDB',!!window.indexedDB);add('localStorage',(function(){try{localStorage.setItem('x','1');return true}catch(e){return false}})());
+</script></body></html>
