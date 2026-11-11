@@ -19,11 +19,18 @@ function create() {
   win.webContents.on('before-input-event', (ev, input) => {
     if (input.type === 'keyDown' && input.key === 'F11') { ev.preventDefault(); const on = !win.isFullScreen(); win.setFullScreen(on); cfgSet('fullscreen', on); }
   });
+  win.on('close', () => { try { session.defaultSession.flushStorageData(); } catch (_) {} });
   win.loadURL(HOME);
   win.webContents.setWindowOpenHandler(({ url }) => { if (url.startsWith(HOME)) return { action: 'allow' }; shell.openExternal(url); return { action: 'deny' }; });
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith(HOME)) { e.preventDefault(); shell.openExternal(url); } });
   win.webContents.on('did-fail-load', () => setTimeout(() => { try { win.loadURL(HOME); } catch (_) {} }, 5000));
 }
+
+// only one Morango at a time: a second copy would find the saved data locked and start empty (asking for the device code again)
+if (!app.requestSingleInstanceLock()) { app.quit(); }
+app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); } });
+// write the saved data (sign-in) to disk before closing
+app.on('before-quit', () => { try { session.defaultSession.flushStorageData(); } catch (_) {} });
 
 app.whenReady().then(async () => {
   try { await session.defaultSession.clearCache(); } catch (_) {} // always start on the latest version of the site
