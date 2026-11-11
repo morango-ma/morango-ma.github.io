@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111212628" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111213507" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1268,6 +1268,12 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const { data, error } = await sb.rpc("next_seq", { p_key: k });
     if (error) throw error;
     return +data;
+  };
+  window.morangoRpc = async (n, a) => {
+    await ensure();
+    const { data, error } = await sb.rpc(n, a);
+    if (error) throw error;
+    return data;
   };
   window.morangoPin = { check: async (u, p) => {
     await ensure();
@@ -3200,6 +3206,58 @@ function alertsFor() {
   }
   return A;
 }
+const VAPID = "BDZ8PzMlmBPEwTUJe8pyOHhU8hvqwn1iBDiTUdwgzIZDAu-L2xDjBNnkByRjHfGIE-oxugx-skXVhZznE6CaJs8";
+const pushOk = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window && !window.MorangoNative;
+const b64u8 = (s) => {
+  const p = "=".repeat((4 - s.length % 4) % 4);
+  const b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from([...b].map((c) => c.charCodeAt(0)));
+};
+async function pushSub(ask) {
+  if (!pushOk() || !me) return false;
+  try {
+    if (Notification.permission !== "granted") {
+      if (!ask) return false;
+      const r3 = await Notification.requestPermission();
+      if (r3 !== "granted") {
+        toast("🔕 التيليفون ما عطاش الإذن ديال الإشعارات", true);
+        return false;
+      }
+    }
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u8(VAPID) });
+    const r = await window.morangoRpc("push_sub_save", { p_sub: sub.toJSON(), p_ua: navigator.userAgent.slice(0, 200) });
+    if (r && r.error) throw new Error(r.error);
+    try {
+      localStorage.setItem("bk-push", me.id);
+    } catch (_) {
+    }
+    if (ask) {
+      toast("🔔 الإشعارات خدامة فهاد التيليفون");
+      render();
+    }
+    return true;
+  } catch (e) {
+    if (ask) toast("ما قدرناش نفعلو الإشعارات: " + (e.message || e), true);
+    return false;
+  }
+}
+const pushOn = () => {
+  try {
+    return pushOk() && Notification.permission === "granted" && localStorage.getItem("bk-push") === (me == null ? void 0 : me.id);
+  } catch (_) {
+    return false;
+  }
+};
+const pushCard = () => !pushOk() || pushOn() || Notification.permission === "denied" ? "" : `<button type="button" class="alert bad" style="border:0;width:100%;text-align:start" data-act="pushon"><div class="lead"><span class="em">🔔</span><div><b>فعل الإشعارات فهاد التيليفون</b><div class="muted">باش يوصلوك التنبيهات حتى والتطبيق مسدود.${/iPhone|iPad/.test(navigator.userAgent) ? " فالآيفون: خاص التطبيق يكون مزاد فالشاشة الرئيسية (Partager → Sur l'écran d'accueil)." : ""}</div></div></div><span class="tag bad">فعل</span></button>`;
+let PUSHME = null;
+setInterval(() => {
+  if (me && me.id !== PUSHME) {
+    PUSHME = me.id;
+    pushSub(false);
+  }
+}, 4e3);
 function vHome() {
   var _a;
   if (me.role === "worker") return vWorkerHome();
@@ -3216,7 +3274,7 @@ function vHome() {
     return `<div class="alert ${late.length ? "bad" : done === WS.length ? "acc" : ""}" data-act="go" data-v="inv"><div class="lead"><span class="em">📋</span><div><b>الجرد الأسبوعي: ${done}/${WS.length} ورشات</b><div class="muted">${late.length ? "⛔ متأخرين: " + late.map((w) => esc(w.name)).join("، ") : "آخر أجل " + DAYS_AR[INVC().day] + " " + invDueDate()}</div></div></div><span class="tag">شوف</span></div>`;
   })() : "";
   const AL = A.length ? `<section class="card" style="border:2px solid var(--bad,#e02843)"><div class="head"><h2>🔔 خاصو انتباه</h2><span class="tag bad">${A.length}</span></div>${A.join("")}</section>` : "";
-  return `<div class="hello"><h1>${greet()}، ${esc(me.name)} 👋</h1><p>${((_a = ROLES[me.role]) == null ? void 0 : _a[1]) || ""} ${esc(roleLabel(me))}</p></div>${AL}${locSwitch()}${invTop}${isAdmin() ? "" : dash}${isAdmin() ? adminDash() : ""}${rosterTodayCard()}${launcher()}${isMgr() || me.role === "seller" ? bdayCard(7) : ""}${invMgr}
+  return `<div class="hello"><h1>${greet()}، ${esc(me.name)} 👋</h1><p>${((_a = ROLES[me.role]) == null ? void 0 : _a[1]) || ""} ${esc(roleLabel(me))}</p></div>${pushCard()}${AL}${locSwitch()}${invTop}${isAdmin() ? "" : dash}${isAdmin() ? adminDash() : ""}${rosterTodayCard()}${launcher()}${isMgr() || me.role === "seller" ? bdayCard(7) : ""}${invMgr}
   ${A.length ? "" : `<section class="card">${emptyB("✨", "كلشي مزيان، ما كاين حتى تنبيه.")}</section>`}`;
 }
 function vProd() {
@@ -15240,6 +15298,7 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  pushon: () => pushSub(true),
   ochef: (el) => sheetOrdChef(el.dataset.id, el.dataset.w, el.dataset.d),
   oprice: (el) => sheetOrdPrice(el.dataset.id),
   opay: (el) => sheetOrdPay(el.dataset.id),
