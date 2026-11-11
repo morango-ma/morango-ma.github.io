@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111131625"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111135756"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -2913,6 +2913,8 @@ function vkbKey(k){const el=VK.el;if(!el)return;
 document.addEventListener('focusin',e=>{const el=e.target;if(!vkbOn()||!vkbField(el))return;if(el.getAttribute('inputmode')!=='none'){el.dataset.vkim=el.getAttribute('inputmode')||'';el.setAttribute('inputmode','none')}VK.el=el;VK.shift=false;VK.lay=vkbNumeric(el)?'num':VK.lang;vkbDraw()});
 document.addEventListener('pointerup',e=>{const el=e.target.closest?.('input,textarea');if(el&&vkbOn()&&vkbField(el)&&VK.el!==el){if(el.getAttribute('inputmode')!=='none'){el.dataset.vkim=el.getAttribute('inputmode')||'';el.setAttribute('inputmode','none')}VK.el=el;VK.shift=false;VK.lay=vkbNumeric(el)?'num':VK.lang;vkbDraw()}},true);
 document.addEventListener('focusout',e=>{setTimeout(()=>{const a=document.activeElement;if(!vkbField(a)||!vkbOn()){VK.el=null;vkbDraw()}},60)});
+/* the field went away (page changed, sign-in done): close the keyboard */
+setInterval(()=>{if(VK.el&&(!VK.el.isConnected||VK.el.offsetParent===null&&getComputedStyle(VK.el).position!=='fixed')){VK.el=null;vkbDraw()}},400);
 /* fullscreen (desktop app: real fullscreen that hides the taskbar, remembered) */
 function nativeFs(){const N=window.MorangoNative;if(!N?.setFullscreen)return false;const on=N.isFullscreen?.()!=='1';N.setFullscreen(on?'1':'0');toast(on?'⛶ شاشة كاملة':'🗗 خرجتي من الشاشة الكاملة');setTimeout(render,200);return true}
 /* display settings (per device) */
