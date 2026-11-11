@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111210319" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111212628" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3215,8 +3215,9 @@ function vHome() {
     const late = WS.filter((w) => invState(w.id) === "late"), done = WS.filter((w) => invState(w.id) === "done").length;
     return `<div class="alert ${late.length ? "bad" : done === WS.length ? "acc" : ""}" data-act="go" data-v="inv"><div class="lead"><span class="em">📋</span><div><b>الجرد الأسبوعي: ${done}/${WS.length} ورشات</b><div class="muted">${late.length ? "⛔ متأخرين: " + late.map((w) => esc(w.name)).join("، ") : "آخر أجل " + DAYS_AR[INVC().day] + " " + invDueDate()}</div></div></div><span class="tag">شوف</span></div>`;
   })() : "";
-  return `<div class="hello"><h1>${greet()}، ${esc(me.name)} 👋</h1><p>${((_a = ROLES[me.role]) == null ? void 0 : _a[1]) || ""} ${esc(roleLabel(me))}</p></div>${locSwitch()}${invTop}${isAdmin() ? "" : dash}${isAdmin() ? adminDash() : ""}${rosterTodayCard()}${launcher()}${isMgr() || me.role === "seller" ? bdayCard(7) : ""}${invMgr}
-  ${A.length ? `<section class="card"><div class="head"><h2>🔔 خاصو انتباه</h2><span class="tag acc">${A.length}</span></div>${A.join("")}</section>` : `<section class="card">${emptyB("✨", "كلشي مزيان، ما كاين حتى تنبيه.")}</section>`}`;
+  const AL = A.length ? `<section class="card" style="border:2px solid var(--bad,#e02843)"><div class="head"><h2>🔔 خاصو انتباه</h2><span class="tag bad">${A.length}</span></div>${A.join("")}</section>` : "";
+  return `<div class="hello"><h1>${greet()}، ${esc(me.name)} 👋</h1><p>${((_a = ROLES[me.role]) == null ? void 0 : _a[1]) || ""} ${esc(roleLabel(me))}</p></div>${AL}${locSwitch()}${invTop}${isAdmin() ? "" : dash}${isAdmin() ? adminDash() : ""}${rosterTodayCard()}${launcher()}${isMgr() || me.role === "seller" ? bdayCard(7) : ""}${invMgr}
+  ${A.length ? "" : `<section class="card">${emptyB("✨", "كلشي مزيان، ما كاين حتى تنبيه.")}</section>`}`;
 }
 function vProd() {
   const ws = S.ws, m = stockMap(ws);
@@ -15482,6 +15483,49 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
   }
 });
+const ALSEEN = /* @__PURE__ */ new Set();
+let ALINIT = false;
+setInterval(() => {
+  if (!me || me.role === "kiosk" || me.role === "worker") return;
+  let L = [];
+  try {
+    L = alertsFor();
+  } catch (_) {
+    return;
+  }
+  const k0 = "bk-al-" + me.id;
+  if (!ALINIT) {
+    ALINIT = true;
+    try {
+      JSON.parse(localStorage.getItem(k0) || "[]").forEach((k) => ALSEEN.add(k));
+    } catch (_) {
+    }
+  }
+  const tmp = document.createElement("div");
+  let ch = false;
+  L.forEach((h) => {
+    var _a, _b, _c;
+    tmp.innerHTML = h;
+    const el = tmp.firstElementChild;
+    if (!el) return;
+    const t = (((_a = el.querySelector("b")) == null ? void 0 : _a.textContent) || "").trim(), m = (((_b = el.querySelector(".muted")) == null ? void 0 : _b.textContent) || "").trim();
+    const key = (el.dataset.act || "") + "|" + (el.dataset.id || "") + "|" + t;
+    if (ALSEEN.has(key)) return;
+    ALSEEN.add(key);
+    ch = true;
+    const ic = (((_c = el.querySelector(".em")) == null ? void 0 : _c.textContent) || "🔔").trim();
+    const ds = __spreadValues({}, el.dataset);
+    notify(ic, t, m, "al:" + key, ds.act && ACT[ds.act] ? [() => {
+      const f = document.createElement("button");
+      Object.assign(f.dataset, ds);
+      ACT[ds.act](f);
+    }, "👀 شوف"] : null);
+  });
+  if (ch) try {
+    localStorage.setItem(k0, JSON.stringify([...ALSEEN].slice(-300)));
+  } catch (_) {
+  }
+}, 6e3);
 let VITLAST = "", TEMPLAST = "", VERIFLAST = "";
 setInterval(() => {
   if (!me || me.role === "kiosk") return;
