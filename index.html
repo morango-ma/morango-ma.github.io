@@ -385,7 +385,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111125543"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111125759"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -686,6 +686,8 @@ function setMe(){setTimeout(()=>{if(me&&window.morangoDev&&window.__seenFor!==me
   if(me&&me.loc){if(me.loc[0]==='w')S.ws=me.loc;if(me.loc[0]==='p')S.pos=me.loc}
 }
 async function boot(){
+  /* desktop POS: every time the app is opened, start on the login page (a reload while open keeps the session) */
+  try{if(window.MorangoNative&&window.MorangoNative.desktop&&!sessionStorage.getItem('bk-started')){localStorage.removeItem('bk-uid');sessionStorage.setItem('bk-started','1')}}catch(_){}
   try{db=window.claude?.use?await window.claude.use('db'):null}catch(e){db=null}
   if(!db){$('#main').innerHTML='<div class="card"><h2>ما قدرناش نوصلو للمعطيات</h2><p class="muted">حل هاد الصفحة من داخل تطبيق Claude ولا من claude.ai وأنت مسجل الدخول.</p></div>';return}
   const err=e=>toast('مشكل فالاتصال ('+(e?.code||'')+')',true);
