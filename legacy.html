@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111153426" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111191553" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -10713,7 +10713,7 @@ const VKL = {
   fr: [["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"], ["a", "z", "e", "r", "t", "y", "u", "i", "o", "p"], ["q", "s", "d", "f", "g", "h", "j", "k", "l", "m"], ["⇧", "w", "x", "c", "v", "b", "n", ",", ".", "⌫"], ["#", "🌐", "␣", "@", "↵"]],
   ar: [["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"], ["ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج"], ["ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط"], ["ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "د", "⌫"], ["#", "🌐", "␣", ".", "↵"]],
   sym: [["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"], ["-", "/", ":", ";", "(", ")", "%", "€", "&", '"'], ["+", "=", "*", "_", "!", "?", "'", "#", "°", "×"], ["abc", "،", "؟", ".", "@", "⌫"], ["🌐", "␣", "↵"]],
-  num: [["7", "8", "9"], ["4", "5", "6"], ["1", "2", "3"], [".", "0", "⌫"], ["✕", "↵"]]
+  num: [["7", "8", "9"], ["4", "5", "6"], ["1", "2", "3"], ["-", ".", "0", "⌫"], ["✕", "↵"]]
 };
 const vkbOn = () => {
   var _a;
@@ -11527,7 +11527,7 @@ function sheetTemp(p0) {
   openSheet(
     "🌡️ الحرارة · " + LOC[p],
     `<p class="muted" style="margin:0">قري الحرارة اللي كاينة فالشاشة ديال كل فيترينة، كتبيها وصوري الشاشة.</p>
-   ${L.map((fr) => `<div class="box"><h3>❄️ ${esc(fr.name)} <span class="muted" style="font-size:.8rem">(خاصها ${tRange(fr)})</span></h3>${fld("tv_" + fr.id, "🌡️ الحرارة (°C)", `<input id="tv_${fr.id}" name="tv_${fr.id}" class="big-in" type="text" inputmode="decimal" placeholder="مثلاً 3.5" autocomplete="off" data-tfr="${fr.id}">`)}<div id="tn_${fr.id}" hidden>${fld("tnote_" + fr.id, "⚠️ الحرارة خارجة على المعدل · شنو درتي؟ (ضروري)", `<input id="tnote_${fr.id}" name="tnote_${fr.id}" class="big-in" placeholder="مثلاً: سديت الباب، عيطت للمسير">`)}</div>${photoField("tp_" + fr.id, "📷 صورة الشاشة ديال الحرارة (إجبارية)")}</div>`).join("")}
+   ${L.map((fr) => `<div class="box"><h3>❄️ ${esc(fr.name)} <span class="muted" style="font-size:.8rem">(خاصها ${tRange(fr)})</span></h3>${fld("tv_" + fr.id, "🌡️ الحرارة (°C)", `<div style="display:flex;gap:8px;align-items:stretch"><button type="button" class="btn" style="min-width:64px;font-size:1.6rem;font-weight:800" title="ناقص (−)" onclick="const i=document.getElementById('tv_${fr.id}');let v=String(i.value||'').trim();i.value=v.startsWith('-')?v.slice(1):'-'+v;i.dispatchEvent(new Event('input',{bubbles:true}));i.focus()">±</button><input id="tv_${fr.id}" name="tv_${fr.id}" class="big-in" type="text" inputmode="decimal" placeholder="${fr.max < 0 ? "مثلاً -20" : "مثلاً 3.5"}" style="flex:1" autocomplete="off" data-tfr="${fr.id}"></div>`)}<div id="tn_${fr.id}" hidden>${fld("tnote_" + fr.id, "⚠️ الحرارة خارجة على المعدل · شنو درتي؟ (ضروري)", `<input id="tnote_${fr.id}" name="tnote_${fr.id}" class="big-in" placeholder="مثلاً: سديت الباب، عيطت للمسير">`)}</div>${photoField("tp_" + fr.id, "📷 صورة الشاشة ديال الحرارة (إجبارية)")}</div>`).join("")}
    ${errP}<button class="btn primary block" type="submit">✅ سجل الحرارة</button>`,
     async (f) => {
       var _a2, _b, _c;
