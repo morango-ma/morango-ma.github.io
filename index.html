@@ -369,6 +369,8 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 .posgrid .prod b{font-size:.72rem!important;line-height:1.2!important;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .posgrid .prod .p{font-size:.8rem!important}.posgrid .prod .q{font-size:.6rem!important}
 .posgrid .prod .badge{top:2px!important;inset-inline-end:2px!important;min-width:18px!important;height:18px!important;font-size:.68rem!important}
+
+#sb-login>*{margin:auto}
 </style>
 
 <header class="top">
@@ -383,7 +385,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111124842"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111125415"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -411,7 +413,7 @@ function devInfo(){const ua=navigator.userAgent;const touch=navigator.maxTouchPo
   const scr=Math.round(screen.width)+'×'+Math.round(screen.height);const pwa=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   return {type,os,model,browser:br,screen:scr,lang:navigator.language,app:pwa?'مثبتة':'متصفح',label:[type,model].filter(Boolean).join(' ')}}
 function loginUI(err){return new Promise(res=>{let d=document.getElementById('sb-login');if(!d){d=document.createElement('div');d.id='sb-login';document.body.appendChild(d)}
-  d.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg,#fff6f7);display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif';
+  d.style.cssText='position:fixed;inset:0;bottom:var(--vkbh,0px);overflow:auto;z-index:9999;background:var(--bg,#fff6f7);display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif';
   const inp='height:52px;border-radius:14px;border:2px solid #f2d8de;padding:0 14px;font-size:1.1rem;text-align:center';
   d.innerHTML=`<form style="max-width:360px;width:100%;display:flex;flex-direction:column;gap:14px;text-align:center"><div style="font-size:3.4rem">🍓</div><div style="font-family:'Source Serif 4',Georgia,serif;font-weight:800;font-size:2rem;letter-spacing:.06em;direction:ltr">MORANGO</div><div style="color:#8c6670">جهاز جديد: طلب الكود من المسير<br><small>(☰ المزيد ← 📱 الأجهزة)</small></div><input name="pw" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="🔑 الكود (6 أرقام)" style="${inp};direction:ltr;letter-spacing:.3em;font-weight:800">${err?`<div style="color:#b8252f">${err}</div>`:''}<button style="height:52px;border-radius:14px;border:0;background:#e02843;color:#fff;font-weight:800;font-size:1.1rem">دخول</button><button type="button" id="sb-adm" style="background:none;border:0;color:#8c6670;text-decoration:underline;font-size:1rem;padding:8px">👑 المدير؟ دخل بالكود السري ديالك</button></form>`;
   const f=d.querySelector('form');f.pw.focus();
