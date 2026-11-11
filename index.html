@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111130621"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111130806"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -414,8 +414,12 @@ function devInfo(){const ua=navigator.userAgent;const touch=navigator.maxTouchPo
   const scr=Math.round(screen.width)+'×'+Math.round(screen.height);const pwa=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   return {type,os,model,browser:br,screen:scr,lang:navigator.language,app:pwa?'مثبتة':'متصفح',label:[type,model].filter(Boolean).join(' ')}}
 /* the device's own account is kept on the device, so if its session is ever lost it signs back in alone (a removed device fails and gets the code page) */
-function devCredSave(e,p){try{localStorage.setItem('morango-dev',JSON.stringify({e,p}))}catch(_){}}
-async function devCredLogin(){try{const c=JSON.parse(localStorage.getItem('morango-dev')||'null');if(!c||!c.e||!c.p)return false;const r=await sb.auth.signInWithPassword({email:c.e,password:c.p});if(r.error){if(/invalid/i.test(r.error.message||''))localStorage.removeItem('morango-dev');return false}return true}catch(_){return false}}
+const DCI=()=>new Promise(r=>{try{const q=indexedDB.open('morango-dev',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(_){r(null)}});
+async function dciPut(v){const d=await DCI();if(!d)return;await new Promise(r=>{try{const t=d.transaction('k','readwrite');v?t.objectStore('k').put(v,'c'):t.objectStore('k').delete('c');t.oncomplete=r;t.onerror=r}catch(_){r()}})}
+async function dciGet(){const d=await DCI();if(!d)return null;return new Promise(r=>{try{const q=d.transaction('k','readonly').objectStore('k').get('c');q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)}catch(_){r(null)}})}
+function devCredSave(e,p){try{localStorage.setItem('morango-dev',JSON.stringify({e,p}))}catch(_){}dciPut({e,p})}
+async function devCredLogin(){try{let c=null;try{c=JSON.parse(localStorage.getItem('morango-dev')||'null')}catch(_){}if(!c||!c.e)c=await dciGet();if(!c||!c.e||!c.p)return false;
+  const r=await sb.auth.signInWithPassword({email:c.e,password:c.p});if(r.error){if(/invalid/i.test(r.error.message||'')){try{localStorage.removeItem('morango-dev')}catch(_){}dciPut(null)}return false}devCredSave(c.e,c.p);return true}catch(_){return false}}
 function loginUI(err){return new Promise(res=>{let d=document.getElementById('sb-login');if(!d){d=document.createElement('div');d.id='sb-login';document.body.appendChild(d)}
   d.style.cssText='position:fixed;inset:0;bottom:var(--vkbh,0px);overflow:auto;z-index:9999;background:var(--bg,#fff6f7);display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif';
   const inp='height:52px;border-radius:14px;border:2px solid #f2d8de;padding:0 14px;font-size:1.1rem;text-align:center';
