@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111191617" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111210319" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1643,7 +1643,19 @@ const greet = () => {
   const h = (/* @__PURE__ */ new Date()).getHours();
   return h < 12 ? "صباح الخير" : h < 18 ? "مساء الخير" : "مساء النور";
 };
-const S = { items: {}, stock: {}, ops: [], pend: [], shifts: [], orders: [], users: {}, cfg: {}, chg: [], chm: null, rep: { per: "month", data: null, loading: false, ws: null }, loy: null, clients: [], cust: {}, usersLoaded: false, ready: false, view: "home", ws: "w1", pos: "p1", cat: "raw", pcat: "all", hist: [], preqs: [], prf: "open", invs: [], invcfg: null, workers: [], att: {}, wws: null, tickets: [], tkf: "open", fb: [], fbf: "new", kf: { step: "idle" }, posreqs: [], prqf: "open", cands: [], cdf: "job", packinvs: [], ppos: null, packEdit: {}, outs: [], vit: [], vitcfg: null, vper: "today", vpos: "all", vtab: "stats", vday: null, vitDay: null, ofilter: "active", cart: {}, q: "", jday: today(), jops: null, loginUser: null, tries: 0, lockUntil: 0 };
+const S = { items: {}, stock: {}, ops: [], pend: [], shifts: [], orders: [], users: {}, cfg: {}, chg: [], chm: null, rep: { per: "month", data: null, loading: false, ws: null }, loy: null, clients: [], cust: (() => {
+  try {
+    return JSON.parse(localStorage.getItem("bk-cart") || "{}").cust || {};
+  } catch (_) {
+    return {};
+  }
+})(), usersLoaded: false, ready: false, view: "home", ws: "w1", pos: "p1", cat: "raw", pcat: "all", hist: [], preqs: [], prf: "open", invs: [], invcfg: null, workers: [], att: {}, wws: null, tickets: [], tkf: "open", fb: [], fbf: "new", kf: { step: "idle" }, posreqs: [], prqf: "open", cands: [], cdf: "job", packinvs: [], ppos: null, packEdit: {}, outs: [], vit: [], vitcfg: null, vper: "today", vpos: "all", vtab: "stats", vday: null, vitDay: null, ofilter: "active", cart: (() => {
+  try {
+    return JSON.parse(localStorage.getItem("bk-cart") || "{}").cart || {};
+  } catch (_) {
+    return {};
+  }
+})(), q: "", jday: today(), jops: null, loginUser: null, tries: 0, lockUntil: 0 };
 let db = null, me = null, SUBMIT = null, ISYNC = null;
 const PH = {}, PINCB = {};
 const itemsArr = () => Object.values(S.items).filter((i) => i.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name), "ar"));
@@ -2039,6 +2051,7 @@ function render() {
   if (rq) return;
   rq = requestAnimationFrame(() => {
     rq = 0;
+    cartSave();
     const ae = document.activeElement;
     if (ae && ae.closest && (ae.closest("[data-ir]") || ae.id === "tq") && (ae.tagName === "INPUT" || ae.tagName === "SELECT")) {
       if (!RDEF) {
@@ -2932,7 +2945,19 @@ async function tryLogin(u, pin) {
     }
   }
 }
+const cartN = () => Object.values((S.cart || {})[S.pos] || {}).reduce((a, q) => a + (+q || 0), 0);
+function leaveSaleOk(to) {
+  if (S.view !== "pos" || to === "pos" || !cartN()) return true;
+  return confirm("🛒 السلة فيها " + cartN() + " حاجة ما تخلصاتش.\nواش بغيتي تخرج من البيع؟\n(السلة غادي تبقى محفوظة)");
+}
+function cartSave() {
+  try {
+    localStorage.setItem("bk-cart", JSON.stringify({ cart: S.cart || {}, cust: S.cust || {} }));
+  } catch (_) {
+  }
+}
 function doBack() {
+  if (!leaveSaleOk(S.hist[S.hist.length - 1] || "home")) return;
   if (!$("#viewer").hidden) {
     $("#viewer").hidden = true;
     return;
@@ -3055,6 +3080,7 @@ function homeTiles(arr) {
 }
 function alertsFor() {
   const r = me.role, A = [];
+  (S.orders || []).filter((o) => ordTodo(o).length).forEach((o) => A.push(`<div class="alert acc" data-act="order" data-id="${o.id}"><div class="lead"><span class="em">📝</span><div><b>طلبية #${o.num} كتسنى الموافقة ديالك</b><div class="muted">${esc(o.client)} · 📅 ${o.due} ${o.dueTime || ""} · ${ordTodo(o).map((t) => t === "price" ? "💰 الثمن" : t === "adv" ? "💵 التسبيق" : "⏳ التاريخ").join("، ")}</div></div></div><span class="tag acc">شوف</span></div>`));
   const big = r === "admin" || r === "manager" || r === "prod";
   const mine = (o) => big || r === "ws" && o.ws === me.loc || r === "seller" && o.pos === me.loc || r === "driver" && o.status === "with_driver";
   S.pend.filter((o) => o.type === "transfer" && mine(o)).forEach((o) => A.push(`<div class="alert ${trLate(o) ? "bad" : "acc"}" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${o.status === "with_driver" ? "🚚" : "📦"}</span><div><b>${o.status === "with_driver" ? "مع السائق" : "كتسنى الاستلام"}${trLate(o) ? " ⏰ متأخر" : ""}</b><div class="muted">${esc(LOC[o.ws])} ← ${esc(LOC[o.pos])} · ${hm(o.ts)} · هادي ${dur(trAge(o))}</div></div></div><span class="tag acc">شوف</span></div>`));
@@ -3286,7 +3312,7 @@ function vPos() {
   if (vitLocked(p)) return `${head}<section class="card c6" style="align-items:center;text-align:center;gap:12px;padding:28px 16px"><div style="font-size:3.4rem">🔒📸</div><h2>البيع مسدود</h2><p class="muted" style="margin:0">ما تصوراتش الفيترينة فالوقت. صوري كل جزء (الحلويات، الفيينوازري، الخبز…) وأكدي بلي مرتب ونقي، والبيع غادي يرجع يتحل مباشرة.</p><button class="btn primary block" data-act="vitshot">📸 صوري الفيترينة دابا</button></section>${recv}`;
   return `${VO ? tempBanner(p) + vitBanner(p) : head + vfb + tempBanner(p) + vitBanner(p)}<div class="posgrid"><div>
   ${S.pbOpen ? "" : `<button type="button" class="posbar slim" data-act="pbtog"><span>${sh.team === "مسائية" ? "🌙" : "☀️"} ${esc(sh.seller)}${VO ? "" : ' · <b class="num">' + money(sumTickets(sh)) + "</b>"}</span><span class="muted">▾ التفاصيل</span></button>`}<section class="posbar" ${S.pbOpen ? "" : "hidden"}><div class="pbi" data-act="pbtog" style="cursor:pointer"><b>${sh.team === "مسائية" ? "🌙" : "☀️"} ${esc(sh.seller)}</b><span class="muted">${hm(sh.openTs)}${VO ? "" : " · " + (sh.tickets || []).length + " وصل"} · ${posMode(p) === "v" ? "🛍️ فوندوز" : "💵 كيسيير"}</span>${VO ? "" : `<b class="num">${money(sumTickets(sh))}</b>`}</div>
-   <div class="pbb">${posMode(p) === "c" ? '<button class="ib" data-act="tickets" title="الوصولات">🧾</button>' : ""}<button class="ib hot" data-act="mytasks" title="المهام ديالي">✅</button><button class="ib" data-act="myplan" title="البلانينگ">📅</button><button class="ib" data-act="go" data-v="appfb" title="ملاحظة">💬</button><button class="ib" data-act="fs" title="شاشة كاملة">⛶</button><button class="ib" data-act="devices" title="الأجهزة">🖨️${PRN ? '<i class="dot"></i>' : ""}</button>${posMode(p) === "c" ? '<button class="ib danger" data-act="closeshift" title="إغلاق النوبة">🔒</button>' : ""}${((_a = window.MorangoNative) == null ? void 0 : _a.desktop) ? '<button class="ib" data-act="fsoff" title="خروج من الشاشة الكاملة">🗗</button><button class="ib danger" data-act="appquit" title="سد التطبيق" style="width:auto;padding:0 8px;font-size:.85rem;font-weight:800">✕ Fermer</button>' : ""}<button class="ib" data-act="pbtog" title="صغر">▴</button></div></section>${bonsCard(p)}${goalCard(p)}${VO ? "" : recv}
+   <div class="pbb">${posMode(p) === "c" ? '<button class="ib" data-act="tickets" title="الوصولات">🧾</button>' : ""}<button class="ib hot" data-act="mytasks" title="المهام ديالي">✅</button><button class="ib" data-act="myplan" title="البلانينگ">📅</button><button class="ib" data-act="go" data-v="appfb" title="ملاحظة">💬</button><button class="ib" data-act="fs" title="شاشة كاملة">⛶</button><button class="ib" data-act="devices" title="الطابعة والأجهزة (ماشي طبع)">⚙️🖨️${PRN ? '<i class="dot"></i>' : ""}</button>${posMode(p) === "c" ? '<button class="ib danger" data-act="closeshift" title="إغلاق النوبة">🔒</button>' : ""}${((_a = window.MorangoNative) == null ? void 0 : _a.desktop) ? '<button class="ib" data-act="fsoff" title="خروج من الشاشة الكاملة">🗗</button><button class="ib danger" data-act="appquit" title="سد التطبيق" style="width:auto;padding:0 8px;font-size:.85rem;font-weight:800">✕ Fermer</button>' : ""}<button class="ib" data-act="pbtog" title="صغر">▴</button></div></section>${bonsCard(p)}${goalCard(p)}${VO ? "" : recv}
   <div class="field"><input id="q" placeholder="🔍 قلب على منتوج..." value="${esc(S.q)}" autocomplete="off" aria-label="قلب على منتوج"></div>
   ${cats.length > 2 ? chipsHtml(cats, S.pcat, "setpcat") : ""}${pc2.length > 1 ? chipsHtml(pc2, P2, "setpcat2") : ""}
   <div class="grid">${prods.map((i) => {
@@ -3477,9 +3503,9 @@ function custChip(p) {
   if (!LOY().on) return "";
   const cu = S.cust[p];
   return cu ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">⭐</span><div><b>${esc(cu.name)}</b><div class="muted num">${fmt(cu.points)} نقطة${(cu.vouchers || []).some((v) => v.status === "active") ? " · 🎁 عندو خصم مصادق عليه" : ""}</div></div></div><button type="button" class="link" data-act="custclear">حيد</button></div>
-   <div class="btns">${cu.isNew ? `<button type="button" class="btn small primary" data-act="wawel" data-id="${cu.id}">📲 رسالة الترحيب فواتساب</button>` : ""}<button type="button" class="btn small" data-act="bdays" data-id="${cu.id}">🎂 أعياد الميلاد${cu.bn ? " (" + cu.bn + ")" : ""}</button></div>` : `<button type="button" class="btn block" data-act="cust">⭐ زبون الوفاء</button>`;
+   <div class="btns" hidden>${""}<button type="button" class="btn small" data-act="bdays" data-id="${cu.id}">🎂 أعياد الميلاد${cu.bn ? " (" + cu.bn + ")" : ""}</button></div>` : `<button type="button" class="btn block" data-act="cust">⭐ زبون الوفاء</button>`;
 }
-const cartQty = (id, q) => `<div class="stp"><input class="qty" style="width:74px;height:44px;font-size:1.2rem" data-cq="${id}" type="text" inputmode="decimal" value="${fmt(q)}" aria-label="العدد ديال ${esc(iname(id))}" onfocus="this.select()"><button type="button" class="sb" style="background:var(--bad-soft);color:var(--bad)" data-act="cdel" data-id="${id}" aria-label="حيد ${esc(iname(id))}">×</button></div>`;
+const cartQty = (id, q) => `<div class="stp"><button type="button" class="sb" style="min-width:40px;height:44px;font-size:1.4rem;font-weight:800" data-act="cstep" data-id="${id}" data-d="-1" aria-label="نقص">−</button><input class="qty" style="width:60px;height:44px;font-size:1.2rem" data-cq="${id}" type="text" inputmode="decimal" value="${fmt(q)}" aria-label="العدد ديال ${esc(iname(id))}" onfocus="this.select()"><button type="button" class="sb" style="min-width:40px;height:44px;font-size:1.4rem;font-weight:800;background:var(--good-soft,#dcfce7);color:var(--good,#15803d)" data-act="cstep" data-id="${id}" data-d="1" aria-label="زيد">+</button><button type="button" class="sb" style="background:var(--bad-soft);color:var(--bad)" data-act="cdel" data-id="${id}" aria-label="حيد ${esc(iname(id))}">×</button></div>`;
 function ticketPanel(p) {
   var _a, _b;
   const c = cartOf(p);
@@ -3501,14 +3527,14 @@ function lastClosed(p) {
 function orderRow(o) {
   const rest = (+o.total || 0) - (+o.advance || 0) - (+o.paidRest || 0);
   const st = o.status === "delivered" ? "good" : o.due < today() ? "bad" : "acc";
-  return `<li class="clk" data-act="order" data-id="${o.id}"><div class="lead"><span class="em">${OSTI[o.status]}</span><div><b>#${o.num} · ${esc(o.client)}</b><div class="muted">${esc(o.desc).slice(0, 50)} · ${o.due || ""} ${o.dueTime || ""}</div></div></div><div style="text-align:end"><span class="tag ${st}">${OSTL[o.status]}</span>${rest > 9e-3 && o.status !== "delivered" ? `<div class="muted num">باقي ${money(rest)}</div>` : ""}</div></li>`;
+  return `<li class="clk" data-act="order" data-id="${o.id}"><div class="lead"><span class="em">${OSTI[o.status]}</span><div><b>#${o.num} · ${esc(o.client)}</b><div class="muted">${esc(o.desc || (o.lines || []).map((l) => l.kind === "sp" ? l.title : iname(l.item)).join("، ")).slice(0, 50)} · ${o.due || ""} ${o.dueTime || ""}</div></div></div><div style="text-align:end"><span class="tag ${st}">${OSTL[o.status]}</span>${rest > 9e-3 && o.status !== "delivered" ? `<div class="muted num">باقي ${money(rest)}</div>` : ""}</div></li>`;
 }
 function vOrders() {
   const F = [{ id: "active", name: "الجارية", i: "⏳" }, ...OST.map((s) => ({ id: s[0], name: s[1], i: s[3] })), { id: "all", name: "كلشي" }];
   let list = S.orders;
-  if (me.role === "ws") list = list.filter((o) => o.ws === me.loc);
+  if (me.role === "ws") list = list.filter((o) => o.ws === me.loc || (o.wss || []).includes(me.loc));
   if (me.role === "seller") list = list.filter((o) => o.pos === me.loc);
-  if (S.ofilter === "active") list = list.filter((o) => o.status !== "delivered");
+  if (S.ofilter === "active") list = list.filter((o) => o.status !== "delivered" && o.status !== "cancel");
   else if (S.ofilter !== "all") list = list.filter((o) => o.status === S.ofilter);
   if (S.ofilter !== "delivered" && S.ofilter !== "all") list = [...list].sort((a, b) => ((a.due || "") + (a.dueTime || "")).localeCompare((b.due || "") + (b.dueTime || "")));
   return `${me.role === "seller" ? '<button class="act c2" data-act="neworder" style="min-height:90px"><span class="big">📝</span><b>طلبية جديدة</b></button>' : ""}${chipsHtml(F, S.ofilter, "ofilter")}
@@ -5383,6 +5409,7 @@ async function receiptLogo() {
 const receiptHtml = (sh, t) => `<div class="receipt">${(S.cfg || {}).logo ? `<div style="text-align:center"><img src="${esc(S.cfg.logo)}" alt="" style="max-width:140px;max-height:80px;object-fit:contain"></div>` : ""}<div class="head"><b class="disp">${esc((S.cfg || {}).title || "Morango")} · ${esc(LOC[sh.pos])}</b><span class="muted num">وصل رقم ${esc(rNo(t))}</span></div><div class="muted num">🕒 ${dhms(t.ts)} · ${esc(sh.seller)}</div>
   <div class="tw"><table class="t"><tbody>${t.lines.map((l) => `<tr><td>${ico(l.item)} ${esc(iname(l.item))}</td><td>${rQtyU(l)} × ${money(l.price)}</td><td class="num">${money(l.qty * l.price)}</td></tr>`).join("")}</tbody></table></div>${t.discount ? `<div class="muted num">خصم الوفاء −${money(t.discount)}</div>` : ""}<div class="tot"><span>المجموع</span><span>${money(t.total)}</span></div>${t.client ? `<div class="muted">⭐ ${esc(t.client.name)} · +${fmt(t.client.earned)} نقطة · الرصيد ${fmt(t.client.balance)}</div>` : ""}${t.given != null ? `<div class="prow num" style="border:0;padding:2px 0"><span>💵 عطى الزبون</span><b>${money(t.given)}</b></div><div class="prow num" style="border:0;padding:2px 0"><span>🪙 الصرف اللي رجع ليه</span><b>${money(t.change)}</b></div>` : ""}<div class="muted">💵 كاش · شكراً على الزيارة 💛</div></div>`;
 async function receiptBlob(sh, t, copy) {
+  var _a, _b, _c;
   const cfg = S.cfg || {};
   const W = cfg.width === "58" ? 384 : 576;
   const P = W > 400 ? 22 : 14;
@@ -5433,7 +5460,36 @@ async function receiptBlob(sh, t, copy) {
   if (cfg.address) center(cfg.address, Math.round(F * 0.8));
   if (cfg.phone) center("☎ " + cfg.phone, Math.round(F * 0.8));
   center(LOC[sh.pos], Math.round(F * 0.85));
-  if (copy === "bonc" || copy === "bono") {
+  if (copy === "ordc" || copy === "ordl") {
+    const o = t, rest = ordRest(o);
+    gap(6);
+    line();
+    center(copy === "ordc" ? "📝 بون الكوموند" : "🎉 بون التسليم · وصل الخلاص", Math.round(F * 1.2), true);
+    center("#" + o.num, Math.round(F * 1.6), true);
+    line();
+    pair("👤 " + o.client, "", Math.round(F * 0.95), true);
+    (o.phones || []).forEach((p) => pair("📞 " + p.n + (p.wa ? " (واتساب)" : ""), "", Math.round(F * 0.8)));
+    wrap("🏠 " + (o.address || ""), Math.round(F * 0.8), false, W - 2 * P).forEach((l) => R.push({ k: "p", r: l, l: "", sz: Math.round(F * 0.8), b: false }));
+    pair("📅 التسليم", (o.due || "") + " " + (o.dueTime || ""), Math.round(F * 0.85), true);
+    line();
+    (o.lines || []).forEach((l) => {
+      pair(lnName(l), l.price != null ? money(l.qty * l.price).replace(" د.م", "") : "", F, true);
+      R.push({ k: "p", r: fmt(l.qty) + " × " + (l.price != null ? money(l.price) : "") + (l.kind === "sp" ? " · طلبية خاصة" : ""), l: "", sz: Math.round(F * 0.78), b: false, mut: true });
+      if (l.note) wrap("📝 " + l.note, Math.round(F * 0.75), false, W - 2 * P).forEach((z) => R.push({ k: "p", r: z, l: "", sz: Math.round(F * 0.75), b: false, mut: true }));
+    });
+    line();
+    pair("المجموع", money(o.total), Math.round(F * 1.3), true);
+    pair("التسبيق (كاش)", money(o.advance || 0), Math.round(F * 0.95), true);
+    if (copy === "ordl") pair("خلص اليوم (كاش)", money(((_a = o.delivery) == null ? void 0 : _a.paid) || 0), Math.round(F * 0.95), true);
+    pair("الباقي", money(rest), Math.round(F * 1.15), true);
+    line();
+    pair("البائعة: " + (copy === "ordl" ? ((_b = o.delivery) == null ? void 0 : _b.by) || meName() : o.advBy || o.by || ""), "", Math.round(F * 0.8));
+    pair("التاريخ", dhms(copy === "ordl" ? ((_c = o.delivery) == null ? void 0 : _c.ts) || Date.now() : o.advTs || Date.now()), Math.round(F * 0.8));
+    gap(4);
+    center(copy === "ordc" ? "⚠️ الباقي كيتخلص قبل التسليم" : "✅ الطلبية تسلمات وتخلصات", Math.round(F * 0.95), true);
+    center(copy === "ordc" ? "جيب هاد البون نهار التسليم" : cfg.footer || "شكراً على الثقة", Math.round(F * 0.85));
+    gap(P);
+  } else if (copy === "bonc" || copy === "bono") {
     gap(6);
     line();
     center("📝 بون الكوموند", Math.round(F * 1.2), true);
@@ -5914,13 +5970,13 @@ async function natImgPrint(bl) {
   if (r !== "ok") throw new Error(r);
   return true;
 }
-async function hwPrint(sh, t, { drawer } = {}) {
+async function hwPrint(sh, t, { drawer, copy } = {}) {
   var _a;
   const p = await hwReconnect();
   if (!p) return false;
   let bl = null;
   try {
-    bl = await receiptBlob(sh, t, "client");
+    bl = await receiptBlob(sh, t, copy || "client");
     if (HW().mode === "img" && p.kind === "nat" && await natImgPrint(bl)) return true;
     const bytes = await escposFromBlob(bl, HW().width === "80" ? 576 : 384);
     await p.write(bytes);
@@ -6198,7 +6254,7 @@ async function receipt2(sh, t) {
 let LASTR = null;
 function sheetReceipt(sh, t) {
   LASTR = { sh, t };
-  openSheet("🧾 الوصل", receiptHtml(sh, t) + '<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ طبع الوصل</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>');
+  openSheet("🧾 الوصل", receiptHtml(sh, t) + '<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ إعادة الطبع</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>');
 }
 const tkKey = (t) => String(t.no || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 function sheetTickets() {
@@ -6206,7 +6262,7 @@ function sheetTickets() {
   if (!sh) return;
   const tk = [...sh.tickets || []].reverse();
   const p = S.pos;
-  const card = (x, t) => `<div data-tk="${esc(tkKey(t))}" data-tn="${t.n}" data-sh0="${x.id === sh.id ? 1 : 0}">${receiptHtml(x, t)}<button type="button" class="btn small" data-act="printt" data-sh="${x.id}" data-n="${t.n}">🖨️ طبع الوصل ${esc(rNo(t))}</button></div>`;
+  const card = (x, t) => `<div data-tk="${esc(tkKey(t))}" data-tn="${t.n}" data-sh0="${x.id === sh.id ? 1 : 0}">${receiptHtml(x, t)}<button type="button" class="btn small" data-act="printt" data-sh="${x.id}" data-n="${t.n}">🖨️ إعادة الطبع ${esc(rNo(t))}</button></div>`;
   const older = S.shifts.filter((x) => x.pos === p && x.id !== sh.id).flatMap((x) => [...x.tickets || []].reverse().map((t) => ({ x, t })));
   openSheet(
     "🧾 وصولات النوبة",
@@ -6232,7 +6288,7 @@ function sheetTickets() {
   );
 }
 function sheetClient(back) {
-  openSheet("⭐ زبون الوفاء", `${fld("cph", "📞 نمرة التيليفون ديال الزبون", '<input id="cph" name="cph" class="big-in" type="tel" inputmode="numeric" autocomplete="off" placeholder="06 00 00 00 00">')}<div id="cres"></div>${errP}<button class="btn primary block" type="submit">✅ اختار</button>`, async (f) => {
+  openSheet("⭐ زبون الوفاء", `${fld("cph", "📱 نمرة الواتساب ديال الزبون (WhatsApp)", '<p class="muted" style="margin:0 0 6px">💬 طلب من الزبون النمرة اللي فيها الواتساب، حيت عليها كيوصلو العروض والهدايا.</p><input id="cph" name="cph" class="big-in" type="tel" inputmode="numeric" autocomplete="off" placeholder="06 00 00 00 00">')}<div id="cres"></div>${errP}<button class="btn primary block" type="submit">✅ اختار</button>`, async (f) => {
     var _a, _b;
     const id = phoneId(f.cph.value);
     if (id.length < 10) return ferr("دخل النمرة كاملة.");
@@ -6287,6 +6343,7 @@ function sheetClient(back) {
   });
 }
 function bdayCard(days = 7) {
+  return "";
   if (!LOY().on) return "";
   const u = bdUpcoming(days);
   if (!u.length) return "";
@@ -6325,7 +6382,7 @@ function sheetClientMgr(id) {
   if (!c) return;
   const vs = c.vouchers || [];
   openSheet("⭐ " + (c.name || "زبون"), `<div class="stats sheet-stats"><div class="stat"><span>🎁 النقاط</span><b>${fmt(c.points)}</b></div><div class="stat"><span>💵 شرا بـ</span><b>${money(c.total)}</b></div><div class="stat"><span>🛍️ الزيارات</span><b>${c.visits || 0}</b></div><div class="stat"><span>📞</span><b style="font-size:1rem;user-select:all">${esc(c.phone || "")}</b></div></div>
-   <div class="btns"><button type="button" class="btn small" data-act="wawel" data-id="${c.id}">📲 رسالة الترحيب${c.waTs ? " (تصيفطات)" : ""}</button><button type="button" class="btn small" data-act="bdays" data-id="${c.id}">🎂 أعياد الميلاد (${(c.bdays || []).length})</button></div>
+   <div class="btns"><button type="button" class="btn small" data-act="wawel" data-id="${c.id}">📲 رسالة الترحيب${c.waTs ? " (تصيفطات)" : ""}</button></div>
    ${vs.length ? `<div class="box"><h3>🎁 الخصومات</h3>${vs.slice().reverse().map((v) => `<div class="prow"><div><b>خصم ${money(v.amount)} · −${fmt(v.pts)} نقطة</b><div class="muted">${dhm(v.ts)} · صادق ${esc(v.by)}${v.note ? " · " + esc(v.note) : ""}${v.usedTs ? " · تستعمل " + dhm(v.usedTs) : ""}</div></div><span class="tag ${v.status === "active" ? "acc" : v.status === "used" ? "good" : "bad"}">${v.status === "active" ? "⏳ كيتسنى" : v.status === "used" ? "✅ تستعمل" : "❌ تلغى"}</span></div>`).join("")}</div>` : ""}
    <div class="box"><h3>✅ صادق على خصم جديد</h3><p class="muted" style="margin:0">الخصم كيبان للبائعة فالصندوق ملي الزبون يجي، والنقاط كتنقص غير ملي يتستعمل.</p>
     <div class="two">${moneyIn("vamt", "💵 مبلغ الخصم (د.م)")}${moneyIn("vpts", "🎁 النقاط اللي غادي تنقص")}</div>${inp("vnote", "📝 ملاحظة (اختياري)", "", "text", 'autocomplete="off"')}</div>
@@ -8309,21 +8366,39 @@ function sheetClose0() {
   const TKs = sh.tickets || [];
   const night = sh.team === "مسائية";
   const nexts = usersArr().filter((u) => u.role === "seller" && u.name !== sh.seller).map((u) => ({ v: u.name, l: u.name, i: "🛍️" }));
-  openSheet(night ? "🌙 إغلاق النوبة · جرد الليل" : "🔒 إغلاق النوبة · جرد التسليم", `${night ? `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🌙</span><div><b>جرد الليل إجباري</b><div class="muted">حسبي كل منتوج باقي فالمحل بيدك. كلشي اللي حسبتي غادي يتسجل <b>مرتجع (retour)</b> ويرجع للورشة ديالو، والمحل غادي يبقى خاوي لغدا.</div></div></div></div>` : `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🤝</span><div><b>جرد التسليم بين الصباح والعشية (Inventaire inter-passation) إجباري</b><div class="muted">حسبي كل منتوج، التغليف والفلوس بيدك مع البائعة اللي غادي تستلم من بعدك. إلا كان كلشي صحيح، الصندوق كيتسد. إلا كان شي فرق، الصندوق ما كيتسدش والإدارة كتوصلها نوتيفيكاسيون.</div></div></div></div>
+  const GRP = [];
+  ids.forEach((id) => {
+    var _a2;
+    const w = ((_a2 = S.items[id]) == null ? void 0 : _a2.ws) || "x";
+    let g = GRP.find((x) => x.id === w);
+    if (!g) {
+      const W = WS.find((x) => x.id === w);
+      g = { id: w, name: W ? W.name : "أخرى", i: W ? W.i : "🧺", ids: [] };
+      GRP.push(g);
+    }
+    g.ids.push(id);
+  });
+  const STP = (n, last) => `<div class="btns" style="margin-top:6px">${n > 1 ? `<button type="button" class="btn" data-stp="-1">→ رجع</button>` : ""}${last ? `<button class="btn primary" type="submit">🔒 سد النوبة</button>` : `<button type="button" class="btn primary" data-stp="1">التالي ←</button>`}</div>`;
+  openSheet(night ? "🌙 إغلاق النوبة · جرد الليل" : "🔒 إغلاق النوبة · جرد التسليم", `<div data-step="1" style="display:flex;flex-direction:column;gap:10px">${night ? `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🌙</span><div><b>جرد الليل إجباري</b><div class="muted">حسبي كل منتوج باقي فالمحل بيدك. كلشي اللي حسبتي غادي يتسجل <b>مرتجع (retour)</b> ويرجع للورشة ديالو، والمحل غادي يبقى خاوي لغدا.</div></div></div></div>` : `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🤝</span><div><b>جرد التسليم بين الصباح والعشية (Inventaire inter-passation) إجباري</b><div class="muted">حسبي كل منتوج، التغليف والفلوس بيدك مع البائعة اللي غادي تستلم من بعدك. إلا كان كلشي صحيح، الصندوق كيتسد. إلا كان شي فرق، الصندوق ما كيتسدش والإدارة كتوصلها نوتيفيكاسيون.</div></div></div></div>
    ${choice("cnext", "🤝 شكون غادي تستلم المحل من بعدك؟", nexts.length ? nexts : [{ v: "-", l: "ما كاينة حتى بائعة أخرى", i: "—" }], ((_a = nexts[0]) == null ? void 0 : _a.v) || "-", 3)}`}${TKs.length ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📋</span><div><b>🧾 ${TKs.length} وصل فهاد النوبة</b><div class="muted">${TKs[0].no ? "من " + esc(rNo(TKs[0])) + " حتى " + esc(rNo(TKs[TKs.length - 1])) : ""} · المجموع ${money(sumTickets(sh))}</div></div></div></div>` : ""}
-   <h3 style="margin:0">🧺 السلعة</h3><div>${ids.length ? ids.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("") : emptyB("🧺", "ما كاين حتى منتوج.")}</div>
-   ${packs.length ? `<h3 style="margin:0">📦 التغليف واللوازم</h3><div>${packs.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("")}</div>` : ""}
+   <h3 style="margin:0">🧺 الخطوة 1: جرد السلعة</h3>${ids.length ? GRP.map((g) => `<div data-grp="${g.id}" style="border:1px solid var(--line,#eee);border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;gap:6px"><b>${g.i} ${esc(g.name)}</b>${g.ids.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("")}${photoField("nret_" + g.id, night ? "📷 صورة " + g.name + " اللي راجعة (retour)" : "📷 صورة الفيترينة ديال " + g.name + " (التسليم)")}</div>`).join("") : emptyB("🧺", "ما كاين حتى منتوج.")}
+   ${STP(1, false)}</div>
+   <div data-step="2" hidden style="display:flex;flex-direction:column;gap:10px">${packs.length ? `<h3 style="margin:0">📦 الخطوة 2: جرد التغليف واللوازم</h3><div>${packs.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("")}</div>` : ""}${STP(2, false)}</div>
+   <div data-step="3" hidden style="display:flex;flex-direction:column;gap:10px"><h3 style="margin:0">💵 الخطوة ${packs.length ? 3 : 2}: حساب الفلوس</h3>
    <div class="lbl" style="font-weight:700">💵 الفلوس اللي فالصندوق: كتبي شحال من درهم كاين من كل نوع، والتطبيق كيحسب القطع</div>${cashCountHtml("cc")}
    ${moneyIn("ccash", "💵 الفلوس اللي فالصندوق دابا (مع fond de caisse)")}
    ${mgrs.length ? choice("cmgr", "📊 المسير اللي استلم الفلوس", mgrs, mgrs[0].v, 3) : inp("cmgr", "المسير اللي استلم الفلوس")}${sigField("csig", "توقيع المسير (استلم الصندوق)")}
-   ${night ? photoField("nret", "📷 صور السلعة اللي رجعات (retour) · إجبارية") : ""}<label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="nok" style="width:22px;height:22px"> ✅ حسبت بيدي وكنأكد بلي هادي هي الأرقام الصحيحة</label><p class="muted" style="margin:0">${night ? "" : "🤝 البائعة اللي غادي تستلم كتأكد الاستلام من الحساب ديالها."}</p>${errP}<button class="btn primary block" type="submit">🔒 سد النوبة</button>`, async (f) => {
-    var _a2, _b;
+   <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="nok" style="width:22px;height:22px"> ✅ حسبت بيدي وكنأكد بلي هادي هي الأرقام الصحيحة</label><p class="muted" style="margin:0">${night ? "" : "🤝 البائعة اللي غادي تستلم كتأكد الاستلام من الحساب ديالها."}</p>${STP(3, true)}</div>${errP}`, async (f) => {
+    var _a2, _b, _c;
     const ins = $$("input[data-cnt]", f);
     if (ins.some((i) => !(num(i.value) >= 0))) return ferr("دخلي العدد ديال كل منتوج وكل تغليف، حتى إلا كان 0.");
-    if (night && ins.some((i) => {
-      var _a3;
-      return ((_a3 = S.items[i.dataset.cnt]) == null ? void 0 : _a3.kind) === "final" && num(i.value) > 0;
-    }) && !(PH.nret || []).length) return ferr("📷 صوري السلعة اللي غادي ترجع (retour).");
+    if (true) {
+      const miss = GRP.filter((g) => g.ids.some((id) => {
+        var _a3;
+        return num((_a3 = $('input[data-cnt="' + id + '"]', f)) == null ? void 0 : _a3.value) > 0;
+      }) && !(PH["nret_" + g.id] || []).length);
+      if (miss.length) return ferr("📷 صوري " + (night ? "السلعة اللي راجعة" : "الفيترينة") + " ديال: " + miss.map((g) => g.name).join("، "));
+    }
     const nx = night ? "-" : ((_a2 = f.cnext) == null ? void 0 : _a2.value) || "-";
     if (!((_b = f.nok) == null ? void 0 : _b.checked)) return ferr("✅ أكدي بلي حسبتي وبلي الأرقام صحيحة.");
     const CC = cashCountRead(f, "cc");
@@ -8338,11 +8413,16 @@ function sheetClose0() {
     });
     const { stockDiff, packDiff } = closeDiffs(counted, theo);
     const salesCost = Math.round((sh.tickets || []).reduce((s, t) => s + t.lines.reduce((a, l) => a + l.qty * (+l.unitCost || 0) + (+l.packCost || 0), 0), 0) * 100) / 100;
-    const salesT = r2(sumTickets(sh)), expected = r2((+sh.float || 0) + salesT), cashDiff = r2(cash - expected);
+    const salesT = r2(sumTickets(sh)), expected = r2((+sh.float || 0) + salesT + (sh.ocash || []).reduce((a, c) => a + (+c.amt || 0), 0)), cashDiff = r2(cash - expected);
     if (!night && (Math.abs(cashDiff) >= 0.01 || stockDiff.length || packDiff.length)) {
       busy(f, true);
       try {
-        await db.doc("shifts/" + sh.id).update({ status: "verif", verif: { ts: Date.now(), counted, theo, stockDiff, packDiff, cash, expected, cashDiff, sales: salesT, salesCost, next: nx === "-" ? null : nx, by: meName(), byId: me.id } });
+        const passPhotos = {};
+        for (const g of GRP) {
+          const ph = PH["nret_" + g.id] || [];
+          if (ph.length) passPhotos[g.id] = await saveMedia(ph, "pass");
+        }
+        await db.doc("shifts/" + sh.id).update({ status: "verif", verif: { passPhotos, ts: Date.now(), counted, theo, stockDiff, packDiff, cash, expected, cashDiff, sales: salesT, salesCost, next: nx === "-" ? null : nx, by: meName(), byId: me.id } });
         await newOp({ type: "shiftverif", pos: p, shift: sh.id, seller: sh.seller, status: "pending" }).catch(() => {
         });
         openSheet("⚠️ كاين فرق", `<div class="alert bad" style="cursor:default"><div class="lead"><span class="em">🔒</span><div><b>الصندوق ما تسدش</b><div class="muted">لقينا فرق ف${[Math.abs(cashDiff) >= 0.01 ? " 💰 الفلوس" : "", stockDiff.length ? " 🧺 السلعة" : "", packDiff.length ? " 📦 التغليف" : ""].filter(Boolean).join(" و")}. الإدارة توصلات بنوتيفيكاسيون.</div></div></div></div>
@@ -8361,22 +8441,29 @@ function sheetClose0() {
     busy(f, true);
     try {
       const sig = await sigSave("csig", "cash");
+      const passPhotos = {};
+      if (!night) for (const g of GRP) {
+        const ph = PH["nret_" + g.id] || [];
+        if (ph.length) passPhotos[g.id] = await saveMedia(ph, "pass");
+      }
       await setStockVals(p, counted);
-      const close = { ts: Date.now(), counted, theo, stockDiff, packDiff, cash, cashDetail: CC.detail, expected, cashDiff, sales: salesT, salesCost, handedTo: mgr, sig, by: meName(), passation: night ? { night: true, ts: Date.now() } : { to: nx === "-" ? null : nx, status: nx === "-" ? null : "pending", ts: Date.now() } };
+      const close = { passPhotos, ts: Date.now(), counted, theo, stockDiff, packDiff, cash, cashDetail: CC.detail, expected, cashDiff, sales: salesT, salesCost, handedTo: mgr, sig, by: meName(), passation: night ? { night: true, ts: Date.now() } : { to: nx === "-" ? null : nx, status: nx === "-" ? null : "pending", ts: Date.now() } };
       if (night) {
         const rl = Object.entries(counted).filter(([id, q]) => {
           var _a3;
           return q > 0 && ((_a3 = S.items[id]) == null ? void 0 : _a3.kind) === "final";
         }).map(([item, qty]) => ({ item, qty }));
         if (rl.length) {
-          const photos = await saveMedia(PH.nret || [], "return");
           const by = {};
           rl.forEach((l) => {
             var _a3;
             const w = ((_a3 = S.items[l.item]) == null ? void 0 : _a3.ws) || "w1";
             (by[w] = by[w] || []).push(l);
           });
-          for (const w in by) await newOp({ type: "return", pos: p, ws: w, lines: by[w], photos, status: "pending", night: true, shift: sh.id });
+          for (const w in by) {
+            const photos = await saveMedia(PH["nret_" + (((_c = S.items[by[w][0].item]) == null ? void 0 : _c.ws) || "x")] || [], "return");
+            await newOp({ type: "return", pos: p, ws: w, lines: by[w], photos, status: "pending", night: true, shift: sh.id });
+          }
           const d = {};
           rl.forEach((l) => d[l.item] = -l.qty);
           await bumpStock(p, d);
@@ -8390,9 +8477,54 @@ function sheetClose0() {
     } catch (e) {
       fail(f, e);
     }
-  }, (f) => cashCountWire(f, "cc", (r) => {
-    if (r.total > 0) f.ccash.value = r.total.toFixed(2);
-  }));
+  }, (f) => {
+    cashCountWire(f, "cc", (r) => {
+      if (r.total > 0) f.ccash.value = r.total.toFixed(2);
+    });
+    let cur = 1;
+    const show = (n) => {
+      if (n === 2 && !packs.length) n = cur < 2 ? 3 : 1;
+      cur = n;
+      $$("[data-step]", f).forEach((d) => {
+        const on = +d.dataset.step === n;
+        d.hidden = !on;
+        d.style.display = on ? "flex" : "none";
+      });
+      const e = $("#ferr");
+      if (e) e.hidden = true;
+      const sc = f.closest("#sheet") || f.parentElement;
+      if (sc && sc.scrollTo) sc.scrollTo(0, 0);
+      f.scrollIntoView && f.scrollIntoView({ block: "start" });
+    };
+    const okStep = (n) => {
+      const box = $('[data-step="' + n + '"]', f);
+      const ins = $$("input[data-cnt]", box);
+      if (ins.some((i) => !(num(i.value) >= 0))) {
+        ferr(n === 1 ? "دخلي العدد ديال كل منتوج، حتى إلا كان 0." : "دخلي العدد ديال كل تغليف، حتى إلا كان 0.");
+        return false;
+      }
+      if (n === 1) {
+        const miss = GRP.filter((g) => g.ids.some((id) => {
+          var _a2;
+          return num((_a2 = $('input[data-cnt="' + id + '"]', f)) == null ? void 0 : _a2.value) > 0;
+        }) && !(PH["nret_" + g.id] || []).length);
+        if (miss.length) {
+          ferr("📷 صوري " + (night ? "السلعة اللي راجعة" : "الفيترينة") + " ديال: " + miss.map((g) => g.name).join("، "));
+          return false;
+        }
+      }
+      return true;
+    };
+    f.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-stp]");
+      if (!b) return;
+      e.preventDefault();
+      const d = +b.dataset.stp;
+      if (d > 0 && !okStep(cur)) return;
+      show(cur + d);
+    });
+    show(1);
+  });
 }
 const passPending = (p) => S.shifts.filter((x) => {
   var _a, _b;
@@ -8402,44 +8534,72 @@ function sheetRecvPass(id) {
   const x = S.shifts.find((s) => s.id === id);
   if (!(x == null ? void 0 : x.close)) return;
   const c = x.close;
-  const ids = Object.keys(c.counted || {}).filter((k) => c.counted[k] > 0);
-  openSheet(
-    "🤝 الاستلام من " + x.seller,
-    `<p class="muted" style="margin:0">${esc(x.seller)} سدات النوبة ديال ${esc(x.team)} ${hm(c.ts)} وحسبات هادشي. شوفي واش عندك نفس الشي فالمحل وأكدي.</p>
-   ${ids.map((k) => {
-      var _a;
-      return prow(k, ((_a = S.items[k]) == null ? void 0 : _a.kind) === "pack" ? "📦 تغليف" : "", `<b class="num">${fmt(c.counted[k])} ${esc(iunit(k))}</b>`);
-    }).join("") || emptyB("🧺", "المحل كان خاوي.")}
-   ${inp("prnote", "📝 إلا كاين شي مشكل، كتبيه هنا", "", "text", 'autocomplete="off"')}${errP}
-   <div class="btns"><button type="button" class="btn danger" id="prbad">⚠️ ماشي بحال بحال</button><button class="btn primary" type="submit">✅ أكد بلي استلمت</button></div>`,
-    async (f) => {
-      busy(f, true);
-      try {
-        await db.doc("shifts/" + id).update({ passRecv: { ok: true, by: meName(), byId: me.id, ts: Date.now() } });
-        closeSheet();
-        toast("🤝 الاستلام تأكد");
-        render();
-      } catch (e) {
-        fail(f, e);
-      }
-    },
-    (f) => {
-      $("#prbad", f).onclick = async () => {
-        const n = (f.prnote.value || "").trim();
-        if (!n) return ferr("كتبي شنو المشكل.");
-        try {
-          await db.doc("shifts/" + id).update({ passRecv: { ok: false, note: n, by: meName(), byId: me.id, ts: Date.now() } });
-          await newOp({ type: "passdispute", pos: x.pos, shift: id, note: n, status: "pending" }).catch(() => {
-          });
-          closeSheet();
-          toast("⚠️ الإدارة توصلات، تاصلي بالمسؤول", true);
-          render();
-        } catch (e) {
-          ferr(e.message);
-        }
-      };
+  const all = Object.keys(c.counted || {});
+  const gids = all.filter((k) => {
+    var _a;
+    return ((_a = S.items[k]) == null ? void 0 : _a.kind) !== "pack";
+  }), pids = all.filter((k) => {
+    var _a;
+    return ((_a = S.items[k]) == null ? void 0 : _a.kind) === "pack";
+  });
+  const ph = c.passPhotos || {};
+  let ack = false;
+  const nav = (n, last) => `<div class="btns" style="margin-top:6px">${n > 1 ? '<button type="button" class="btn" data-rs="-1">→ رجع</button>' : ""}${last ? '<button class="btn primary" type="submit">✅ أكدي الاستلام ← fond de caisse</button>' : '<button type="button" class="btn primary" data-rs="1">التالي ←</button>'}</div>`;
+  openSheet("🤝 الاستلام من " + x.seller, `<p class="muted" style="margin:0">${esc(x.seller)} سدات النوبة ديال ${esc(x.team)} ${hm(c.ts)}. حسبي معاها السلعة والتغليف بيدك، من الحساب ديالك.</p>
+   <div data-rstep="1" style="display:flex;flex-direction:column;gap:8px"><h3 style="margin:0">🧺 الخطوة 1: حسبي السلعة</h3>${Object.keys(ph).length ? `<div class="media">${Object.entries(ph).map(([w, l]) => mediaBtns(l, "الفيترينة · " + ((WS.find((z) => z.id === w) || {}).name || ""), "📷")).join("")}</div>` : ""}
+    ${gids.length ? gids.map((k) => prow(k, `<span class="muted">${esc(x.seller)}: ${fmt(c.counted[k])}</span>`, stepper("data-rc", k, "", iunit(k)))).join("") : emptyB("🧺", "المحل كان خاوي.")}${nav(1, !pids.length)}</div>
+   ${pids.length ? `<div data-rstep="2" hidden style="display:none;flex-direction:column;gap:8px"><h3 style="margin:0">📦 الخطوة 2: حسبي التغليف</h3>${pids.map((k) => prow(k, `<span class="muted">${esc(x.seller)}: ${fmt(c.counted[k])}</span>`, stepper("data-rc", k, "", iunit(k)))).join("")}${nav(2, true)}</div>` : ""}
+   <div id="rdiff"></div>${errP}`, async (f) => {
+    const ins = $$("input[data-rc]", f);
+    if (ins.some((i) => !(num(i.value) >= 0))) return ferr("دخلي العدد ديال كلشي، حتى إلا كان 0.");
+    const cnt = {}, diffs = [];
+    ins.forEach((i) => {
+      const k = i.dataset.rc, v = num(i.value);
+      cnt[k] = v;
+      const d = r2(v - (+c.counted[k] || 0));
+      if (d) diffs.push({ item: k, sent: +c.counted[k] || 0, got: v, d });
+    });
+    if (diffs.length && !ack) {
+      ack = true;
+      $("#rdiff", f).innerHTML = `<div class="alert bad" style="cursor:default"><div class="lead"><span class="em">⚠️</span><div><b>ماشي بحال بحال</b><div class="muted">${diffs.map((d) => esc(iname(d.item)) + ": " + fmt(d.sent) + " ← " + fmt(d.got)).join("<br>")}</div></div></div></div><p class="muted">عاودي حسبي معاها. إلا بقى الفرق، ضغطي مرة أخرى والإدارة غادي توصلها.</p>`;
+      return ferr("⚠️ كاين فرق، شوفي التفاصيل لتحت.");
     }
-  );
+    busy(f, true);
+    try {
+      const rec = { ok: !diffs.length, counted: cnt, diffs, by: meName(), byId: me.id, ts: Date.now() };
+      await db.doc("shifts/" + id).update({ passRecv: rec });
+      x.passRecv = rec;
+      if (diffs.length) await newOp({ type: "passdispute", pos: x.pos, shift: id, diffs, note: "فرق فالاستلام: " + diffs.map((d) => iname(d.item) + " " + fmt(d.sent) + "→" + fmt(d.got)).join("، "), status: "pending" }).catch(() => {
+      });
+      closeSheet();
+      toast(diffs.length ? "⚠️ الإدارة توصلات بالفرق" : "🤝 الاستلام تأكد");
+      setTimeout(() => {
+        if (!openShift(x.pos)) sheetOpenShift();
+      }, 300);
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    let cur = 1;
+    const show = (n) => {
+      cur = n;
+      $$("[data-rstep]", f).forEach((d) => {
+        const on = +d.dataset.rstep === n;
+        d.hidden = !on;
+        d.style.display = on ? "flex" : "none";
+      });
+      const e = $("#ferr");
+      if (e) e.hidden = true;
+    };
+    f.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-rs]");
+      if (!b) return;
+      e.preventDefault();
+      const d = +b.dataset.rs;
+      if (d > 0 && $$('[data-rstep="' + cur + '"] input[data-rc]', f).some((i) => !(num(i.value) >= 0))) return ferr("دخلي العدد ديال كلشي، حتى إلا كان 0.");
+      show(cur + d);
+    });
+  });
 }
 const closeDiffs = (counted, theo) => {
   const all = Object.keys(counted).map((id) => {
@@ -13344,40 +13504,386 @@ function sheetOpDetail(id) {
   if (o.type === "count") b += `<p>${esc(LOC[o.pos])}</p><div>${o.diffs.map((d) => prow(d.item, "نظري " + fmt(d.theo) + " · لقينا " + fmt(d.counted), `<b class="num ${d.d < 0 ? "neg" : "pos"}">${fmt(d.d)}</b>`)).join("")}</div>`;
   openSheet({ purchase: "🛒 شراء", production: "👨‍🍳 إنتاج", return: "↩️ مرتجع", count: "🔍 فرق الجرد", adjust: "✏️ تصحيح المخزون" }[o.type] || "عملية", b);
 }
-function sheetNewOrder() {
+Object.assign(OSTL, { wait: "كتسنى الموافقة", refused: "مرفوضة", topay: "كتسنى التسبيق", cancel: "ملغية" });
+Object.assign(OSTI, { wait: "⏳", refused: "⛔", topay: "💵", cancel: "🗑️" });
+let OD = null;
+const ordWss = (o) => [...new Set((o.lines || []).map((l) => {
   var _a;
-  if (me.role !== "seller") return toast("📝 الطلبيات كتسجلهم غير البائعات مع الزبون", true);
-  openSheet("📝 طلبية جديدة", `${choice("ochan", "الطلبية جات من", CHANNELS, "فالمحل", 3)}
-   <div class="two">${inp("oclient", "👤 سمية الزبون", "", "text", 'autocomplete="off"')}${inp("ophone", "📞 التيليفون", "", "tel", 'autocomplete="off"')}</div>
-   ${fld("odesc", "🎂 شنو بغا؟ (المنتوج، الحجم، الكتابة، الألوان...)", '<textarea id="odesc" name="odesc" rows="3"></textarea>')}
-   ${choice("ows", "شكون غادي يصاوبها؟", WS.map((x) => ({ v: x.id, l: x.name, i: x.i })), "w1", 3)}${choice("opos", "غادي ياخدها من", POS.map((x) => ({ v: x.id, l: x.name, i: x.i })), ((_a = me.loc) == null ? void 0 : _a[0]) === "p" ? me.loc : S.pos, 2)}
-   ${choice("odue", "📅 إمتى؟", [{ v: today(), l: "اليوم", i: "⚡" }, { v: daysAgo(-1), l: "غدا", i: "🌅" }, { v: daysAgo(-2), l: "بعد غدا", i: "📆" }], daysAgo(-1), 3)}
-   <div class="two">${inp("odue2", "ولا تاريخ آخر", "", "date")}${inp("otime", "⏰ الساعة", "", "time")}</div>
-   <div class="two">${moneyIn("ototal", "💰 الثمن الكامل")}${moneyIn("oadv", "💵 التسبيق", "0")}</div>
-   ${choice("oadvm", "التسبيق تخلص بـ", [{ v: "كاش", l: "كاش", i: "💵" }, { v: "تحويل بنكي", l: "تحويل بنكي", i: "🏦" }], "كاش", 2)}
-   ${photoField("ord", "صورة (نموذج، وصل التحويل...)")}${errP}<button class="btn primary block" type="submit">✅ سجل الطلبية</button>`, async (f) => {
-    const client = f.oclient.value.trim(), desc = f.odesc.value.trim(), total = num(f.ototal.value), adv = num(f.oadv.value) || 0;
-    const due = f.odue2.value || f.odue.value;
-    if (!client) return ferr("كتب سمية الزبون.");
-    if (!desc) return ferr("كتب شنو بغا الزبون.");
-    if (!(total >= 0)) return ferr("دخل الثمن.");
-    if (adv > total) return ferr("التسبيق كبر من الثمن.");
+  return l.kind === "sp" ? l.ws : ((_a = S.items[l.item]) == null ? void 0 : _a.ws) || "";
+}).filter(Boolean))];
+const ordTotal = (o) => r2((o.lines || []).reduce((a, l) => a + (+l.qty || 0) * (+l.price || 0), 0));
+const ordPriced = (o) => (o.lines || []).every((l) => l.kind !== "sp" || l.price != null);
+const ordRest = (o) => r2((+o.total || 0) - (+o.advance || 0) - (+o.paidRest || 0));
+const lnName = (l) => l.kind === "sp" ? l.title || "طلبية خاصة" : iname(l.item);
+const isChefOf = (w) => me && (me.role === "admin" || me.role === "prod" || me.role === "ws" && (me.loc === w || (me.locs || []).includes(w)));
+function ordState(o) {
+  if (["new", "production", "ready", "transit", "delivered", "cancel"].includes(o.status)) return o.status;
+  const W = o.wss || ordWss(o);
+  const ch = o.chef || {};
+  if (W.some((w) => {
+    var _a;
+    return ((_a = ch[w]) == null ? void 0 : _a.st) === "no";
+  })) return "refused";
+  if (W.every((w) => {
+    var _a;
+    return ((_a = ch[w]) == null ? void 0 : _a.st) === "ok";
+  }) && ordPriced(o)) return "topay";
+  return "wait";
+}
+const ordTodo = (o) => {
+  var _a;
+  if (o.v !== 2) return [];
+  const T = [];
+  const ch = o.chef || {};
+  if (o.status === "wait") {
+    (o.wss || []).forEach((w) => {
+      if (!ch[w] || ch[w].st === "wait") {
+        if (isChefOf(w)) T.push("chef:" + w);
+      }
+    });
+    if (!ordPriced(o) && isMgr()) T.push("price");
+  }
+  if (o.status === "topay" && ((_a = o.advReq) == null ? void 0 : _a.st) === "wait" && isMgr()) T.push("adv");
+  return T;
+};
+const voiceBox = () => `<div class="box" style="gap:8px"><b>🎤 سجل بالصوت (اختياري)</b><div class="btns" style="margin:0"><button type="button" class="btn primary" id="recb">🎤 بدا التسجيل</button><span id="rect" class="num" style="align-self:center"></span></div><div id="recout"></div><input type="file" id="recf" accept="audio/*" capture hidden></div>`;
+const audioOf = (v) => v && v.data ? `<audio controls src="${v.data}" style="width:100%"></audio>` : "";
+function ordReadForm(f) {
+  var _a, _b, _c, _d;
+  if (!OD || !f) return;
+  ["cfirst", "clast", "p1", "p2", "addr", "time"].forEach((k) => {
+    const e = f["o_" + k];
+    if (e) OD[k] = e.value;
+  });
+  OD.w1 = !!((_a = f.o_w1) == null ? void 0 : _a.checked);
+  OD.w2 = !!((_b = f.o_w2) == null ? void 0 : _b.checked);
+  const d = ((_c = f.o_due2) == null ? void 0 : _c.value) || ((_d = f.o_due) == null ? void 0 : _d.value);
+  if (d) OD.due = d;
+}
+function sheetNewOrder(keep) {
+  if (me.role !== "seller" && !isMgr()) return toast("📝 الطلبيات كتسجلهم البائعات مع الزبون فالمحل", true);
+  if (!keep || !OD) OD = { cfirst: "", clast: "", p1: "", w1: true, p2: "", w2: false, addr: "", due: daysAgo(-1), time: "", lines: [] };
+  const o = OD;
+  const tot = ordTotal(o), hasSp = o.lines.some((l) => l.kind === "sp");
+  openSheet("📝 طلبية جديدة", `<div class="box" style="gap:8px"><h3 style="margin:0">👤 الزبون</h3><div class="two">${inp("o_cfirst", "الاسم", o.cfirst, "text", 'autocomplete="off"')}${inp("o_clast", "النسب", o.clast, "text", 'autocomplete="off"')}</div>
+    <div class="two">${inp("o_p1", "📞 التيليفون 1", o.p1, "tel", 'autocomplete="off"')}<label class="prow" style="gap:8px;justify-content:flex-start;align-self:end;min-height:48px"><input type="checkbox" name="o_w1" ${o.w1 ? "checked" : ""} style="width:24px;height:24px"> 💬 فيه واتساب</label></div>
+    <div class="two">${inp("o_p2", "📞 التيليفون 2", o.p2, "tel", 'autocomplete="off"')}<label class="prow" style="gap:8px;justify-content:flex-start;align-self:end;min-height:48px"><input type="checkbox" name="o_w2" ${o.w2 ? "checked" : ""} style="width:24px;height:24px"> 💬 فيه واتساب</label></div>
+    ${fld("o_addr", "🏠 العنوان", `<textarea id="o_addr" name="o_addr" rows="2">${esc(o.addr)}</textarea>`)}</div>
+   <div class="box" style="gap:8px"><h3 style="margin:0">🧺 شنو بغا الزبون؟</h3>${o.lines.length ? o.lines.map((l, i) => {
+    var _a;
+    return `<div class="prow" style="align-items:flex-start"><div class="lead" style="align-items:flex-start"><span class="em">${l.kind === "sp" ? "✨" : ico(l.item)}</span><div><b>${esc(lnName(l))} × ${fmt(l.qty)}</b><div class="muted">${l.kind === "sp" ? "🏭 " + esc(LOC[l.ws] || "") + " · 💰 الثمن كيعطيه المسير" : money(l.price) + " للحبة"}${((_a = l.photos) == null ? void 0 : _a.length) ? " · 📷 " + l.photos.length : ""}${l.voice ? " · 🎤" : ""}${l.note ? " · 📝 " + esc(l.note.slice(0, 40)) : ""}</div></div></div><div style="display:flex;gap:6px;align-items:center">${l.kind === "sp" ? "" : `<b class="num">${money(l.qty * l.price)}</b>`}<button type="button" class="link neg" data-odel="${i}">🗑️</button></div></div>`;
+  }).join("") : '<p class="muted" style="margin:0">زيد منتوج من الكتالوج ولا طلبية خاصة.</p>'}
+    <div class="btns" style="margin:0"><button type="button" class="btn" data-oadd="cat">➕ منتوج من الكتالوج</button><button type="button" class="btn" data-oadd="sp">✨ طلبية خاصة</button></div>
+    ${o.lines.length ? `<div class="prow"><b>المجموع${hasSp ? " (بلا الطلبيات الخاصة)" : ""}</b><b class="num">${money(tot)}</b></div>` : ""}</div>
+   <div class="box" style="gap:8px"><h3 style="margin:0">📅 التسليم</h3>${choice("o_due", "إمتى؟", [{ v: daysAgo(-1), l: "غدا", i: "🌅" }, { v: daysAgo(-2), l: "بعد غدا", i: "📆" }, { v: daysAgo(-3), l: "من هنا 3 أيام", i: "🗓️" }], [daysAgo(-1), daysAgo(-2), daysAgo(-3)].includes(o.due) ? o.due : "", 3)}<div class="two">${inp("o_due2", "ولا تاريخ آخر", [daysAgo(-1), daysAgo(-2), daysAgo(-3)].includes(o.due) ? "" : o.due, "date")}${inp("o_time", "⏰ الساعة", o.time, "time")}</div>
+    <p class="muted" style="margin:0">⏳ الشاف ديال الورشة خاصو يوافق على التاريخ${hasSp ? "، والمسير كيعطي الثمن ديال الطلبيات الخاصة" : ""}. من بعد الزبون كيخلص تسبيق 50% على الأقل، كاش.</p></div>
+   ${errP}<button class="btn primary block" type="submit">📨 صيفط للموافقة</button>`, async (f) => {
+    var _a, _b;
+    ordReadForm(f);
+    const o2 = OD;
+    const cfirst = o2.cfirst.trim(), clast = o2.clast.trim();
+    const ph = [{ n: o2.p1.trim(), wa: o2.w1 }, { n: o2.p2.trim(), wa: o2.w2 }];
+    if (!cfirst || !clast) return ferr("👤 كتب الاسم والنسب ديال الزبون.");
+    if (ph.some((p) => phoneId(p.n).length < 10)) return ferr("📞 خاص جوج نمر ديال التيليفون كاملين.");
+    if (phoneId(ph[0].n) === phoneId(ph[1].n)) return ferr("📞 جوج النمر بحال بحال، خاص نمرة أخرى.");
+    if (!ph.some((p) => p.wa)) return ferr("💬 خاص على الأقل نمرة وحدة فيها واتساب.");
+    if (o2.addr.trim().length < 4) return ferr("🏠 كتب العنوان ديال الزبون.");
+    if (!o2.lines.length) return ferr("🧺 زيد على الأقل منتوج ولا طلبية خاصة.");
+    if (!o2.due || o2.due < today()) return ferr("📅 اختار تاريخ التسليم.");
     busy(f, true);
     try {
-      const photos = await saveMedia(PH.ord, "order");
-      const n = S.orders.reduce((m, o) => Math.max(m, +o.num || 0), 0) + 1;
-      await db.collection("orders").add({ num: n, client, phone: f.ophone.value.trim(), channel: f.ochan.value, pos: f.opos.value, ws: f.ows.value, desc, due, dueTime: f.otime.value, total, advance: adv, advMethod: f.oadvm.value, paidRest: 0, status: "new", ts: Date.now(), history: [{ s: "new", by: meName(), ts: Date.now(), photos, note: f.ochan.value }] });
+      const lines = [];
+      for (const l of o2.lines) {
+        const photos = ((_a = l.photos) == null ? void 0 : _a.length) ? await saveMedia(l.photos, "order") : [];
+        lines.push({ kind: l.kind, item: l.item || null, title: l.title || "", ws: l.kind === "sp" ? l.ws : ((_b = S.items[l.item]) == null ? void 0 : _b.ws) || "", qty: +l.qty || 1, price: l.kind === "sp" ? null : +l.price || 0, note: l.note || "", photos, voice: l.voice || null });
+      }
+      const doc = { v: 2, cfirst, clast, client: cfirst + " " + clast, phones: ph, phone: ph[0].n, address: o2.addr.trim(), pos: S.pos || me.loc, channel: "فالمحل", lines, due: o2.due, dueTime: o2.time || "", advance: 0, paidRest: 0, ts: Date.now(), by: meName(), byId: me.id };
+      doc.wss = ordWss(doc);
+      doc.ws = doc.wss[0] || "w1";
+      doc.chef = Object.fromEntries(doc.wss.map((w) => [w, { st: "wait" }]));
+      doc.total = ordPriced(doc) ? ordTotal(doc) : null;
+      doc.status = ordState(doc);
+      doc.num = S.orders.reduce((m, x) => Math.max(m, +x.num || 0), 0) + 1;
+      doc.history = [{ s: "wait", by: meName(), ts: Date.now() }];
+      const r = await db.collection("orders").add(doc);
+      OD = null;
       closeSheet();
-      toast("📝 الطلبية #" + n + " تسجلات");
+      toast("📨 الطلبية #" + doc.num + " تصيفطات للموافقة");
+      setTimeout(() => sheetOrder(r.id), 300);
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    f.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-oadd]"), d = e.target.closest("[data-odel]");
+      if (a) {
+        e.preventDefault();
+        ordReadForm(f);
+        a.dataset.oadd === "sp" ? sheetOrdSp() : sheetOrdCat();
+      }
+      if (d) {
+        e.preventDefault();
+        ordReadForm(f);
+        OD.lines.splice(+d.dataset.odel, 1);
+        sheetNewOrder(true);
+      }
+    });
+  });
+}
+function sheetOrdCat() {
+  recReset();
+  let pick = null;
+  const L = itemsArr().filter((i) => i.kind === "final" && i.active !== false && +i.price > 0).sort((a, b) => a.name.localeCompare(b.name));
+  openSheet("➕ منتوج من الكتالوج", `${inp("oc_q", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div id="oc_list" style="max-height:38vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-pick="${i.id}" data-n="${esc(i.name.toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}</b></div><b class="num">${money(i.price)}</b></button>`).join("")}</div>
+   <div id="oc_sel" class="muted">👆 اختار المنتوج</div>${stepper("data-ocq", "q", "1", "")}${fld("oc_note", "📝 ملاحظة (الكتابة، اللون، الحجم...)", '<textarea id="oc_note" name="oc_note" rows="2"></textarea>')}${photoField("ocph", "📷 صور (اختيارية)")}${voiceBox()}
+   ${errP}<div class="btns"><button type="button" class="btn" id="oc_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
+    if (!pick) return ferr("👆 اختار المنتوج من اللائحة.");
+    if (REC.rec) return ferr("⏹️ وقف التسجيل قبل.");
+    const q = num($("input[data-ocq]", f).value);
+    if (!(q > 0)) return ferr("دخل العدد.");
+    OD.lines.push({ kind: "cat", item: pick, qty: q, price: +S.items[pick].price || 0, note: f.oc_note.value.trim(), photos: [...PH.ocph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
+    recReset();
+    sheetNewOrder(true);
+  }, (f) => {
+    recMount(f);
+    $("#oc_back", f).onclick = () => {
+      recReset();
+      sheetNewOrder(true);
+    };
+    f.oc_q.addEventListener("input", () => {
+      const q = f.oc_q.value.trim().toLowerCase();
+      $$("[data-pick]", f).forEach((b) => b.style.display = !q || b.dataset.n.includes(q) ? "" : "none");
+    });
+    f.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-pick]");
+      if (!b) return;
+      e.preventDefault();
+      pick = b.dataset.pick;
+      $$("[data-pick]", f).forEach((x) => x.style.outline = x === b ? "3px solid var(--acc,#e02843)" : "");
+      $("#oc_sel", f).innerHTML = "✅ <b>" + esc(iname(pick)) + "</b> · " + money(S.items[pick].price);
+    });
+  });
+}
+function sheetOrdSp() {
+  recReset();
+  openSheet("✨ طلبية خاصة", `${inp("os_t", "🎂 شنو هو؟ (مثلاً: كيكة عيد ميلاد 3 طبقات)", "", "text", 'autocomplete="off"')}${stepper("data-osq", "q", "1", "")}${choice("os_ws", "🏭 شكون غادي يصاوبها؟", WS.map((x) => ({ v: x.id, l: x.name, i: x.i })), "w1", 3)}
+   ${fld("os_note", "📝 التفاصيل (الحجم، الكتابة، الألوان، الذوق...)", '<textarea id="os_note" name="os_note" rows="3"></textarea>')}${photoField("osph", "📷 صور (نموذج...)")}${voiceBox()}
+   <p class="muted" style="margin:0">💰 الثمن كيعطيه المسير قبل ما تدوز الطلبية.</p>${errP}<div class="btns"><button type="button" class="btn" id="os_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
+    const t = f.os_t.value.trim();
+    if (!t) return ferr("كتب شنو هي الطلبية.");
+    if (REC.rec) return ferr("⏹️ وقف التسجيل قبل.");
+    const q = num($("input[data-osq]", f).value);
+    if (!(q > 0)) return ferr("دخل العدد.");
+    const note = f.os_note.value.trim();
+    if (!note && !(PH.osph || []).length && !REC.data) return ferr("زيد التفاصيل: كتابة، صورة ولا صوت.");
+    OD.lines.push({ kind: "sp", title: t, qty: q, ws: f.os_ws.value, note, photos: [...PH.osph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
+    recReset();
+    sheetNewOrder(true);
+  }, (f) => {
+    recMount(f);
+    $("#os_back", f).onclick = () => {
+      recReset();
+      sheetNewOrder(true);
+    };
+  });
+}
+function sheetOrder2(id) {
+  const o = S.orders.find((x) => x.id === id);
+  if (!o) return;
+  const ch = o.chef || {};
+  const st = o.status;
+  const rest = ordRest(o);
+  const todo = ordTodo(o);
+  const mine = me.role === "seller" || isMgr();
+  const ln = (l, i) => {
+    var _a, _b, _c, _d, _e;
+    return `<div class="box" style="gap:6px"><div class="prow"><div class="lead"><span class="em">${l.kind === "sp" ? "✨" : ico(l.item)}</span><div><b>${esc(lnName(l))} × ${fmt(l.qty)}</b><div class="muted">${l.kind === "sp" ? "طلبية خاصة · " + esc(LOC[l.ws] || "") : esc(LOC[(_a = S.items[l.item]) == null ? void 0 : _a.ws] || "")}</div></div></div><b class="num">${l.price != null ? money(l.qty * l.price) : "💰 ؟"}</b></div>${l.note ? `<div style="white-space:pre-wrap">📝 ${esc(l.note)}</div>` : ""}${audioOf(l.voice)}${((_b = l.photos) == null ? void 0 : _b.length) ? `<div class="media">${mediaBtns(l.photos, "صورة")}</div>` : ""}${((_e = (_d = (_c = o.delivery) == null ? void 0 : _c.photos) == null ? void 0 : _d[i]) == null ? void 0 : _e.length) ? `<div class="media">${mediaBtns(o.delivery.photos[i], "التسليم", "🎉")}</div>` : ""}</div>`;
+  };
+  const chefRow = (w) => {
+    const c = ch[w] || { st: "wait" };
+    return `<div class="prow"><span>🏭 ${esc(LOC[w] || w)}</span><span>${c.st === "ok" ? "✅ وافق " + esc(c.by || "") : c.st === "no" ? "⛔ رفض " + esc(c.by || "") : "⏳ كيتسنى الشاف"}</span></div>${c.st === "no" ? `<div class="alert bad" style="cursor:default"><div style="white-space:pre-wrap">💬 ${esc(c.reason || "")}</div>${audioOf(c.voice)}</div>` : ""}${c.st === "wait" && isChefOf(w) && st === "wait" ? `<div class="btns" style="margin:0"><button type="button" class="btn danger" data-act="ochef" data-id="${o.id}" data-w="${w}" data-d="no">❌ رفض</button><button type="button" class="btn primary" data-act="ochef" data-id="${o.id}" data-w="${w}" data-d="ok">✅ موافق على التاريخ</button></div>` : ""}`;
+  };
+  openSheet("📝 طلبية #" + o.num, `<div class="head"><h2>👤 ${esc(o.client)}</h2><span class="tag ${st === "delivered" ? "good" : st === "refused" ? "bad" : "acc"}">${OSTI[st] || ""} ${OSTL[st] || st}</span></div>
+   <div class="muted">${(o.phones || []).map((p) => "📞 " + esc(p.n) + (p.wa ? " 💬" : "")).join(" · ")}<br>🏠 ${esc(o.address || "")}<br>${LOCI[o.pos]} ${esc(LOC[o.pos])} · 📅 ${o.due} ${o.dueTime || ""} · ✍️ ${esc(o.by || "")}</div>
+   ${(o.lines || []).map(ln).join("")}
+   <div class="stats sheet-stats"><div class="stat"><span>💰 المجموع</span><b>${o.total != null ? money(o.total) : "؟"}</b></div><div class="stat"><span>💵 التسبيق</span><b>${money(o.advance || 0)}</b></div><div class="stat"><span>⏳ الباقي</span><b>${o.total != null ? money(rest) : "؟"}</b></div></div>
+   ${["wait", "refused", "topay"].includes(st) ? `<div class="box" style="gap:6px"><h3 style="margin:0">✅ الموافقات</h3>${(o.wss || []).map(chefRow).join("")}
+     ${(o.lines || []).some((l) => l.kind === "sp") ? `<div class="prow"><span>💰 الثمن ديال الطلبيات الخاصة</span><span>${ordPriced(o) ? "✅ " + esc(o.pricedBy || "") : "⏳ كيتسنى المسير"}</span></div>${!ordPriced(o) && isMgr() ? `<button type="button" class="btn primary block" data-act="oprice" data-id="${o.id}">💰 عطي الثمن</button>` : ""}` : ""}
+     ${o.advReq ? `<div class="prow"><span>💵 تسبيق أقل من 50%: ${money(o.advReq.amt)}</span><span>${o.advReq.st === "ok" ? "✅ وافق " + esc(o.advReq.by || "") : o.advReq.st === "no" ? "⛔ رفض" : "⏳ كيتسنى المسير"}</span></div>${o.advReq.st === "wait" && isMgr() ? `<div class="btns" style="margin:0"><button type="button" class="btn danger" data-act="oadvq" data-id="${o.id}" data-d="no">❌ رفض</button><button type="button" class="btn primary" data-act="oadvq" data-id="${o.id}" data-d="ok">✅ وافق</button></div>` : ""}` : ""}</div>` : ""}
+   <div class="btns">${st === "topay" && mine ? `<button type="button" class="btn primary" data-act="opay" data-id="${o.id}">💵 خلص التسبيق</button>` : ""}
+    ${st === "refused" && mine ? `<button type="button" class="btn primary" data-act="oredate" data-id="${o.id}">📅 بدل التاريخ وعاود صيفط</button>` : ""}
+    ${["new", "production"].includes(st) && (isChefOf(o.ws) || (o.wss || []).some(isChefOf)) ? nextStatuses(st).map((n) => `<button type="button" class="btn primary" data-act="oadv" data-id="${o.id}" data-s="${n}">${OSTI[n]} ${OSTL[n]}</button>`).join("") : ""}
+    ${["ready", "transit"].includes(st) && mine ? `<button type="button" class="btn primary" data-act="odeliver" data-id="${o.id}">🎉 سلم للزبون</button>` : ""}
+    ${o.advance > 0 ? `<button type="button" class="btn" data-act="oslip" data-id="${o.id}" data-c="ordc">🖨️ إعادة طبع بون الكوموند</button>` : ""}${st === "delivered" ? `<button type="button" class="btn" data-act="oslip" data-id="${o.id}" data-c="ordl">🖨️ إعادة طبع بون التسليم</button>` : ""}
+    ${["wait", "refused", "topay"].includes(st) && (isMgr() || o.byId === me.id) ? `<button type="button" class="btn danger" data-act="ocancel" data-id="${o.id}">🗑️ لغي الطلبية</button>` : ""}</div>`);
+}
+async function ordSave(o, upd, hist) {
+  const n = __spreadValues(__spreadValues({}, o), upd);
+  n.status = ordState(n);
+  if (n.total == null && ordPriced(n)) n.total = ordTotal(n);
+  const u = __spreadProps(__spreadValues({}, upd), { status: n.status, total: n.total != null ? n.total : null });
+  if (hist) u.history = [...o.history || [], __spreadProps(__spreadValues({}, hist), { by: meName(), ts: Date.now() })];
+  await db.doc("orders/" + o.id).update(u);
+  Object.assign(o, u);
+  return o;
+}
+function sheetOrdChef(id, w, d) {
+  const o = S.orders.find((x) => x.id === id);
+  if (!o || !isChefOf(w)) return;
+  recReset();
+  if (d === "ok") {
+    if (!confirm("✅ موافق على التسليم " + o.due + " " + (o.dueTime || "") + " (" + (LOC[w] || "") + ")؟")) return;
+    ordSave(o, { chef: __spreadProps(__spreadValues({}, o.chef || {}), { [w]: { st: "ok", by: meName(), ts: Date.now() } }) }, { s: "chef_ok", note: LOC[w] }).then(() => {
+      toast("✅ تقبلات");
+      sheetOrder2(id);
+    }).catch((e) => toast(e.message, true));
+    return;
+  }
+  openSheet("❌ رفض الطلبية #" + o.num, `<p class="muted" style="margin:0">علاش؟ كتب ولا سجل بالصوت (إجباري). البائعة غادي تشوفها وتعاود مع الزبون.</p>${voiceBox()}${fld("ocr", "📝 السبب", '<textarea id="ocr" name="ocr" rows="3"></textarea>')}${errP}<button class="btn danger block" type="submit">❌ رفض</button>`, async (f) => {
+    const t = f.ocr.value.trim();
+    if (REC.rec) return ferr("⏹️ وقف التسجيل قبل.");
+    if (t.length < 3 && !REC.data) return ferr("كتب السبب ولا سجلو بالصوت.");
+    busy(f, true);
+    try {
+      await ordSave(o, { chef: __spreadProps(__spreadValues({}, o.chef || {}), { [w]: { st: "no", by: meName(), ts: Date.now(), reason: t, voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null } }) }, { s: "chef_no", note: t });
+      recReset();
+      toast("⛔ الطلبية ترفضات");
+      sheetOrder2(id);
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => recMount(f));
+}
+function sheetOrdPrice(id) {
+  const o = S.orders.find((x) => x.id === id);
+  if (!o || !isMgr()) return;
+  const L = o.lines || [];
+  openSheet("💰 الثمن · طلبية #" + o.num, `${L.map((l, i) => {
+    var _a;
+    return l.kind === "sp" ? `<div class="box" style="gap:6px"><b>✨ ${esc(l.title)} × ${fmt(l.qty)}</b>${l.note ? `<div class="muted" style="white-space:pre-wrap">${esc(l.note)}</div>` : ""}${audioOf(l.voice)}${((_a = l.photos) == null ? void 0 : _a.length) ? `<div class="media">${mediaBtns(l.photos, "صورة")}</div>` : ""}${moneyIn("opr" + i, "💰 الثمن ديال الحبة", l.price != null ? fmt(l.price) : "")}</div>` : "";
+  }).join("")}${errP}<button class="btn primary block" type="submit">✅ حفظ الثمن</button>`, async (f) => {
+    const lines = L.map((l, i) => l.kind === "sp" ? __spreadProps(__spreadValues({}, l), { price: num(f["opr" + i].value) }) : l);
+    if (lines.some((l) => l.kind === "sp" && !(l.price > 0))) return ferr("دخل الثمن ديال كل طلبية خاصة.");
+    busy(f, true);
+    try {
+      await ordSave(o, { lines, total: ordTotal({ lines }), pricedBy: meName(), pricedTs: Date.now() }, { s: "priced", note: money(ordTotal({ lines })) });
+      toast("💰 الثمن تسجل");
+      sheetOrder2(id);
     } catch (e) {
       fail(f, e);
     }
   });
 }
+function sheetOrdPay(id) {
+  var _a;
+  const o = S.orders.find((x) => x.id === id);
+  if (!o || o.status !== "topay") return;
+  const tot = +o.total || 0, min = Math.ceil(tot * 0.5 * 100) / 100;
+  const okLow = ((_a = o.advReq) == null ? void 0 : _a.st) === "ok" ? +o.advReq.amt : null;
+  openSheet("💵 التسبيق · طلبية #" + o.num, `<div class="stats sheet-stats"><div class="stat"><span>💰 المجموع</span><b>${money(tot)}</b></div><div class="stat"><span>💵 الحد الأدنى (50%)</span><b>${money(min)}</b></div></div>${okLow != null ? `<div class="alert acc" style="cursor:default">✅ المسير وافق على تسبيق ديال ${money(okLow)}</div>` : ""}
+   ${moneyIn("opay", "💵 شحال غادي يخلص دابا (كاش)", fmt(okLow != null ? okLow : min))}<p class="muted" style="margin:0">إلا الزبون بغا يخلص أقل من 50%، خاص موافقة المسير قبل.</p>${errP}<button class="btn primary block" type="submit">✅ قبضت الفلوس · طبع البون</button>`, async (f) => {
+    const a = num(f.opay.value);
+    if (!(a > 0)) return ferr("دخل المبلغ.");
+    if (a > tot + 9e-3) return ferr("المبلغ كبر من المجموع.");
+    if (a < min - 9e-3 && !(okLow != null && a >= okLow - 9e-3)) {
+      if (!confirm("💵 " + money(a) + " أقل من 50%. نصيفطو طلب الموافقة للمسير؟")) return;
+      busy(f, true);
+      try {
+        await db.doc("orders/" + o.id).update({ advReq: { amt: a, st: "wait", by: meName(), ts: Date.now() } });
+        o.advReq = { amt: a, st: "wait" };
+        toast("📨 تصيفط للمسير، تسنى الموافقة");
+        sheetOrder2(id);
+      } catch (e) {
+        fail(f, e);
+      }
+      return;
+    }
+    const sh = openShift(o.pos);
+    if (!sh) return ferr("🔓 خاص النوبة (la caisse) تكون محلولة باش تقبضي الفلوس.");
+    busy(f, true);
+    try {
+      await db.doc("shifts/" + sh.id).update({ ocash: [...sh.ocash || [], { order: o.id, num: o.num, amt: a, kind: "adv", ts: Date.now(), by: meName() }] });
+      await db.doc("orders/" + o.id).update({ status: "new", advance: a, advMethod: "كاش", advTs: Date.now(), advBy: meName(), advShift: sh.id, history: [...o.history || [], { s: "new", by: meName(), ts: Date.now(), note: "تسبيق " + money(a) }] });
+      Object.assign(o, { status: "new", advance: a, advTs: Date.now() });
+      closeSheet();
+      toast("✅ الطلبية #" + o.num + " داززت");
+      printOrderSlip(o, "ordc");
+    } catch (e) {
+      fail(f, e);
+    }
+  });
+}
+function sheetOrdRedate(id) {
+  const o = S.orders.find((x) => x.id === id);
+  if (!o) return;
+  openSheet("📅 تاريخ جديد · طلبية #" + o.num, `${inp("ord2", "📅 التاريخ الجديد", "", "date")}${inp("ort", "⏰ الساعة", o.dueTime || "", "time")}${errP}<button class="btn primary block" type="submit">📨 عاود صيفط للشاف</button>`, async (f) => {
+    const d = f.ord2.value;
+    if (!d || d < today()) return ferr("اختار تاريخ.");
+    busy(f, true);
+    try {
+      const chef = Object.fromEntries((o.wss || []).map((w) => [w, { st: "wait" }]));
+      await ordSave(o, { due: d, dueTime: f.ort.value || "", chef }, { s: "redate", note: d });
+      toast("📨 تصيفطات");
+      sheetOrder2(id);
+    } catch (e) {
+      fail(f, e);
+    }
+  });
+}
+function sheetOrdDeliver(id) {
+  const o = S.orders.find((x) => x.id === id);
+  if (!o) return;
+  const rest = ordRest(o);
+  const L = o.lines || [];
+  openSheet("🎉 التسليم · طلبية #" + o.num, `<div class="stats sheet-stats"><div class="stat"><span>💰 المجموع</span><b>${money(o.total)}</b></div><div class="stat"><span>💵 خلص</span><b>${money((+o.advance || 0) + (+o.paidRest || 0))}</b></div><div class="stat"><span>⏳ الباقي</span><b>${money(rest)}</b></div></div>
+   ${rest > 9e-3 ? `<label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" name="odpaid" style="width:24px;height:24px"> 💵 قبضت الباقي ${money(rest)} كاش</label>` : ""}
+   <h3 style="margin:0">📷 صور كل منتوج قبل ما يخرج (إجبارية)</h3>${L.map((l, i) => photoField("odl" + i, "📷 " + lnName(l) + " × " + fmt(l.qty))).join("")}${errP}<button class="btn primary block" type="submit">🎉 سلم · طبع بون التسليم</button>`, async (f) => {
+    if (rest > 9e-3 && !f.odpaid.checked) return ferr("💵 الباقي خاصو يتخلص قبل التسليم.");
+    const miss = L.map((l, i) => (PH["odl" + i] || []).length ? null : lnName(l)).filter(Boolean);
+    if (miss.length) return ferr("📷 صور: " + miss.join("، "));
+    const sh = rest > 9e-3 ? openShift(o.pos) : null;
+    if (rest > 9e-3 && !sh) return ferr("🔓 خاص النوبة (la caisse) تكون محلولة باش تقبضي الباقي.");
+    busy(f, true);
+    try {
+      const photos = {};
+      for (let i = 0; i < L.length; i++) photos[i] = await saveMedia(PH["odl" + i], "order");
+      if (sh) await db.doc("shifts/" + sh.id).update({ ocash: [...sh.ocash || [], { order: o.id, num: o.num, amt: rest, kind: "rest", ts: Date.now(), by: meName() }] });
+      const delivery = { ts: Date.now(), by: meName(), paid: rest > 9e-3 ? rest : 0, photos, shift: (sh == null ? void 0 : sh.id) || null };
+      const pr = r2((+o.paidRest || 0) + (rest > 9e-3 ? rest : 0));
+      await db.doc("orders/" + o.id).update({ status: "delivered", paidRest: pr, delivery, history: [...o.history || [], { s: "delivered", by: meName(), ts: Date.now(), note: rest > 9e-3 ? "خلص " + money(rest) : "" }] });
+      Object.assign(o, { status: "delivered", paidRest: pr, delivery });
+      closeSheet();
+      toast("🎉 الطلبية #" + o.num + " تسلمات");
+      printOrderSlip(o, "ordl");
+    } catch (e) {
+      fail(f, e);
+    }
+  });
+}
+async function printOrderSlip(o, copy) {
+  var _a;
+  const sh = { pos: o.pos };
+  if (HW().kind && await hwPrint(sh, o, { copy })) return toast("🖨️ تطبع");
+  let dl = null;
+  try {
+    dl = ((_a = window.claude) == null ? void 0 : _a.use) ? await window.claude.use("downloads") : null;
+  } catch (_) {
+  }
+  if (!dl) return toast("الطبع ما متاحش فهاد الجهاز", true);
+  try {
+    const b = await receiptBlob(sh, o, copy);
+    await dl.save({ filename: `${copy === "ordc" ? "bon-commande" : "bon-livraison"}-${o.num}.png`, data: b });
+    toast("🖨️ البون واجد");
+  } catch (e) {
+    if ((e == null ? void 0 : e.code) === "declined") return;
+    toast("ما قدرناش نوجدو البون", true);
+  }
+}
 const nextStatuses = (s) => ({ new: ["production"], production: ["ready"], ready: ["transit", "delivered"], transit: ["delivered"] })[s] || [];
 function sheetOrder(id) {
   const o = S.orders.find((x) => x.id === id);
   if (!o) return;
+  if (o.v === 2) return sheetOrder2(id);
   const rest = r2((+o.total || 0) - (+o.advance || 0) - (+o.paidRest || 0));
   const hist = o.history || [];
   const idx = OST.findIndex((s) => s[0] === o.status);
@@ -13780,6 +14286,7 @@ async function openMedia(id) {
 const ACT = {
   back: () => doBack(),
   go: (el) => {
+    if (!leaveSaleOk(el.dataset.v)) return;
     if (el.dataset.v === "report") S.rep.data = null;
     if (S.view !== el.dataset.v) {
       S.hist.push(S.view);
@@ -14349,7 +14856,7 @@ const ACT = {
   devices: () => sheetDevices(),
   appquit: () => {
     var _a, _b;
-    if (!confirm("نسدو التطبيق؟")) return;
+    if (!confirm((cartN() ? "🛒 السلة فيها " + cartN() + " حاجة ما تخلصاتش (غادي تبقى محفوظة).\n" : "") + "نسدو التطبيق؟")) return;
     try {
       (_b = (_a = window.MorangoNative) == null ? void 0 : _a.setFullscreen) == null ? void 0 : _b.call(_a, "0");
     } catch (_) {
@@ -14666,6 +15173,14 @@ const ACT = {
       toast("ما تلغاش", true);
     }
   },
+  cstep: (el) => {
+    const c = cartOf(S.pos), id = el.dataset.id;
+    const v = Math.round(((+c[id] || 0) + +el.dataset.d) * 1e3) / 1e3;
+    if (v > 0) c[id] = v;
+    else delete c[id];
+    render();
+    if (!$("#sheet").hidden) Object.keys(c).length ? sheetCart() : closeSheet();
+  },
   cdel: (el) => {
     const c = cartOf(S.pos);
     delete c[el.dataset.id];
@@ -14724,8 +15239,46 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  ochef: (el) => sheetOrdChef(el.dataset.id, el.dataset.w, el.dataset.d),
+  oprice: (el) => sheetOrdPrice(el.dataset.id),
+  opay: (el) => sheetOrdPay(el.dataset.id),
+  oredate: (el) => sheetOrdRedate(el.dataset.id),
+  odeliver: (el) => sheetOrdDeliver(el.dataset.id),
+  oslip: (el) => {
+    const o = S.orders.find((x) => x.id === el.dataset.id);
+    if (o) printOrderSlip(o, el.dataset.c);
+  },
+  ocancel: async (el) => {
+    const o = S.orders.find((x) => x.id === el.dataset.id);
+    if (!o || !confirm("🗑️ نلغيو الطلبية #" + o.num + "؟")) return;
+    try {
+      await db.doc("orders/" + o.id).update({ status: "cancel", history: [...o.history || [], { s: "cancel", by: meName(), ts: Date.now() }] });
+      closeSheet();
+      toast("🗑️ تلغات");
+    } catch (e) {
+      toast(e.message, true);
+    }
+  },
+  oadvq: async (el) => {
+    const o = S.orders.find((x) => x.id === el.dataset.id);
+    if (!(o == null ? void 0 : o.advReq) || !isMgr()) return;
+    const ok = el.dataset.d === "ok";
+    try {
+      await db.doc("orders/" + o.id).update({ advReq: __spreadProps(__spreadValues({}, o.advReq), { st: ok ? "ok" : "no", by: meName(), dts: Date.now() }) });
+      o.advReq = __spreadProps(__spreadValues({}, o.advReq), { st: ok ? "ok" : "no", by: meName() });
+      toast(ok ? "✅ وافقتي" : "⛔ رفضتي");
+      sheetOrder2(o.id);
+    } catch (e) {
+      toast(e.message, true);
+    }
+  },
   order: (el) => sheetOrder(el.dataset.id),
-  oadv: (el) => sheetOrderAdvance(el.dataset.id, el.dataset.s),
+  oadv: (el) => {
+    const o = S.orders.find((x) => x.id === el.dataset.id);
+    if ((o == null ? void 0 : o.v) === 2 && el.dataset.s === "delivered") return sheetOrdDeliver(o.id);
+    return sheetOrderAdvance(el.dataset.id, el.dataset.s);
+  },
+  oadv_old: (el) => sheetOrderAdvance(el.dataset.id, el.dataset.s),
   item: (el) => sheetItem(el.dataset.id),
   newitem: (el) => {
     S.newKind = el.dataset.k === "pre" ? "semi" : el.dataset.k;
