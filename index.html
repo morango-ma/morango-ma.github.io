@@ -385,7 +385,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111125759"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111125836"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -412,6 +412,9 @@ function devInfo(){const ua=navigator.userAgent;const touch=navigator.maxTouchPo
   const br=/CriOS|Chrome/.test(ua)&&!/Edg/.test(ua)?'Chrome':/Edg/.test(ua)?'Edge':/FxiOS|Firefox/.test(ua)?'Firefox':/Safari/.test(ua)?'Safari':'';
   const scr=Math.round(screen.width)+'×'+Math.round(screen.height);const pwa=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   return {type,os,model,browser:br,screen:scr,lang:navigator.language,app:pwa?'مثبتة':'متصفح',label:[type,model].filter(Boolean).join(' ')}}
+/* the device's own account is kept on the device, so if its session is ever lost it signs back in alone (a removed device fails and gets the code page) */
+function devCredSave(e,p){try{localStorage.setItem('morango-dev',JSON.stringify({e,p}))}catch(_){}}
+async function devCredLogin(){try{const c=JSON.parse(localStorage.getItem('morango-dev')||'null');if(!c||!c.e||!c.p)return false;const r=await sb.auth.signInWithPassword({email:c.e,password:c.p});if(r.error){if(/invalid/i.test(r.error.message||''))localStorage.removeItem('morango-dev');return false}return true}catch(_){return false}}
 function loginUI(err){return new Promise(res=>{let d=document.getElementById('sb-login');if(!d){d=document.createElement('div');d.id='sb-login';document.body.appendChild(d)}
   d.style.cssText='position:fixed;inset:0;bottom:var(--vkbh,0px);overflow:auto;z-index:9999;background:var(--bg,#fff6f7);display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif';
   const inp='height:52px;border-radius:14px;border:2px solid #f2d8de;padding:0 14px;font-size:1.1rem;text-align:center';
@@ -422,12 +425,12 @@ function loginUI(err){return new Promise(res=>{let d=document.getElementById('sb
     f.onsubmit=async e=>{e.preventDefault();const pin=f.pin.value.replace(/\D/g,'');if(pin.length<4){res(loginUI('❌ الكود السري ناقص'));return}const b=f.querySelector('button');b.disabled=true;b.textContent='⏳';const di=devInfo();
       try{const {data,error}=await sb.rpc('enroll_device_admin',{p_pin:pin,p_label:di.label,p_info:di});if(error)throw error;
         if(!data||data.error){res(loginUI(data&&data.error==='locked'?'🔒 بزاف ديال المحاولات الغالطة. تسنى '+data.wait+' دقيقة':'❌ الكود السري غالط'));return}
-        const r=await sb.auth.signInWithPassword({email:data.email,password:data.password});if(r.error)throw r.error;try{localStorage.setItem('bk-uid',data.uid)}catch(_){}d.remove();res(true)}catch(e2){res(loginUI('❌ ما كاينش الأنترنيت ولا وقع مشكل، عاود'))}}};
+        const r=await sb.auth.signInWithPassword({email:data.email,password:data.password});if(r.error)throw r.error;devCredSave(data.email,data.password);try{localStorage.setItem('bk-uid',data.uid)}catch(_){}d.remove();res(true)}catch(e2){res(loginUI('❌ ما كاينش الأنترنيت ولا وقع مشكل، عاود'))}}};
   f.onsubmit=async e=>{e.preventDefault();const code=f.pw.value.replace(/\D/g,''),di=devInfo(),nm=di.label;
     if(code.length!==6){res(loginUI('❌ الكود خاصو 6 أرقام'));return}const b=f.querySelector('button');b.disabled=true;b.textContent='⏳';
     try{const {data,error}=await sb.rpc('enroll_device',{p_code:code,p_label:nm,p_info:di});if(error)throw error;if(!data||data.error){res(loginUI(data&&data.error==='bad'?'❌ الكود غالط ولا تخدم من قبل. طلب الكود الجديد':'❌ ما كاينش كود، طلب من المسير يحل 📱 الأجهزة'));return}
-      const r=await sb.auth.signInWithPassword({email:data.email,password:data.password});if(r.error)throw r.error;d.remove();res(true)}catch(e2){res(loginUI('❌ ما كاينش الأنترنيت ولا وقع مشكل، عاود'))}}})}
-async function ensure(){if(authed)return authed;authed=(async()=>{sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'morango-auth'}});const {data}=await sb.auth.getSession();if(!data?.session)await loginUI();startRealtime();
+      const r=await sb.auth.signInWithPassword({email:data.email,password:data.password});if(r.error)throw r.error;devCredSave(data.email,data.password);d.remove();res(true)}catch(e2){res(loginUI('❌ ما كاينش الأنترنيت ولا وقع مشكل، عاود'))}}})}
+async function ensure(){if(authed)return authed;authed=(async()=>{sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'morango-auth'}});const {data}=await sb.auth.getSession();if(!data?.session&&!(await devCredLogin()))await loginUI();startRealtime();
   sb.auth.onAuthStateChange((ev,s)=>{if(ev==='SIGNED_OUT'||(!s&&ev!=='INITIAL_SESSION')){authed=null;location.reload()}});return true})();return authed}
 async function fetchAll(c,F,O,N){const out=[];let from=0;const page=1000;for(;;){let q=sb.from('docs').select('id,data').eq('col',c);
   for(const [f,op,v] of F){const k='data->>'+f;if(op==='==')q=q.eq(k,String(v));else if(op==='>=')q=q.gte(k,String(v));else if(op==='<=')q=q.lte(k,String(v));else if(op==='>')q=q.gt(k,String(v));else if(op==='<')q=q.lt(k,String(v));else if(op==='in')q=q.in(k,v.map(String));else if(op==='!=')q=q.neq(k,String(v))}
