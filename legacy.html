@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112143647" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112143931" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3146,6 +3146,7 @@ function homeTiles(arr) {
     if (sh) T.push({ i: "🔒", l: "إغلاق النوبة والجرد", a: "closeshift", c: 6 });
     T.push({ i: "↩️", l: "إرجاع غير المباع", a: "returnpos", c: sh ? 2 : 6 });
   }
+  if (r === "prod") T.push({ i: "🔧", l: "طلب أدوات العمل (لورشة)", a: "newpreq", k: "tools", c: 2, b: 0 });
   if (r === "ws") T.push({ i: "🔧", l: "طلب أدوات العمل", a: "newpreq", k: "tools", c: 2, b: 0 }, { i: "⚙️", l: "المعدات ديال الورشة", v: "equip", c: 3, b: eqDue(me.loc) ? 1 : 0 });
   if (r === "ws" && consOf(me.loc).length) T.push({ i: "🧷", l: "المواد الثانوية", a: "consuse", v: me.loc, c: 5, b: 0 });
   if (r === "ws" || r === "prod") T.unshift({ i: "📱", l: "آراء الزبناء", a: "go", v: "feedback", b: myFb().filter((x) => x.wsStatus === "new").length, c: 1 });
@@ -12947,7 +12948,7 @@ const dateQuick = (name, label, val) => `${choice(name, label, [{ v: today(), l:
 function sheetNewPreq(purpose) {
   var _a;
   if (invGuard()) return;
-  if (me.role !== "ws") return toast("📝 طلبات الشراء كيديرهم غير مسؤول الورشة", true);
+  if (me.role !== "ws" && me.role !== "prod") return toast("📝 طلبات الشراء كيديرهم مسؤول الورشة ولا عون الإدخال", true);
   if (purpose !== "tools") return sheetToolsPreq();
   if (purpose !== "normal" && purpose !== "order" && purpose !== "tools") return openSheet("📝 طلب شراء جديد", `<p class="muted">لاش محتاج هاد المواد؟</p><div class="acts"><button type="button" class="act c5" data-act="newpreq" data-k="normal" style="min-height:120px"><span class="big">🔄</span><b>للاستهلاك العادي</b></button><button type="button" class="act c2" data-act="newpreq" data-k="order" style="min-height:120px"><span class="big">📝</span><b>لطلبية زبون</b></button><button type="button" class="act c3" data-act="newpreq" data-k="tools" style="min-height:120px"><span class="big">🔧</span><b>أدوات العمل</b></button></div>`);
   if (purpose === "tools") return sheetToolsPreq();
@@ -13488,7 +13489,7 @@ function vPreqs() {
   const W2 = [{ id: "normal", name: "الاستهلاك (" + cnt("normal") + ")", i: "🔄" }, { id: "order", name: "الطلبيات (" + cnt("order") + ")", i: "📝" }, { id: "tools", name: "أدوات العمل (" + cnt("tools") + ")", i: "🔧" }];
   let l = myPreqs().filter(ofP);
   l = S.prf === "open" ? l.filter((r) => ["pending", "approved", "partial"].includes(r.status)).sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0) || String(a.deadline).localeCompare(String(b.deadline))) : l.filter((r) => r.status === S.prf);
-  const canAsk = me.role === "ws" && PP === "tools";
+  const canAsk = (me.role === "ws" || me.role === "prod") && PP === "tools";
   const all = myPreqs().filter(ofP), since = Date.now() - 30 * 864e5;
   const dn = all.filter((r) => r.status === "done" && r.doneTs > since);
   const dec = all.filter((r) => r.decidedTs && r.decidedTs > since);
