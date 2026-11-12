@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112173508" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112174833" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1687,7 +1687,27 @@ const ico = (id) => {
   return ((_a = S.items[id]) == null ? void 0 : _a.icon) || KICON[(_b = S.items[id]) == null ? void 0 : _b.kind] || "📦";
 };
 const stockMap = (loc) => (S.stock[loc] || {}).items || {};
-const stockOf = (loc, id) => stockMap(loc)[id] || 0;
+const blendOf = (id) => {
+  var _a;
+  const b = (_a = S.items[id]) == null ? void 0 : _a.blend;
+  if (!b || typeof b !== "object" || Array.isArray(b)) return null;
+  const L = Object.entries(b).filter(([x, f]) => S.items[x] && +f > 0);
+  const T = L.reduce((a, [, f]) => a + +f, 0);
+  return L.length && T > 0 ? L.map(([x, f]) => [x, +f / T]) : null;
+};
+const stockOf = (loc, id) => {
+  const B = blendOf(id);
+  if (B) return Math.max(0, Math.floor(Math.min(...B.map(([x, f]) => +(stockMap(loc)[x] || 0) / f)) * 1e3) / 1e3);
+  return stockMap(loc)[id] || 0;
+};
+function blendCost(id, loc) {
+  return blendOf(id).reduce((a, [x, f]) => a + f * (costOf(x, 1, loc) || lastPrice(x) || 0), 0);
+}
+function blendSplit(loc, id, qty) {
+  const out = {};
+  blendOf(id).forEach(([x, f]) => out[x] = Math.round(qty * f * 1e4) / 1e4);
+  return out;
+}
 const avgMap = (loc) => (S.stock[loc] || {}).avg || {};
 const lastPrice = (id) => {
   var _a, _b, _c;
@@ -1710,6 +1730,7 @@ function costOf(id, d = 0, loc) {
   var _a;
   const it = S.items[id];
   if (!it || d > 6) return 0;
+  if (blendOf(id)) return blendCost(id, loc);
   if (loc && avgMap(loc)[id] != null) return +avgMap(loc)[id];
   if (it.egg) {
     const E = EGG();
@@ -1928,6 +1949,13 @@ async function hashPin(uid, pin) {
 }
 async function moveStock(loc, deltas, costs) {
   deltas = __spreadValues({}, deltas);
+  for (const k of Object.keys(deltas)) {
+    if (blendOf(k) && +deltas[k] < 0) {
+      const sp = blendSplit(loc, k, -deltas[k]);
+      delete deltas[k];
+      for (const x in sp) deltas[x] = Math.round(((+deltas[x] || 0) - sp[x]) * 1e4) / 1e4;
+    }
+  }
   for (const k in deltas) if (noSt(k)) delete deltas[k];
   if (window.morangoStockMove) {
     if (!Object.keys(deltas).length) return { before: {}, after: {} };
@@ -9654,7 +9682,7 @@ function sheetSuppliers() {
 function sheetPurchase(req) {
   var _a;
   if (!canBuy()) return openSheet("🛒 شراء جديد", emptyB("🔒", "الشراء كيسجلو غير المسير ولا المشرف العام."));
-  const raws = itemsArr().filter((i) => !i.noStock && ((req == null ? void 0 : req.pos) ? i.kind === "pack" : isBought(i.kind))).sort((a, b) => {
+  const raws = itemsArr().filter((i) => !i.noStock && !blendOf(i.id) && ((req == null ? void 0 : req.pos) ? i.kind === "pack" : isBought(i.kind))).sort((a, b) => {
     var _a2, _b;
     return ((_a2 = { raw: 0, cons: 1 }[a.kind]) != null ? _a2 : 2) - ((_b = { raw: 0, cons: 1 }[b.kind]) != null ? _b : 2);
   });
@@ -11152,6 +11180,7 @@ async function lotEvent(id, patch, ev) {
 }
 async function consumeLots(loc, cons, ref) {
   const used = [];
+  cons = (cons || []).flatMap((c) => blendOf(c.item) ? Object.entries(blendSplit(loc, c.item, +c.qty || 0)).map(([x, q]) => __spreadProps(__spreadValues({}, c), { item: x, qty: q })) : [c]);
   for (const c of cons) {
     let need = +c.qty || 0;
     if (!(need > 0)) continue;
