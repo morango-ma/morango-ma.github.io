@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112145351" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112145923" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2968,8 +2968,10 @@ function vDispatch() {
       var _a;
       const w = ((_a = S.items[l.item]) == null ? void 0 : _a.ws) || "";
       const sn = +s[l.item] || 0;
-      const av = stockOf(w, l.item);
-      return prow(l.item, `<span class="muted">${esc(LOC[w] || "")} · فالمخزون ${fmt(av)}</span>`, `<b class="num ${sn >= l.qty ? "" : "neg"}">${fmt(sn)} / ${fmt(l.qty)} ${esc(iunit(l.item))}</b>`);
+      const av = Math.max(0, stockOf(w, l.item));
+      const left = r2(l.qty - sn);
+      const miss = r2(left - av);
+      return prow(l.item, `<span class="muted">${esc(LOC[w] || "")} · مفيني فالمخزون ${fmt(av)}</span>${left > 0 && miss > 0 ? `<div style="color:var(--bad,#b91c1c);font-weight:700">⚠️ ناقص ${fmt(miss)} · خاص الفينيسيون</div>${canDpSend() ? `<button type="button" class="btn small primary" data-act="dpfin" data-item="${l.item}" data-q="${miss}" data-w="${w}">👨‍🍳 كمل ${fmt(miss)} (فينيسيون)</button>` : ""}` : ""}`, `<b class="num ${sn >= l.qty ? "" : "neg"}">${fmt(sn)} / ${fmt(l.qty)} ${esc(iunit(l.item))}</b>`);
     }).join("")}
      ${p.note ? `<p class="muted" style="margin:0">📝 ${esc(p.note)}</p>` : ""}<div class="muted" style="font-size:.85rem">✍️ ${esc(p.by || "")}</div>
      <div class="btns" style="margin:0">${canDpSend() ? Object.entries(byWs).map(([w, ls]) => `<button type="button" class="btn primary" data-act="dpsend" data-id="${p.id}" data-w="${w}">🚚 صيفط من ${esc(LOC[w] || w)} (${ls.length})</button>`).join("") : ""}${canDp() ? `<button type="button" class="btn" data-act="dpedit" data-id="${p.id}">✏️ بدل</button><button type="button" class="btn danger" data-act="dpdel" data-id="${p.id}">🗑️</button>` : ""}</div></section>`;
@@ -3020,11 +3022,14 @@ function dpSendSheet(id, w) {
   const p = (S.dplans || []).find((x) => x.id === id);
   if (!p || !canDpSend()) return;
   const s = dpSent(p);
-  const lines = (p.lines || []).filter((l) => {
+  const all = (p.lines || []).filter((l) => {
     var _a;
     return (((_a = S.items[l.item]) == null ? void 0 : _a.ws) || "w1") === w;
   }).map((l) => ({ item: l.item, qty: r2(l.qty - (+s[l.item] || 0)) })).filter((l) => l.qty > 0);
-  if (!lines.length) return toast("✅ كلشي تصيفط من هاد الورشة");
+  if (!all.length) return toast("✅ كلشي تصيفط من هاد الورشة");
+  const lines = all.map((l) => ({ item: l.item, qty: r2(Math.min(l.qty, Math.max(0, stockOf(w, l.item)))) })).filter((l) => l.qty > 0);
+  if (!lines.length) return toast("⚠️ ما كاين والو مفيني فالمخزون. دير الفينيسيون قبل (👨‍🍳 كمل).", true);
+  if (lines.length < all.length || lines.some((l, i) => l.qty < all.find((x) => x.item === l.item).qty)) toast("⚠️ غادي تصيفط غير اللي كاين مفيني فالمخزون، الباقي خاصو الفينيسيون");
   sheetSend({ ws: w, pos: p.pos, lines, dplan: p.id, by: "برنامج الإرسال ⏰ " + (p.time || "") });
 }
 async function dpMark(pre, lines, tid) {
@@ -4764,6 +4769,10 @@ function sheetSend(pre) {
     const ws = f.sws.value, pos = f.spos.value;
     const lines = $$("input[data-line]", f).map((i) => ({ item: i.dataset.line, qty: num(i.value), unitCost: costOf(i.dataset.line, 0, f.sws.value) })).filter((l) => l.qty > 0);
     if (!lines.length) return ferr("زيد الكمية ديال منتوج واحد على الأقل.");
+    if (pre == null ? void 0 : pre.dplan) {
+      const over = lines.filter((l) => l.qty > Math.max(0, stockOf(ws, l.item)) + 1e-9);
+      if (over.length) return ferr("⚠️ كتر من اللي كاين فالمخزون: " + over.map((l) => iname(l.item) + " (" + fmt(Math.max(0, stockOf(ws, l.item))) + ")").join("، "));
+    }
     if (PHOTO_REQ && (PH.send || []).length < lines.length) return ferr("📷 خاص صورة لكل منتوج كتصيفطو: " + lines.length + " صورة على الأقل (دابا " + (PH.send || []).length + ").");
     let driver = "";
     if (pos === "p2") {
@@ -15507,6 +15516,10 @@ const ACT = {
   neworder: () => sheetNewOrder(),
   dpedit: (el) => sheetDpEdit(el.dataset.id),
   dpsend: (el) => dpSendSheet(el.dataset.id, el.dataset.w),
+  dpfin: (el) => {
+    S.ws = el.dataset.w;
+    sheetProduce("final", { item: el.dataset.item, qty: +el.dataset.q });
+  },
   dpdel: async (el) => {
     const p = (S.dplans || []).find((x) => x.id === el.dataset.id);
     if (!p || !confirm("🗑️ نمسحو هاد الإرسال المبرمج؟")) return;
