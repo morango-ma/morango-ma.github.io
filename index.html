@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112173508"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112174833"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -616,7 +616,12 @@ const imgOf=id=>{const it=S.items[id];if(!it)return null;return it.photo?'/_blob
 const pic=(id,cls='thumb')=>{const u=imgOf(id);return u?`<img class="${cls}" src="${u}" alt="" loading="lazy">`:`<span class="em">${ico(id)}</span>`};
 const ico=id=>S.items[id]?.icon||KICON[S.items[id]?.kind]||'📦';
 const stockMap=loc=>(S.stock[loc]||{}).items||{};
-const stockOf=(loc,id)=>stockMap(loc)[id]||0;
+/* blends (مخلوط): bought as separate materials, used mixed by a fixed recipe per kilo.
+   No stock of its own: available = what the parts allow, cost = each part's average price × its share, using it takes each part by its share */
+const blendOf=id=>{const b=S.items[id]?.blend;if(!b||typeof b!=='object'||Array.isArray(b))return null;const L=Object.entries(b).filter(([x,f])=>S.items[x]&&+f>0);const T=L.reduce((a,[,f])=>a+ +f,0);return L.length&&T>0?L.map(([x,f])=>[x,+f/T]):null};
+const stockOf=(loc,id)=>{const B=blendOf(id);if(B)return Math.max(0,Math.floor(Math.min(...B.map(([x,f])=>(+(stockMap(loc)[x]||0))/f))*1000)/1000);return stockMap(loc)[id]||0};
+function blendCost(id,loc){return blendOf(id).reduce((a,[x,f])=>a+f*(costOf(x,1,loc)||lastPrice(x)||0),0)}
+function blendSplit(loc,id,qty){const out={};blendOf(id).forEach(([x,f])=>out[x]=Math.round(qty*f*10000)/10000);return out}
 const avgMap=loc=>(S.stock[loc]||{}).avg||{};
 const lastPrice=id=>+(S.items[id]?.lastPrice??S.items[id]?.cost)||0;
 /* CMUP: unit cost of an item at a location = its weighted average there; otherwise last purchase price (raw) or recipe cost (made) */
@@ -624,7 +629,7 @@ const lastPrice=id=>+(S.items[id]?.lastPrice??S.items[id]?.cost)||0;
 const EGG=()=>{const sp=Object.values(S.items).find(i=>i.split&&i.active!==false);if(!sp)return null;const w=Object.values(S.items).find(i=>i.egg==='white'),y=Object.values(S.items).find(i=>i.egg==='yolk');if(!w||!y)return null;return{id:sp.id,egg:sp.recipe?.lines?.[0]?.item,wg:+sp.split.white||33,yg:+sp.split.yolk||17,wid:w.id,yid:y.id}};
 const egF=it=>UF[it.unit]?.[1]||1;
 const eggsFor=(E,wG,yG)=>Math.ceil(Math.max(wG/E.wg,yG/E.yg)-1e-6);
-function costOf(id,d=0,loc){const it=S.items[id];if(!it||d>6)return 0;if(loc&&avgMap(loc)[id]!=null)return +avgMap(loc)[id];if(it.egg){const E=EGG();if(E&&E.egg)return costOf(E.egg,d+1,loc)/(E.wg+E.yg)*egF(it)}if(isBought(it.kind))return lastPrice(id);const r=it.recipe;if(!r||!r.lines?.length)return 0;return r.lines.reduce((s,l)=>s+cq(l,lineQty(l))*costOf(l.item,d+1,loc||it.ws),0)/yld(it)}
+function costOf(id,d=0,loc){const it=S.items[id];if(!it||d>6)return 0;if(blendOf(id))return blendCost(id,loc);if(loc&&avgMap(loc)[id]!=null)return +avgMap(loc)[id];if(it.egg){const E=EGG();if(E&&E.egg)return costOf(E.egg,d+1,loc)/(E.wg+E.yg)*egF(it)}if(isBought(it.kind))return lastPrice(id);const r=it.recipe;if(!r||!r.lines?.length)return 0;return r.lines.reduce((s,l)=>s+cq(l,lineQty(l))*costOf(l.item,d+1,loc||it.ws),0)/yld(it)}
 const sumTickets=sh=>(sh.tickets||[]).reduce((s,t)=>s+(+t.total||0),0);
 const allOps=()=>{const m=new Map();[...S.pend,...S.ops].forEach(o=>m.set(o.id,o));return [...m.values()].sort((a,b)=>b.ts-a.ts)};
 const getOp=id=>allOps().find(o=>o.id===id)||(S.jops||[]).find(o=>o.id===id);
@@ -682,7 +687,7 @@ async function hashPin(uid,pin){const b=await crypto.subtle.digest('SHA-256',new
 
 /* ---------- data layer ---------- */
 /* moves quantities; for incoming lines with a unit cost, re-weights the CMUP: (old qty x old avg + new qty x new cost) / total qty */
-async function moveStock(loc,deltas,costs){deltas={...deltas};for(const k in deltas)if(noSt(k))delete deltas[k];if(window.morangoStockMove){if(!Object.keys(deltas).length)return{before:{},after:{}};return await window.morangoStockMove(loc,deltas,costs||null)}const ref=db.doc('stock/'+loc);const snap=await ref.get();const dt=snap.exists?snap.data():{};const cur=dt.items||{},av=dt.avg||{};const items={},avg={};
+async function moveStock(loc,deltas,costs){deltas={...deltas};for(const k of Object.keys(deltas)){if(blendOf(k)&&+deltas[k]<0){const sp=blendSplit(loc,k,-deltas[k]);delete deltas[k];for(const x in sp)deltas[x]=Math.round(((+deltas[x]||0)-sp[x])*10000)/10000}}for(const k in deltas)if(noSt(k))delete deltas[k];if(window.morangoStockMove){if(!Object.keys(deltas).length)return{before:{},after:{}};return await window.morangoStockMove(loc,deltas,costs||null)}const ref=db.doc('stock/'+loc);const snap=await ref.get();const dt=snap.exists?snap.data():{};const cur=dt.items||{},av=dt.avg||{};const items={},avg={};
   for(const k in deltas){const q0=cur[k]||0,q=deltas[k];if(costs&&costs[k]!=null&&q>0){const base=Math.max(q0,0);const a0=av[k]!=null?+av[k]:+costs[k];avg[k]=Math.round(((base*a0+q*costs[k])/(base+q))*10000)/10000}items[k]=r2(q0+q)}
   const upd={items};if(Object.keys(avg).length)upd.avg=avg;if(snap.exists)await ref.update(upd);else await ref.set(upd);return{before:cur,after:items}}
 const bumpStock=(loc,deltas)=>moveStock(loc,deltas,null);
@@ -2643,7 +2648,7 @@ async function supAdd(sel){const n=(prompt('🏪 سمية المورد الجد�
 function sheetSuppliers(){if(!canBuy())return;openSheet('🏪 لائحة الموردين',`<p class="muted" style="margin:0">مورد واحد فكل سطر. كيبانو فالشراء باش تختار المورد ديال كل مادة.</p>${fld('supl','',`<textarea id="supl" name="supl" rows="14">${esc(supList().join('\n'))}</textarea>`)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,async f=>{const L=[...new Set(f.supl.value.split('\n').map(x=>x.trim()).filter(Boolean))];busy(f,true);try{await db.doc('config/suppliers').set({list:L,updTs:Date.now(),by:meName()});closeSheet();toast('🏪 تسجلات '+L.length+' مورد')}catch(e){fail(f,e)}})}
 function sheetPurchase(req){
   if(!canBuy())return openSheet('🛒 شراء جديد',emptyB('🔒','الشراء كيسجلو غير المسير ولا المشرف العام.'));
-  const raws=itemsArr().filter(i=>!i.noStock&&(req?.pos?i.kind==='pack':isBought(i.kind))).sort((a,b)=>({raw:0,cons:1}[a.kind]??2)-({raw:0,cons:1}[b.kind]??2));if(!raws.length)return openSheet('🛒 شراء جديد',emptyB('🌾','ما كاينة حتى مادة أولية فالكتالوج.'));
+  const raws=itemsArr().filter(i=>!i.noStock&&!blendOf(i.id)&&(req?.pos?i.kind==='pack':isBought(i.kind))).sort((a,b)=>({raw:0,cons:1}[a.kind]??2)-({raw:0,cons:1}[b.kind]??2));if(!raws.length)return openSheet('🛒 شراء جديد',emptyB('🌾','ما كاينة حتى مادة أولية فالكتالوج.'));
   const ws0=req?.ws||req?.pos||(me.loc?.[0]==='w'?me.loc:S.ws);const preq=id=>{const l=req?.lines?.find(x=>x.item===id);if(!l)return '';return Math.max(0,r2(l.qty-((req.delivered||{})[id]||0)))||''};
   openSheet(req?'🚚 تسليم للورشة · '+LOC[req.ws]:'🛒 شراء جديد',`${req?`<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📥</span><div><b>طلب من ${esc(req.by)}</b><div class="muted">الكميات معمرة بالباقي ديال الطلب. دخل شنو وصل بالضبط: إلا كان أقل، التسليم غادي يكون جزئي.</div></div></div></div>`:''}${choice('pws','لفين؟',[...WS,...POS].map(x=>({v:x.id,l:x.name,i:x.i})),ws0,3)}
    ${(()=>{const row=i=>{const rl=req?.lines?.find(x=>x.item===i.id);return `<div class="box" style="gap:4px" data-prow="${i.id}"><div class="prow" style="border:0;padding:0"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}</b><span class="muted">${esc(i.unit)}</span></div></div>${stepper('data-pq',i.id,preq(i.id),i.unit)}</div>${rl&&(brandOf(rl)||rl.note||rl.photos?.length)?`<div class="muted" style="font-size:.9rem">${brandOf(rl)?'🏷️ الماركة المطلوبة: <b>'+esc(brandOf(rl))+'</b> ':''}${rl.note?'· 📝 '+esc(rl.note):''}</div>${rl.photos?.length?`<div class="media">${mediaBtns(rl.photos,i.name,'📷')}</div>`:''}`:''}
@@ -2985,7 +2990,7 @@ const lotsActive=(loc,item)=>lotsAll().filter(l=>l.status==='active'&&(!loc||l.l
 const canLot=loc=>isMgr()||isProd()||canBuy()||(me.loc===loc)||myLocs().includes(loc);
 async function lotEvent(id,patch,ev){const s=await db.doc('lots/'+id).get();const d=s.data()||{};await db.doc('lots/'+id).update({...patch,events:[...(d.events||[]),{ts:Date.now(),by:meName(),...ev}],updTs:Date.now()})}
 /* FEFO: take consumed quantities out of the active lots of a workshop, earliest expiry first */
-async function consumeLots(loc,cons,ref){const used=[];for(const c of cons){let need=+c.qty||0;if(!(need>0))continue;for(const l of lotsActive(loc,c.item)){if(need<=1e-9)break;const t=Math.min(+l.qty||0,need);if(!(t>0))continue;const left=r2((+l.qty||0)-t);need=r2(need-t);
+async function consumeLots(loc,cons,ref){const used=[];cons=(cons||[]).flatMap(c=>blendOf(c.item)?Object.entries(blendSplit(loc,c.item,+c.qty||0)).map(([x,q])=>({...c,item:x,qty:q})):[c]);for(const c of cons){let need=+c.qty||0;if(!(need>0))continue;for(const l of lotsActive(loc,c.item)){if(need<=1e-9)break;const t=Math.min(+l.qty||0,need);if(!(t>0))continue;const left=r2((+l.qty||0)-t);need=r2(need-t);
   await lotEvent(l.id,{qty:left,status:left<=1e-9?'used':'active'},{act:'use',qty:t,ref});used.push({lot:l.id,n:l.n,item:c.item,qty:t})}}return used}
 async function lotLabelsBlob(lots){const W=576,P=24,FONT='"IBM Plex Sans Arabic",Tahoma,sans-serif';try{await document.fonts.load(`700 30px "IBM Plex Sans Arabic"`)}catch(_){}
   const cv=document.createElement('canvas');const x=cv.getContext('2d');const font=(sz,b)=>`${b?700:400} ${sz}px ${FONT}`;const H1=lots.some(l=>l.type==='freeze')?560:470;cv.width=W;cv.height=H1*lots.length;x.fillStyle='#fff';x.fillRect(0,0,W,cv.height);
