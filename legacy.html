@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112225411" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112231429" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2844,7 +2844,7 @@ function allTiles() {
   add({ i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 });
   if (vendRole()) {
     const sh = openShift(me.loc || S.pos);
-    return [{ i: "🛍️", l: sh ? "البيع" : "البيع (لاكيس مسدودة)", a: "go", v: "pos", c: 1 }, { i: "✅", l: "المهام ديالي والجرد", a: "mytasks", c: 5, b: helperPending(me.id).length }, ...frOf(me.loc || S.pos).length ? [{ i: "🌡️", l: "الحرارة ديال الفيترينات", a: "tempin", b: tempDue(me.loc || S.pos).length, c: 4 }] : [], { i: "📸", l: "صور الفيترينة والنظافة", a: "vitshot", c: 3 }, { i: "📦", l: "استلام السلعة من الأتولي", a: "rcvlist", c: 4, b: S.pend.filter((o) => o.type === "transfer" && o.pos === (me.loc || S.pos)).length }, { i: "📝", l: "طلبية جديدة", a: "neworder", c: 2 }, { i: "📋", l: "الطلبيات", a: "go", v: "orders", c: 3 }, { i: "📅", l: "البلانينگ ديالي", a: "myplan", c: 3 }, { i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 }];
+    return [{ i: "🛍️", l: sh ? "البيع" : "البيع (لاكيس مسدودة)", a: "go", v: "pos", c: 1 }, { i: "✅", l: "المهام ديالي والجرد", a: "mytasks", c: 5, b: helperPending(me.id).length }, ...frOf(me.loc || S.pos).length ? [{ i: "🌡️", l: "الحرارة ديال الفيترينات", a: "tempin", b: tempDue(me.loc || S.pos).length, c: 4 }] : [], { i: "📸", l: "صور الفيترينة والنظافة", a: "vitshot", c: 3 }, { i: "📦", l: "استلام السلعة من الأتولي", a: "rcvlist", c: 4, b: S.pend.filter((o) => o.type === "transfer" && o.pos === (me.loc || S.pos)).length }, { i: "🍰", l: "التذوق (Dégustation)", a: "tasting", c: 5 }, { i: "📝", l: "طلبية جديدة", a: "neworder", c: 2 }, { i: "📋", l: "الطلبيات", a: "go", v: "orders", c: 3 }, { i: "📅", l: "البلانينگ ديالي", a: "myplan", c: 3 }, { i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 }];
   }
   return out;
 }
@@ -3418,6 +3418,7 @@ function homeTiles(arr) {
     if (sh) T.push({ i: "🔒", l: "إغلاق النوبة والجرد", a: "closeshift", c: 6 });
     T.push({ i: "↩️", l: "إرجاع غير المباع", a: "returnpos", c: sh ? 2 : 6 });
   }
+  if (r === "admin" || r === "manager" || r === "seller") T.push({ i: "🍰", l: "التذوق (Dégustation)", a: "tasting", c: 5 });
   if (r === "admin" || r === "manager") T.push({ i: "🎯", l: "مراقبة الأثمنة", a: "go", v: "pxcheck", c: 5, b: 0 });
   if (r === "prod" || r === "admin" || r === "manager") T.push({ i: "🗓️", l: "برنامج الإرسال", a: "go", v: "dispatch", c: 4, b: (S.dplans || []).filter((p) => p.date === today() && dpState(p) !== "sent").length });
   if (r === "prod" || r === "admin" || r === "manager") T.push({ i: "🏪", l: "لائحة الموردين", a: "sups", c: 6 });
@@ -4553,7 +4554,7 @@ function sheetAdjust(loc, id) {
 }
 function vJournal() {
   const ops = S.jops || S.ops.filter((o) => o.date === S.jday);
-  const T = { purchase: ["شراء", "🛒"], tools: ["أدوات العمل", "🔧"], production: ["إنتاج", "👨‍🍳"], transfer: ["إرسال", "🚚"], return: ["مرتجع", "↩️"], count: ["فرق الجرد", "🔍"], adjust: ["تصحيح المخزون", "✏️"] };
+  const T = { purchase: ["شراء", "🛒"], tools: ["أدوات العمل", "🔧"], production: ["إنتاج", "👨‍🍳"], transfer: ["إرسال", "🚚"], return: ["مرتجع", "↩️"], count: ["فرق الجرد", "🔍"], adjust: ["تصحيح المخزون", "✏️"], tasting: ["تذوق (Dégustation)", "🍰"] };
   const shs = S.shifts.filter((x) => x.date === S.jday);
   return `<div class="field"><label for="jday">🗓️ النهار</label><input type="date" id="jday" value="${S.jday}"></div>
   <section class="card"><h2>☀️ النوبات</h2>${shs.length ? `<ul class="list">${shs.map((x) => `<li class="clk" data-act="shiftres" data-id="${x.id}"><div class="lead"><span class="em">${LOCI[x.pos]}</span><div><b>${esc(LOC[x.pos])} · ${esc(x.team)}</b><div class="muted">${esc(x.seller)} · ${(x.tickets || []).length} وصل · ${x.status === "open" ? "مفتوحة" : "مسدودة"}</div></div></div><b class="num">${money(sumTickets(x))}</b></li>`).join("")}</ul>` : emptyB("🌙", "ما كاينة حتى نوبة.")}</section>
@@ -5526,7 +5527,7 @@ function sheetHelpIssues() {
 const posRoleOf = (u) => (u == null ? void 0 : u.posRole) === "v" ? "v" : "c";
 const vendOnly = () => (me == null ? void 0 : me.role) === "seller" && !!openShift(me.loc) && posMode(me.loc) === "v";
 const vendRole = () => (me == null ? void 0 : me.role) === "seller" && posRoleOf(me) === "v";
-const VO_V = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "tempin", "vitshot", "myplan", "neworder", "order", "ofilter", "media", "ocancel", "oslip", "transfer", "receive", "rcvlist", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
+const VO_V = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "tempin", "vitshot", "myplan", "neworder", "order", "ofilter", "media", "ocancel", "oslip", "transfer", "receive", "rcvlist", "tasting", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
 const VO_OK = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cart", "cust", "custclear", "wawel", "devices", "fs", "logout", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "myplan", "mytasks", "disp", "pbtog", "appquit", "fsoff", "afbnew", "afbopen", "afba", "afbf", "refillreq", "tempin", "vitshot", "helpconf", "order", "ofilter", "neworder", "ost", "oadv", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser"]);
 const posMode = (p) => {
   const sh = openShift(p);
@@ -9891,6 +9892,44 @@ function sheetSuppliers() {
         e.preventDefault();
         add();
       }
+    });
+  });
+}
+function sheetTasting() {
+  const p = me.loc || S.pos;
+  if (!p || !LOC[p]) return toast("اختار المحل", true);
+  const L = itemsArr().filter((i) => i.kind === "final" && i.active !== false && stockOf(p, i.id) > 0).sort((a, b) => a.name.localeCompare(b.name));
+  openSheet("🍰 التذوق (Dégustation) · " + LOC[p], `<p class="muted" style="margin:0">السلعة اللي خرجات للتذوق ديال الزبناء. كتنقص من المخزون وما كتبانش فرق فلاكيس.</p>${inp("tq", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}
+   <div style="max-height:46vh;overflow:auto">${L.length ? L.map((i) => `<div data-tr data-n="${esc(i.name.toLowerCase())}">${prow(i.id, `<span class="muted">فالمحل ${fmt(stockOf(p, i.id))}</span>`, stepper("data-tg", i.id, "", i.unit))}</div>`).join("") : emptyB("🧺", "ما كاين حتى منتوج فالمحل.")}</div>
+   ${fld("tnote", "📝 ملاحظة (اختيارية)", '<textarea id="tnote" name="tnote" rows="2" placeholder="مثلاً: قطعتها على 8 للتذوق"></textarea>')}${photoField("tph", "📷 صورة (اختيارية)")}${errP}<button class="btn primary block" type="submit">✅ سجل التذوق</button>`, async (f) => {
+    const lines = $$("input[data-tg]", f).map((i) => ({ item: i.dataset.tg, qty: num(i.value) })).filter((l) => l.qty > 0);
+    if (!lines.length) return ferr("دخل الكمية ديال منتوج واحد على الأقل.");
+    const over = lines.filter((l) => l.qty > stockOf(p, l.item) + 1e-9);
+    if (over.length) return ferr("⚠️ كتر من اللي كاين فالمحل: " + over.map((l) => iname(l.item)).join("، "));
+    busy(f, true);
+    try {
+      lines.forEach((l) => {
+        var _a;
+        l.unitCost = Math.round((costOf(l.item, 0, p) || 0) * 100) / 100;
+        l.price = +((_a = S.items[l.item]) == null ? void 0 : _a.price) || 0;
+      });
+      await moveStock(p, Object.fromEntries(lines.map((l) => [l.item, -l.qty])));
+      try {
+        await consumeLots(p, lines, "tasting");
+      } catch (_) {
+      }
+      const photos = (PH.tph || []).length ? await saveMedia(PH.tph, "tasting") : [];
+      const sh = openShift(p);
+      await newOp({ type: "tasting", pos: p, lines, note: f.tnote.value.trim(), photos, shift: (sh == null ? void 0 : sh.id) || null, cost: r2(lines.reduce((a, l) => a + l.qty * l.unitCost, 0)), value: r2(lines.reduce((a, l) => a + l.qty * l.price, 0)) });
+      closeSheet();
+      toast("🍰 التذوق تسجل");
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    f.tq.addEventListener("input", () => {
+      const t = f.tq.value.trim().toLowerCase();
+      $$("[data-tr]", f).forEach((r) => r.style.display = !t || r.dataset.n.includes(t) ? "" : "none");
     });
   });
 }
@@ -14335,13 +14374,14 @@ function sheetOpDetail(id) {
     return esc(((_a = S.workers.find((x) => x.id === id2)) == null ? void 0 : _a.name) || "؟");
   }).join("، ")}</p>` : ""}<h3>🥄 تنقص من المخزون</h3><div>${o.consumed.map((c) => prow(c.item, isMgr() && c.cost != null ? money(c.cost) : "", `<b class="num">${fmt(c.qty)} ${esc(iunit(c.item))}</b>`)).join("")}</div>${isMgr() && o.cost != null ? `<div class="receipt"><div class="tot"><span>التكلفة</span><span>${money(o.cost)}</span></div><div class="muted">${money(o.unitCost)} لكل ${esc(iunit(o.item))} (CMUP)</div></div>` : ""}`;
   if (o.type === "return") b += `<p>${esc(LOC[o.pos])} ← ${esc(LOC[o.ws])}</p><div>${(o.decisions || o.lines).map((x) => prow(x.item, "رجع " + fmt(x.qty), o.decisions ? `<span class="muted">🛍️${fmt(x.resell)} ♻️${fmt(x.recycle)} 🗑️${fmt(x.destroy)}</span>` : "")).join("")}</div>${o.status === "decided" ? `<p class="muted">قرر ${esc(o.decidedBy)} · خسارة الإتلاف ${money(o.loss)}</p>` : ""}<div class="media">${mediaBtns(o.photos, "صورة")}</div>`;
+  if (o.type === "tasting") b += `<p>${LOCI[o.pos] || ""} ${esc(LOC[o.pos] || "")}${o.note ? " · 📝 " + esc(o.note) : ""}</p><div>${(o.lines || []).map((l) => prow(l.item, "التكلفة " + money(l.unitCost), `<b class="num">${fmt(l.qty)}</b>`)).join("")}</div><div class="prow"><b>💰 التكلفة</b><b class="num">${money(o.cost)}</b></div>${(o.photos || []).length ? `<div class="media">${mediaBtns(o.photos, "صورة")}</div>` : ""}`;
   if (o.type === "adjust") b += `${prow(o.item, LOCI[o.ws || o.pos] + " " + esc(LOC[o.ws || o.pos]) + " · " + esc(o.reason), `<b class="num">${fmt(o.from)} ← ${fmt(o.to)}</b>`)}`;
   if (o.type === "count") b += `<p>${esc(LOC[o.pos])}</p><div>${o.diffs.map((d) => prow(d.item, "نظري " + fmt(d.theo) + " · لقينا " + fmt(d.counted), `<b class="num ${d.d < 0 ? "neg" : "pos"}">${fmt(d.d)}</b>`)).join("")}</div>`;
   if (o.type === "purchase" && isMgr()) b += `${(o.edits || []).length ? `<details class="box"><summary style="cursor:pointer;font-weight:700">✏️ تبدل ${o.edits.length} مرة · التاريخ</summary>${o.edits.slice().reverse().map((e) => {
     var _a, _b;
     return `<div class="box" style="gap:4px"><b>${dhm(e.ts)} · ${esc(e.by)}</b><div class="muted">💬 ${esc(e.reason || "")}</div>${(e.changes || []).map((c) => `<div style="font-size:.88rem">• ${esc(c)}</div>`).join("")}<div class="muted" style="font-size:.85rem">المجموع: ${money((_a = e.before) == null ? void 0 : _a.total)} ← ${money((_b = e.after) == null ? void 0 : _b.total)}</div></div>`;
   }).join("")}</details>` : ""}<button type="button" class="btn block" data-act="purchedit" data-id="${o.id}">✏️ تصحيح الشراء (غير المسير والمشرف)</button>`;
-  openSheet({ purchase: "🛒 شراء", production: "👨‍🍳 إنتاج", return: "↩️ مرتجع", count: "🔍 فرق الجرد", adjust: "✏️ تصحيح المخزون" }[o.type] || "عملية", b);
+  openSheet({ purchase: "🛒 شراء", production: "👨‍🍳 إنتاج", return: "↩️ مرتجع", count: "🔍 فرق الجرد", adjust: "✏️ تصحيح المخزون", tasting: "🍰 التذوق" }[o.type] || "عملية", b);
 }
 function sheetPurchEdit(id) {
   const o = getOp(id);
@@ -16168,6 +16208,7 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  tasting: () => sheetTasting(),
   gramedit: (el) => sheetGram(el.dataset.id),
   blendedit: (el) => sheetBlendEdit(el.dataset.id),
   blendfix: (el) => sheetBlendFix(el.dataset.id),
