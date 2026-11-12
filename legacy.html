@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112172629" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112173508" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -14093,7 +14093,89 @@ function sheetOpDetail(id) {
   if (o.type === "return") b += `<p>${esc(LOC[o.pos])} ← ${esc(LOC[o.ws])}</p><div>${(o.decisions || o.lines).map((x) => prow(x.item, "رجع " + fmt(x.qty), o.decisions ? `<span class="muted">🛍️${fmt(x.resell)} ♻️${fmt(x.recycle)} 🗑️${fmt(x.destroy)}</span>` : "")).join("")}</div>${o.status === "decided" ? `<p class="muted">قرر ${esc(o.decidedBy)} · خسارة الإتلاف ${money(o.loss)}</p>` : ""}<div class="media">${mediaBtns(o.photos, "صورة")}</div>`;
   if (o.type === "adjust") b += `${prow(o.item, LOCI[o.ws || o.pos] + " " + esc(LOC[o.ws || o.pos]) + " · " + esc(o.reason), `<b class="num">${fmt(o.from)} ← ${fmt(o.to)}</b>`)}`;
   if (o.type === "count") b += `<p>${esc(LOC[o.pos])}</p><div>${o.diffs.map((d) => prow(d.item, "نظري " + fmt(d.theo) + " · لقينا " + fmt(d.counted), `<b class="num ${d.d < 0 ? "neg" : "pos"}">${fmt(d.d)}</b>`)).join("")}</div>`;
+  if (o.type === "purchase" && isMgr()) b += `${(o.edits || []).length ? `<details class="box"><summary style="cursor:pointer;font-weight:700">✏️ تبدل ${o.edits.length} مرة · التاريخ</summary>${o.edits.slice().reverse().map((e) => {
+    var _a, _b;
+    return `<div class="box" style="gap:4px"><b>${dhm(e.ts)} · ${esc(e.by)}</b><div class="muted">💬 ${esc(e.reason || "")}</div>${(e.changes || []).map((c) => `<div style="font-size:.88rem">• ${esc(c)}</div>`).join("")}<div class="muted" style="font-size:.85rem">المجموع: ${money((_a = e.before) == null ? void 0 : _a.total)} ← ${money((_b = e.after) == null ? void 0 : _b.total)}</div></div>`;
+  }).join("")}</details>` : ""}<button type="button" class="btn block" data-act="purchedit" data-id="${o.id}">✏️ تصحيح الشراء (غير المسير والمشرف)</button>`;
   openSheet({ purchase: "🛒 شراء", production: "👨‍🍳 إنتاج", return: "↩️ مرتجع", count: "🔍 فرق الجرد", adjust: "✏️ تصحيح المخزون" }[o.type] || "عملية", b);
+}
+function sheetPurchEdit(id) {
+  const o = getOp(id);
+  if (!o || o.type !== "purchase" || !isMgr()) return;
+  const L = o.lines || [];
+  const fe = o.fees || {};
+  const iS = "height:38px;border-radius:10px;border:2px solid var(--line);background:var(--surface);padding:0 6px;min-width:0";
+  openSheet("✏️ تصحيح الشراء", `<div class="alert warn" style="cursor:default">⚠️ المخزون والثمن المتوسط والوطات غادي يتصححو. التاريخ ديال التبديل كيتسجل.</div>
+   ${L.map((l, k) => `<div class="box" style="gap:6px" data-pe="${k}"><b>${ico(l.item)} ${esc(iname(l.item))}</b>
+    <div class="two">${fld("peq" + k, "الكمية (" + esc(iunit(l.item)) + ")", `<input name="peq${k}" class="big-in" inputmode="decimal" value="${fmt(l.qty)}">`)}${fld("pep" + k, "💰 ثمن " + esc(iunit(l.item)), `<input name="pep${k}" class="big-in" inputmode="decimal" value="${fmt(l.price)}">`)}</div>
+    <div class="prow" style="gap:6px;border:0;padding:0"><span class="muted">🏪</span><input type="text" data-psp="pe${k}" name="pes${k}" value="${esc(l.sup || o.supplier || "")}" autocomplete="off" style="${iS};flex:1"><span class="muted">🏷️</span><input name="peb${k}" value="${esc(l.brand || "")}" style="${iS};flex:1"></div>
+    <div class="prow" style="gap:6px;border:0;padding:0"><span class="muted">📅 DLC</span><input type="date" name="ped${k}" value="${esc(l.dlc || "")}" style="${iS};flex:1"></div></div>`).join("")}
+   <div class="box"><h3>💸 مصاريف إضافية</h3><div class="two">${fld("pefc", "🤝 الكوميسيون", `<input name="pefc" class="big-in" inputmode="decimal" value="${fe.commission ? fmt(fe.commission) : ""}">`)}${fld("peft", "🪙 البوربوار", `<input name="peft" class="big-in" inputmode="decimal" value="${fe.tip ? fmt(fe.tip) : ""}">`)}</div>${fld("pefh", "💪 الحمالة", `<input name="pefh" class="big-in" inputmode="decimal" value="${fe.handling ? fmt(fe.handling) : ""}">`)}</div>
+   ${fld("per", "💬 علاش كتبدل؟ (إجباري)", '<textarea name="per" id="per" rows="2" placeholder="مثلاً: الثمن ديال الزبدة تكتب غالط"></textarea>')}${errP}<button class="btn primary block" type="submit">✅ حفظ التصحيح</button>`, async (f) => {
+    var _a;
+    const reason = f.per.value.trim();
+    if (reason.length < 3) return ferr("💬 كتب علاش كتبدل.");
+    const NL = L.map((l, k) => __spreadProps(__spreadValues({}, l), { qty: num(f["peq" + k].value), price: num(f["pep" + k].value), sup: supFix(f["pes" + k].value), brand: f["peb" + k].value.trim(), dlc: f["ped" + k].value || "" }));
+    if (NL.some((l) => !(l.qty >= 0) || !(l.price >= 0))) return ferr("الكمية والثمن خاصهم يكونو أرقام صحيحة.");
+    if (NL.some((l) => l.qty > 0 && !l.sup)) return ferr("🏪 اختار المورد ديال كل مادة.");
+    const fees = { commission: num(f.pefc.value) || 0, tip: num(f.peft.value) || 0, handling: num(f.pefh.value) || 0 };
+    const feesTotal = r2(fees.commission + fees.tip + fees.handling);
+    const sub = r2(NL.reduce((a, l) => a + l.qty * l.price, 0));
+    const total = r2(sub + feesTotal);
+    const fk2 = sub > 0 ? 1 + feesTotal / sub : 1;
+    NL.forEach((l) => l.landed = Math.round(l.price * fk2 * 1e4) / 1e4);
+    const ch = [];
+    NL.forEach((l, k) => {
+      const a = L[k], n = iname(l.item).split(" (")[0];
+      if (a.qty !== l.qty) ch.push(n + ": الكمية " + fmt(a.qty) + " ← " + fmt(l.qty));
+      if (a.price !== l.price) ch.push(n + ": الثمن " + fmt(a.price) + " ← " + fmt(l.price));
+      if ((a.sup || o.supplier || "") !== l.sup) ch.push(n + ": المورد " + (a.sup || o.supplier || "—") + " ← " + l.sup);
+      if ((a.brand || "") !== l.brand) ch.push(n + ": الماركة " + (a.brand || "—") + " ← " + l.brand);
+      if ((a.dlc || "") !== l.dlc) ch.push(n + ": DLC " + (a.dlc || "—") + " ← " + (l.dlc || "—"));
+    });
+    if (feesTotal !== r2(+o.feesTotal || 0)) ch.push("المصاريف الإضافية " + fmt(+o.feesTotal || 0) + " ← " + fmt(feesTotal));
+    if (!ch.length) return ferr("ما بدلتي والو.");
+    busy(f, true);
+    try {
+      const ws = o.ws;
+      const sm = ((_a = S.stock) == null ? void 0 : _a[ws]) || {};
+      const avg = __spreadValues({}, sm.avg || {});
+      const dq = {};
+      NL.forEach((l, k) => {
+        var _a2;
+        const a = L[k];
+        const oldL = +((_a2 = a.landed) != null ? _a2 : a.price) || 0;
+        const Sq = +(sm.items || {})[l.item] || 0;
+        const A = +avg[l.item] || oldL;
+        const S1 = Sq - a.qty + l.qty;
+        dq[l.item] = r2((dq[l.item] || 0) + l.qty - a.qty);
+        avg[l.item] = S1 > 0 ? Math.max(0, Math.round((A * Sq - a.qty * oldL + l.qty * l.landed) / S1 * 1e4) / 1e4) : l.landed;
+      });
+      if (Object.values(dq).some((v) => v)) await bumpStock(ws, Object.fromEntries(Object.entries(dq).filter(([, v]) => v)));
+      await db.doc("stock/" + ws).update({ avg });
+      for (const l of NL) {
+        const lots = lotsAll().filter((x) => x.purchaseId === o.id && x.item === l.item);
+        const a = L.find((x) => x.item === l.item) || {};
+        for (const x of lots) {
+          const d = r2(l.qty - (+a.qty || 0));
+          await db.doc("lots/" + x.id).update({ qty0: l.qty, qty: Math.max(0, r2((+x.qty || 0) + d)), price: l.price, supplier: l.sup, brand: l.brand, dlc: l.dlc || x.dlc || "" }).catch(() => {
+          });
+        }
+        const u = {};
+        if (l.price > 0 && l.price !== lastPrice(l.item)) u.lastPrice = u.cost = l.price;
+        if (l.sup) u.lastSup = l.sup;
+        if (Object.keys(u).length) await db.doc("items/" + l.item).update(u).catch(() => {
+        });
+      }
+      const sups = [...new Set(NL.filter((l) => l.qty > 0).map((l) => l.sup))];
+      const edits = [...o.edits || [], { ts: Date.now(), by: meName(), reason, changes: ch, before: { lines: L, fees: o.fees || {}, total: o.total }, after: { total } }];
+      await db.doc("ops/" + o.id).update({ lines: NL, fees, feesTotal, sub, total, supplier: sups.join(" · "), suppliers: sups, edits, edited: true });
+      closeSheet();
+      toast("✏️ الشراء تصحح");
+    } catch (e) {
+      fail(f, e);
+    }
+  });
 }
 Object.assign(OSTL, { wait: "كتسنى الموافقة", refused: "مرفوضة", topay: "كتسنى التسبيق", cancel: "ملغية" });
 Object.assign(OSTI, { wait: "⏳", refused: "⛔", topay: "💵", cancel: "🗑️" });
@@ -15842,6 +15924,7 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  purchedit: (el) => sheetPurchEdit(el.dataset.id),
   sups: () => sheetSuppliers(),
   rcvlist: () => {
     const p = me.loc || S.pos;
