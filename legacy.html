@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112165301" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112165612" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2712,7 +2712,7 @@ function allTiles() {
   add({ i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 });
   if (vendRole()) {
     const sh = openShift(me.loc || S.pos);
-    return [{ i: "🛍️", l: sh ? "البيع" : "البيع (لاكيس مسدودة)", a: "go", v: "pos", c: 1 }, { i: "✅", l: "المهام ديالي والجرد", a: "mytasks", c: 5, b: helperPending(me.id).length }, ...frOf(me.loc || S.pos).length ? [{ i: "🌡️", l: "الحرارة ديال الفيترينات", a: "tempin", b: tempDue(me.loc || S.pos).length, c: 4 }] : [], { i: "📸", l: "صور الفيترينة والنظافة", a: "vitshot", c: 3 }, { i: "📝", l: "طلبية جديدة", a: "neworder", c: 2 }, { i: "📋", l: "الطلبيات", a: "go", v: "orders", c: 3 }, { i: "📅", l: "البلانينگ ديالي", a: "myplan", c: 3 }, { i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 }];
+    return [{ i: "🛍️", l: sh ? "البيع" : "البيع (لاكيس مسدودة)", a: "go", v: "pos", c: 1 }, { i: "✅", l: "المهام ديالي والجرد", a: "mytasks", c: 5, b: helperPending(me.id).length }, ...frOf(me.loc || S.pos).length ? [{ i: "🌡️", l: "الحرارة ديال الفيترينات", a: "tempin", b: tempDue(me.loc || S.pos).length, c: 4 }] : [], { i: "📸", l: "صور الفيترينة والنظافة", a: "vitshot", c: 3 }, { i: "📦", l: "استلام السلعة من الأتولي", a: "rcvlist", c: 4, b: S.pend.filter((o) => o.type === "transfer" && o.pos === (me.loc || S.pos)).length }, { i: "📝", l: "طلبية جديدة", a: "neworder", c: 2 }, { i: "📋", l: "الطلبيات", a: "go", v: "orders", c: 3 }, { i: "📅", l: "البلانينگ ديالي", a: "myplan", c: 3 }, { i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 }];
   }
   return out;
 }
@@ -3316,7 +3316,7 @@ function homeTiles(arr) {
 }
 function alertsFor() {
   if (vendRole()) {
-    const keep = alertsFor0().filter((h) => /data-act="(tempin|vitshot)"/.test(h));
+    const keep = alertsFor0().filter((h) => /data-act="(tempin|vitshot|transfer)"/.test(h));
     return keep.concat(helperPending(me.id).map((x) => `<div class="alert bad" data-act="helpconf" data-id="${x.id}"><div class="lead"><span class="em">🤝</span><div><b>أكدي الجرد ديال النوبة ديال ${esc(x.seller || "")}</b><div class="muted">حسبي معاها وأكدي</div></div></div><span class="tag bad">أكدي</span></div>`));
   }
   return alertsFor0();
@@ -5261,7 +5261,11 @@ function sheetMyPlan() {
   }
   const hp = helperPending(me.id);
   if (hp.length) T.push(["bad", "🤝", "أكدي الجرد ديال النوبة ديال " + hp[0].seller, "قبل ما تبيعي"]);
-  const od = (S.orders || []).filter((o) => o.pos === p && o.status !== "delivered" && o.due && o.due <= addD(today(), 1)).sort((a, b) => ((a.due || "") + (a.dueTime || "")).localeCompare((b.due || "") + (b.dueTime || "")));
+  {
+    const tr = S.pend.filter((o) => o.type === "transfer" && o.pos === p);
+    if (tr.length) T.push(["warn", "📦", tr.length + " إرسال جاي من الأتولي", "استلميه"]);
+  }
+  const od = (S.orders || []).filter((o) => o.pos === p && !["delivered", "cancel", "refused"].includes(o.status) && o.due && o.due <= addD(today(), 1)).sort((a, b) => ((a.due || "") + (a.dueTime || "")).localeCompare((b.due || "") + (b.dueTime || "")));
   od.forEach((o) => T.push([o.due < today() ? "bad" : o.due === today() ? "warn" : "", "🎂", "طلبية " + esc(o.client || "") + (o.num ? " #" + o.num : ""), (o.due === today() ? "اليوم" : o.due < today() ? "فاتت " + o.due : "غدا") + (o.dueTime ? " " + o.dueTime : "")]));
   const role = sh ? posMode(p) : null;
   const who = `<div class="box" style="gap:4px"><b>${avatar(me)} ${esc(me.name)}</b><div class="muted">${esc(LOC[p] || "")}${sh ? " · " + (sh.team === "مسائية" ? "🌙" : "☀️") + " " + esc(sh.team) + " · " + (role === "v" ? "🛍️ فوندوز" : "💵 فوندوز كيسيير") : " · النوبة ما مفتوحاش"}</div></div>`;
@@ -5270,7 +5274,7 @@ function sheetMyPlan() {
     return openSheet("✅ المهام ديالي", `${who}
    <h3 style="margin:6px 0 0">⏰ دابا</h3>${T.length ? T.map(([c, i, t, d]) => `<div class="prow"><div class="lead"><span class="em">${i}</span><b>${t}</b></div>${d ? `<span class="tag ${c}">${d}</span>` : ""}</div>`).join("") : '<p class="muted">ما عندك والو دابا. 👏</p>'}
    <h3 style="margin:10px 0 0">🔁 ديما (كل ${RMD_MIN() || 20} دقيقة)</h3>${RMD.map((x) => `<div class="prow"><div class="lead"><span class="em">${x[0]}</span><div><b>${x[1]}</b><div class="muted">${x[2]}</div></div></div></div>`).join("")}
-   <h3 style="margin:10px 0 0">📋 فكل نوبة</h3>${(role === "v" ? [["🛍️", "بيعي وخرجي البون (2 نسخ)"], ["👀", "تبعي الزبون حتى يخلص فلاكيس"], ["🎂", "سجلي الطلبيات ديال الزبناء وتبعيهم"], ["📸", "صوري الفيترينات والكولوار والبلاصة ديال الزبناء"], ["🌡️", "سجلي الحرارة"], ["🤝", "أكدي الجرد ملي تسد لاكيس"]] : [["🔓", "فتحي النوبة وحسبي الفلوس اللي لقيتي"], ["💵", "خلصي الزبناء والبونات ديال الفوندوز"], ["🎂", "سجلي الطلبيات وتبعيهم"], ["📸", "صوري الفيترينات والكولوار والبلاصة ديال الزبناء"], ["🌡️", "سجلي الحرارة"], ["📦", "استلمي السلعة اللي جات من الورشات"], ["🔒", "سدي النوبة: الجرد، حساب الفلوس والباساسيون"]]).map((x) => `<div class="prow"><div class="lead"><span class="em">${x[0]}</span><b>${x[1]}</b></div></div>`).join("")}
+   <h3 style="margin:10px 0 0">📋 فكل نوبة</h3>${(role === "v" || vendRole() ? [["🛍️", "بيعي وديري البون بسمية الزبون"], ["👀", "تبعي الزبون حتى يخلص فلاكيس"], ["📦", "استلمي السلعة اللي جات من الأتولي وحسبيها مزيان"], ["🎂", "سجلي الطلبيات ديال الزبناء (صور، صوت وكتابة) وتبعيهم"], ["📸", "صوري الفيترينات، الكولوار والبلاصة ديال الزبناء"], ["🌡️", "سجلي الحرارة ديال الفيترينات (كل جوج سوايع)"], ["🤝", "عاوني فالجرد وأكديه ملي تتسد لاكيس"], ["📅", "شوفي البلانينگ ديالك"]] : [["🔓", "فتحي النوبة وحسبي الفلوس اللي لقيتي"], ["💵", "خلصي الزبناء والبونات ديال الفوندوز"], ["🎂", "سجلي الطلبيات وتبعيهم"], ["📸", "صوري الفيترينات والكولوار والبلاصة ديال الزبناء"], ["🌡️", "سجلي الحرارة"], ["📦", "استلمي السلعة اللي جات من الورشات"], ["🔒", "سدي النوبة: الجرد، حساب الفلوس والباساسيون"]]).map((x) => `<div class="prow"><div class="lead"><span class="em">${x[0]}</span><b>${x[1]}</b></div></div>`).join("")}
    <button type="button" class="btn primary block" data-act="close">👍 واخا</button>`);
   }
   openSheet("📅 البلانينگ ديالي", `${who}
@@ -5317,7 +5321,7 @@ function sheetHelpIssues() {
 const posRoleOf = (u) => (u == null ? void 0 : u.posRole) === "v" ? "v" : "c";
 const vendOnly = () => (me == null ? void 0 : me.role) === "seller" && !!openShift(me.loc) && posMode(me.loc) === "v";
 const vendRole = () => (me == null ? void 0 : me.role) === "seller" && posRoleOf(me) === "v";
-const VO_V = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "tempin", "vitshot", "myplan", "neworder", "order", "ofilter", "media", "ocancel", "oslip", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
+const VO_V = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "tempin", "vitshot", "myplan", "neworder", "order", "ofilter", "media", "ocancel", "oslip", "transfer", "receive", "rcvlist", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
 const VO_OK = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cart", "cust", "custclear", "wawel", "devices", "fs", "logout", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "myplan", "mytasks", "disp", "pbtog", "appquit", "fsoff", "afbnew", "afbopen", "afba", "afbf", "refillreq", "tempin", "vitshot", "helpconf", "order", "ofilter", "neworder", "ost", "oadv", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser"]);
 const posMode = (p) => {
   const sh = openShift(p);
@@ -15719,6 +15723,12 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  rcvlist: () => {
+    const p = me.loc || S.pos;
+    const L = S.pend.filter((o) => o.type === "transfer" && o.pos === p);
+    if (L.length === 1) return sheetTransfer(L[0].id);
+    openSheet("📦 السلعة اللي جاية لـ" + LOC[p], L.length ? L.map((o) => `<div class="alert acc" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${o.status === "with_driver" ? "🚚" : "📦"}</span><div><b>${esc(LOC[o.ws] || "")} · ${(o.lines || []).length} منتوج</b><div class="muted">${hm(o.ts)} · ${esc(o.by || "")}</div></div></div><span class="tag acc">استلم</span></div>`).join("") : emptyB("📦", "ما كاينة حتى سلعة جاية دابا."));
+  },
   dpedit: (el) => sheetDpEdit(el.dataset.id),
   dpsend: (el) => dpSendSheet(el.dataset.id, el.dataset.w),
   dpfin: (el) => {
