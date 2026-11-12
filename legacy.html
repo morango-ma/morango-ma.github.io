@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112154925" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112161311" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3061,7 +3061,7 @@ function vPxCheck() {
   const T = { bad: ["🔴", "خاسر ولا رخيص بزاف"], warn: ["🟠", "ضعيف"], good: ["🟢", "مزيان"], nocost: ["⚪", "التكلفة ما معروفاش"], noprice: ["⚪", "بلا ثمن"] };
   return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">🎯 مراقبة الأثمنة</h2></div><p class="muted" style="margin:0">نتا كتحط الثمن. هنا كنقولو ليك واش كيخلي هامش: المواد والتغليف خاصهم يكونو تحت 35% من الثمن.</p>
    <div class="chips">${[["alert", "⚠️ اللي خاصهم انتباه", C("bad") + C("warn")], ["bad", "🔴", C("bad")], ["warn", "🟠", C("warn")], ["good", "🟢", C("good")], ["nocost", "⚪ بلا تكلفة", C("nocost")], ["all", "الكل", rows.length]].map(([k, l, n]) => `<button type="button" class="chip ${f === k ? "on" : ""}" onclick="S.pxf='${k}';render()">${l} (${n})</button>`).join("")}</div></section>
-   <section class="card">${L.length ? L.map((r) => `<div class="prow clk" data-act="item" data-id="${r.it.id}"><div class="lead"><span class="em">${ico(r.it.id)}</span><div><b>${esc(r.it.name)}</b><div class="muted">${r.pr > 0 ? money(r.pr) : "بلا ثمن"}${r.v > 0 ? " · المواد " + money(r.v) : ""}${r.it.comp ? " · المنافسة " + money(r.it.comp) : ""}${r.q ? " · 🛍️ " + fmt(r.q) + " ف30 يوم" : ""}</div></div></div><span class="tag ${r.lvl === "good" ? "good" : r.lvl === "bad" ? "bad" : "warn"}">${T[r.lvl][0]} ${r.fc != null ? Math.round(r.fc) + "%" : T[r.lvl][1]}</span></div>`).join("") : emptyB("✨", "ما كاين والو هنا.")}</section>`;
+   <section class="card">${L.length ? L.map((r) => `<div class="prow clk" data-act="item" data-id="${r.it.id}"><div class="lead"><span class="em">${ico(r.it.id)}</span><div><b>${esc(r.it.name)}</b><div class="muted">${r.pr > 0 ? money(r.pr) : "بلا ثمن"}${r.v > 0 ? " · المواد " + money(r.v) : ""}${r.q ? " · 🛍️ " + fmt(r.q) + " ف30 يوم" : ""}</div></div></div><span class="tag ${r.lvl === "good" ? "good" : r.lvl === "bad" ? "bad" : "warn"}">${T[r.lvl][0]} ${r.fc != null ? Math.round(r.fc) + "%" : T[r.lvl][1]}</span></div>`).join("") : emptyB("✨", "ما كاين والو هنا.")}</section>`;
 }
 function vLogins() {
   if (!(isAdmin() || me.role === "manager")) return vHome();
@@ -3558,10 +3558,16 @@ function vSend() {
 }
 const openShift = (p) => S.shifts.find((x) => x.pos === p && x.status === "open");
 const cartOf = (p) => S.cart[p] || (S.cart[p] = {});
-const cartTotal = (p) => Object.entries(cartOf(p)).reduce((s, [id, q]) => {
-  var _a;
-  return s + q * (+((_a = S.items[id]) == null ? void 0 : _a.price) || 0);
-}, 0);
+const unitPx = (id, q) => {
+  const it = S.items[id] || {};
+  const p1 = +it.price || 0, p2 = +it.price2 || 0, p3 = +it.price3 || 0;
+  q = +q || 0;
+  if (q >= 3 - 1e-9 && (p3 > 0 || p2 > 0)) return p3 > 0 ? p3 : p2;
+  if (q >= 2 - 1e-9 && p2 > 0) return p2;
+  return p1;
+};
+const pxTiers = (it) => +it.price2 > 0 || +it.price3 > 0 ? `<span class="muted" style="font-size:.78rem">${+it.price2 > 0 ? "2: " + fmt(it.price2) : ""}${+it.price3 > 0 ? " · 3+: " + fmt(it.price3) : ""}</span>` : "";
+const cartTotal = (p) => Object.entries(cartOf(p)).reduce((s, [id, q]) => s + q * unitPx(id, q), 0);
 function cartBar() {
   const p = S.pos;
   if (!openShift(p)) return "";
@@ -3804,7 +3810,7 @@ function ticketPanel(p) {
   return `<aside class="ticket" aria-label="الوصل الحالي"><div class="th"><h2>🧾 الزبون الحالي</h2>${ids.length ? '<button class="link" data-act="cclear">🗑️ فرغ</button>' : ""}</div>
   <div class="tl">${ids.length ? ids.map((id) => {
     var _a2;
-    return prow(id, money((_a2 = S.items[id]) == null ? void 0 : _a2.price), cartQty(id, c[id]));
+    return prow(id, money(unitPx(id, c[id])) + (unitPx(id, c[id]) !== (+((_a2 = S.items[id]) == null ? void 0 : _a2.price) || 0) ? ' <span class="tag good" style="font-size:.72rem">🏷️ ثمن الكمية</span>' : ""), cartQty(id, c[id]));
   }).join("") : emptyB("👆", "ضغط على المنتوجات باش تزيدهم.")}</div>
   <div class="tf">${custChip(p)}<div class="tot"><span>المجموع</span><span class="num ctot">${money(cartTotal(p))}</span></div><div class="muted">${fmt(n)} قطعة</div>
   ${((_a = S.bonPay) == null ? void 0 : _a[p]) ? '<div class="muted">📝 كتخلصي البون ' + esc(((_b = (S.bons || []).find((b) => b.id === S.bonPay[p])) == null ? void 0 : _b.no) || "") + "</div>" : ""}<button class="btn primary block paybtn" data-act="cart" ${ids.length ? "" : "disabled"}>${posMode(p) === "v" ? "📝 خرج البون" : "💵 خلص"}</button></div></aside>`;
@@ -4113,14 +4119,15 @@ function inlineFinal(rows, title, w) {
   const R = L.map((i) => ({ i, r: pxRow(i) }));
   const nb = R.filter((x) => x.r.lvl === "bad").length, nw = R.filter((x) => x.r.lvl === "warn").length;
   return `<section class="card" style="gap:6px"><div class="head"><h2>${esc(title)} <span class="tag">${L.length}</span></h2>${nb ? `<span class="tag bad">🔴 ${nb}</span>` : ""}${nw ? `<span class="tag warn">🟠 ${nw}</span>` : ""}<div class="btns" style="flex-wrap:nowrap;margin:0">${w ? `<button class="btn small" data-act="cats" data-id="${w}">🏷️ الفئات</button>` : ""}<button class="btn small primary" data-act="newitem" data-k="final">➕ زيد</button></div></div>
-   <p class="muted" style="margin:0">بدل ثمن البيع ولا ثمن المنافسة نيشان هنا، كيتسجل بوحدو. الـ% = شحال كياكلو المواد والتغليف من الثمن (🟢 تحت 35% · 🟠 35-50% · 🔴 فوق 50%). ضغط على اللون باش تشوف التفاصيل.</p>
+   <p class="muted" style="margin:0">ببدل ثمن البيع نيشان هنا، كيتسجل بوحدو. الـ% = شحال كياكلو المواد والتغليف من الثمن (🟢 تحت 35% · 🟠 35-50% · 🔴 فوق 50%). ضغط على اللون باش تشوف التفاصيل.</p>
    <input type="search" placeholder="🔍 قلب..." style="${inS};height:44px;text-align:start" oninput="const v=nrm(this.value);document.querySelectorAll('[data-fr]').forEach(r=>r.style.display=!v||nrm(r.dataset.nm).includes(v)?'':'none')" aria-label="قلب">
-   <div class="muted" style="display:grid;grid-template-columns:24px minmax(0,1fr) clamp(36px,9vw,64px) clamp(54px,13vw,80px) clamp(54px,13vw,80px) clamp(58px,14vw,84px);gap:5px;font-size:.75rem;padding:0 2px"><span></span><span>المنتوج</span><span>المواد</span><span>ثمن البيع</span><span>المنافسة</span><span></span></div>
-   ${R.map(({ i, r }) => `<div data-fr="${i.id}" data-nm="${esc(i.name)}" style="border-bottom:1px solid var(--line);padding:3px 0"><div style="display:grid;grid-template-columns:24px minmax(0,1fr) clamp(36px,9vw,64px) clamp(54px,13vw,80px) clamp(54px,13vw,80px) clamp(58px,14vw,84px);gap:5px;align-items:center">
+   <div class="muted" style="display:grid;grid-template-columns:24px minmax(0,1fr) clamp(40px,10vw,64px) clamp(58px,15vw,84px) clamp(58px,14vw,84px);gap:5px;font-size:.75rem;padding:0 2px"><span></span><span>المنتوج</span><span>المواد</span><span>ثمن البيع</span><span></span></div>
+   ${R.map(({ i, r }) => `<div data-fr="${i.id}" data-nm="${esc(i.name)}" style="border-bottom:1px solid var(--line);padding:3px 0"><div style="display:grid;grid-template-columns:24px minmax(0,1fr) clamp(40px,10vw,64px) clamp(58px,15vw,84px) clamp(58px,14vw,84px);gap:5px;align-items:center">
      <button type="button" class="link" data-act="itemview" data-id="${i.id}" aria-label="شوف" style="font-size:1.05rem">👁️</button><b style="font-size:.9rem;line-height:1.2">${esc(i.name)}</b><span class="num muted" style="font-size:.85rem;text-align:center">${r.v > 0 ? fmt(Math.round(r.v * 100) / 100) : "؟"}</span>
      <input value="${+i.price > 0 ? fmt(i.price) : ""}" inputmode="decimal" placeholder="—" style="${inS};font-weight:700${+i.price > 0 ? "" : ";border-color:var(--bad,#dc2626)"}" onchange="inlineSave('${i.id}','sprice',this)" aria-label="ثمن البيع ${esc(i.name)}">
-     <input value="${+i.comp > 0 ? fmt(i.comp) : ""}" inputmode="decimal" placeholder="—" style="${inS}" onchange="inlineSave('${i.id}','comp',this)" aria-label="ثمن المنافسة ${esc(i.name)}">${r.tag}</div>
-     <div data-pxa="${i.id}" hidden style="margin-top:4px">${pxAdvice(i, i.price, 0, i.comp)}</div></div>`).join("")}</section>`;
+${r.tag}</div>
+     <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:3px;font-size:.8rem"><span class="muted">ثمن الحبة إلا شرا</span><span>2️⃣</span><input value="${+i.price2 > 0 ? fmt(i.price2) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price2',this)" aria-label="ثمن الحبة إلا شرا 2"><span>3️⃣+</span><input value="${+i.price3 > 0 ? fmt(i.price3) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price3',this)" aria-label="ثمن الحبة إلا شرا 3 ولا كثر"></div>
+     <div data-pxa="${i.id}" hidden style="margin-top:4px">${pxAdvice(i, i.price, 0, 0)}</div></div>`).join("")}</section>`;
 }
 function inlineRaw(rows, title, kk) {
   kk = kk === "cons" || kk === "pack" ? kk : S.cat === "pack" ? "pack" : "raw";
@@ -4160,6 +4167,17 @@ async function inlineSave(id, k, el) {
       return;
     }
     d.unit = v;
+  } else if (k === "price2" || k === "price3") {
+    const p = v.trim() === "" ? 0 : num(v);
+    if (!(p >= 0)) {
+      toast("الثمن ماشي صحيح", true);
+      return;
+    }
+    if (p > 0 && +it.price > 0 && p > +it.price) {
+      toast("⚠️ ثمن الكمية كبر من ثمن الحبة الوحدة", true);
+    }
+    if (Math.abs(p - (+it[k] || 0)) < 1e-9) return;
+    d[k] = p;
   } else if (k === "sprice" || k === "comp") {
     const p = v.trim() === "" ? 0 : num(v);
     if (!(p >= 0)) {
@@ -4192,7 +4210,7 @@ async function inlineSave(id, k, el) {
       const t = document.querySelector('[data-pxt="' + id + '"]');
       if (t) t.outerHTML = pxRow(it, old).tag;
       const a = document.querySelector('[data-pxa="' + id + '"]');
-      if (a) a.innerHTML = k === "sprice" ? pxAdvice(it, it.price, old, it.comp) : pxAdvice(it, it.price, 0, it.comp);
+      if (a) a.innerHTML = k === "sprice" ? pxAdvice(it, it.price, old, 0) : pxAdvice(it, it.price, 0, 0);
     }
     if ("cost" in d) {
       for (const w of [...WS.map((w2) => w2.id), ...POS.map((p) => p.id)]) {
@@ -4266,7 +4284,7 @@ function sheetItemView(id, back) {
    ${((_c = (_b = it.recipe) == null ? void 0 : _b.lines) == null ? void 0 : _c.length) ? `<div class="box"><h3>📋 الفيش تكنيك (كتعطي ${fmt(yld(it))} ${esc(it.unit)}${isW(it.unit) ? " ⚖️ أوتوماتيك" : ""})</h3>${it.recipe.lines.map((l) => prow(l.item, "", `<b class="num">${fmtq(l.qty)} ${esc(l.unit || iunit(l.item))}</b>`)).join("")}${isMgr() ? `<div class="muted" style="margin-top:6px">التكلفة دابا: <b>${money(costOf(id, 0, it.ws || null))}</b> لكل ${esc(it.unit)}</div>` : ""}${it.rnote ? `<div class="alert" style="cursor:default;margin-top:6px"><div>♻️ ${esc(it.rnote)}</div></div>` : ""}</div>` : ""}${it.kind === "final" && isMgr() ? (() => {
     const b = priceBar(it, null, true);
     return b ? `<div class="box"><h3>📊 تركيبة ثمن البيع</h3>${b}</div>` : "";
-  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, it.comp)}</div>` : "") : ""}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
+  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, 0)}</div>` : "") : ""}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
 }
 function sheetDelItem(id) {
   if (!isMgr()) return;
@@ -5346,7 +5364,7 @@ function sheetBonNew() {
       f.bname.focus();
       return ferr("👤 كتبي سمية الزبون.");
     }
-    const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: +S.items[id].price }));
+    const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: unitPx(id, c[id]) }));
     const tot = r2(lines.reduce((a, l) => a + l.qty * l.price, 0));
     busy(f, true);
     try {
@@ -5533,7 +5551,7 @@ function sheetCart() {
     var _a;
     const sh = openShift(p);
     if (!sh) return ferr("ما كاينة حتى نوبة مفتوحة.");
-    const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: +S.items[id].price, unitCost: costOf(id, 0, p) }));
+    const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: unitPx(id, c[id]), unitCost: costOf(id, 0, p) }));
     const grossT = r2(lines.reduce((s, l) => s + l.qty * l.price, 0));
     const tot = r2(grossT - useVal);
     const given = num(f.cgiven.value);
@@ -14077,7 +14095,7 @@ function sheetOrdCat() {
     if (REC.rec) return ferr("⏹️ وقف التسجيل قبل.");
     const q = num($("input[data-ocq]", f).value);
     if (!(q > 0)) return ferr("دخل العدد.");
-    OD.lines.push({ kind: "cat", item: pick, qty: q, price: +S.items[pick].price || 0, note: f.oc_note.value.trim(), photos: [...PH.ocph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
+    OD.lines.push({ kind: "cat", item: pick, qty: q, price: unitPx(pick, q), note: f.oc_note.value.trim(), photos: [...PH.ocph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
     recReset();
     sheetNewOrder(true);
   }, (f) => {
@@ -14407,7 +14425,8 @@ function sheetItem(id) {
       doc.steps = (((_g = f.isteps) == null ? void 0 : _g.value) || "").trim();
       doc.ws = f.iws.value;
       doc.price = kind === "final" ? num(f.iprice.value) || 0 : 0;
-      if (f.icomp) doc.comp = num(f.icomp.value) || 0;
+      if (f.iprice2) doc.price2 = num(f.iprice2.value) || 0;
+      if (f.iprice3) doc.price3 = num(f.iprice3.value) || 0;
       if (f.ibarcode) doc.barcode = String(f.ibarcode.value || "").trim();
       if (kind === "final") {
         if (f.isgoal) doc.sgoal = num(f.isgoal.value) || 0;
@@ -14529,7 +14548,7 @@ function sheetItem(id) {
     };
     ISYNC = sync;
     const costUpd = () => {
-      var _a2, _b, _c, _d, _e, _f, _g, _h, _i;
+      var _a2, _b, _c, _d, _e, _f, _g, _h;
       const l = $("#icostl", f);
       if (!l) return;
       sync();
@@ -14568,7 +14587,7 @@ function sheetItem(id) {
       }
       {
         const pa = $("#pxadv", f);
-        if (pa) pa.innerHTML = f.ikind.value === "final" && isMgr() ? pxAdvice(__spreadProps(__spreadValues({}, it), { kind: "final", ws: ((_g = f.iws) == null ? void 0 : _g.value) || it.ws, pack: plines.filter((x) => x.item && +x.qty > 0) }), num((_h = f.iprice) == null ? void 0 : _h.value), it.price, num((_i = f.icomp) == null ? void 0 : _i.value), c) : "";
+        if (pa) pa.innerHTML = f.ikind.value === "final" && isMgr() ? pxAdvice(__spreadProps(__spreadValues({}, it), { kind: "final", ws: ((_g = f.iws) == null ? void 0 : _g.value) || it.ws, pack: plines.filter((x) => x.item && +x.qty > 0) }), num((_h = f.iprice) == null ? void 0 : _h.value), it.price, 0, c) : "";
       }
       const th = $("#itheo", f);
       if (th) {
@@ -14596,7 +14615,7 @@ function sheetItem(id) {
       ex.innerHTML = `${choice("iws", "الورشة", WS.map((x) => ({ v: x.id, l: x.name, i: x.i })), ws, 3)}${kind === "semi" ? choice("istage", "النوع", [{ v: "inter", l: "منتوج ميز أون بلاس · Mise en place (بيسكوي، كريمة، كادر، عجين...)", i: "🥣" }, { v: "pre", l: "منتوج ممفينيش · Non fini (ترونش ممفينيش...)", i: "🧊" }], it.stage === "pre" ? "pre" : "inter", 2) : ""}<div class="box" style="gap:6px">${choice("ifrz", "❄️ هاد المنتوج يمكن يدخل للكونجيلاتور؟", [{ v: "0", l: "لا", i: "🚫" }, { v: "1", l: "إيه، إلا بغينا", i: "❄️" }], it.frz ? "1" : "0", 2)}${it.frz ? fld("ifrzd", "⛔ شحال كيبقى مزيان فالكونجيلاتور؟ (بالأيام)", `<input id="ifrzd" name="ifrzd" class="big-in" inputmode="decimal" value="${it.frzDays ? fmt(it.frzDays) : ""}" placeholder="مثلاً 30">`) : ""}${kind === "semi" ? choice("istep", "🧭 المرحلة ديال الإنتاج (كل مرحلة فنهار بوحدها)", [{ v: "", l: "بلا مرحلة", i: "➖" }, { v: "cuis", l: "الطياب", i: "🔥" }, { v: "crem", l: "الكريمات والحشوات", i: "🥄" }, { v: "mont", l: "المونطاج", i: "🧱" }, { v: "coup", l: "التقطيع", i: "🔪" }], it.step || "", 3) : ""}${kind === "semi" ? `<div class="two">${fld("ismin", "⚖️ المخزون الأدنى (ديما خاص يكون)", `<input id="ismin" name="ismin" class="big-in" inputmode="decimal" value="${+it.smin > 0 ? fmt(it.smin) : ""}" placeholder="مثلاً 1">`)}${fld("ismax", "🔝 المخزون الأقصى", `<input id="ismax" name="ismax" class="big-in" inputmode="decimal" value="${+it.smax > 0 ? fmt(it.smax) : ""}" placeholder="مثلاً 2">`)}</div>` : ""}${kind === "semi" ? fld("ilead", "⏳ كيتصاوب قبل بشحال من نهار من الاستعمال ديالو؟ (0 = نفس النهار · العادي 1)", `<input id="ilead" name="ilead" class="big-in" inputmode="decimal" value="${it.lead != null && it.lead !== "" ? fmt(it.lead) : ""}" placeholder="${it.split ? 0 : 1}">`) : ""}</div>${kind === "final" ? `<div class="two">${fld("ivmin", "🪟 نبه البائعة ملي يبقى (فالفيترينة)", `<input id="ivmin" name="ivmin" class="big-in" inputmode="decimal" value="${it.vmin ? fmt(it.vmin) : ""}" placeholder="مثلاً 5">`)}${fld("ivqty", "🔁 كمية الشارج المعتادة", `<input id="ivqty" name="ivqty" class="big-in" inputmode="decimal" value="${it.vqty ? fmt(it.vqty) : ""}" placeholder="مثلاً 20">`)}</div>${fld("ibarcode", "🔫 الباركود (اختياري)", `<input id="ibarcode" name="ibarcode" class="big-in" inputmode="numeric" data-bc="1" value="${esc(it.barcode || "")}" placeholder="سكاني ولا كتب الرقم" autocomplete="off">`)}${fld("isgoal", "🎯 هدف البيع فالنهار (حبات · لكل لاكيس)", `<input id="isgoal" name="isgoal" class="big-in" inputmode="decimal" value="${it.sgoal ? fmt(it.sgoal) : ""}" placeholder="مثلاً 30">`)}` : ""}${kind === "final" ? fld("ifstep", "🧊 كيتفينا بمضاعفات ديال (اختياري · مثلاً 10: إلا طلبو 5 كيتفيناو 10 و5 كيبقاو فالمخزون)", `<input id="ifstep" name="ifstep" class="big-in" inputmode="decimal" value="${+it.fstep > 0 ? fmt(it.fstep) : ""}" placeholder="فارغ = قد ما تطلب">`) : ""}${kind === "final" ? fld("idmin", "🗓️ أقل كمية فالنهار (للبرنامج الأوتوماتيكي، مزيان للمنتوجات الجداد)", `<input id="idmin" name="idmin" class="big-in" inputmode="decimal" value="${it.dmin ? fmt(it.dmin) : ""}" placeholder="مثلاً 10">`) : ""}${kind === "final" ? `<div class="two">${fld("icmin", "📏 أقل عدد من الروسيطة (للتكلفة)", `<input id="icmin" name="icmin" class="big-in" inputmode="decimal" value="${it.cntMin ? fmt(it.cntMin) : ""}" placeholder="مثلاً 46">`)}${fld("icmax", "📏 أكثر عدد", `<input id="icmax" name="icmax" class="big-in" inputmode="decimal" value="${it.cntMax ? fmt(it.cntMax) : ""}" placeholder="مثلاً 50">`)}</div><p class="muted" style="margin:0">إلا دخلتي «أقل عدد»، الكمية من النصف مصنع فالوصفة كتولي 1 ÷ هاد العدد (التكلفة محسوبة على الأقل باش تكون مضمونة).</p>` : ""}${kind === "final" ? (() => {
         const cs = catsOf(ws);
         return cs.length ? choice("icat", "🏷️ الفئة", [...cs.map((c) => ({ v: c, l: c, i: "🏷️" })), { v: "", l: "بلا فئة", i: "📦" }], cs.includes(it.cat) ? it.cat : "", 2) : "";
-      })() : ""}${kind === "final" && !isW(f.iunit.value) ? fld("ibaked", "⚖️ وزن القطعة من بعد الطهي (غ، اختياري: للقيمة الغذائية)", `<input id="ibaked" name="ibaked" class="big-in" inputmode="decimal" value="${it.bakedG ? fmt(it.bakedG) : ""}" placeholder="وزنها ملي تبرد">`) : ""}${kind === "final" ? allocOf(ws) === "time" ? fld("ilmin", "⏱️ وقت الخدمة لكل " + esc(f.iunit.value) + " (بالدقائق)", `<input id="ilmin" name="ilmin" class="big-in" inputmode="decimal" value="${it.lmin ? fmt(it.lmin) : ""}" placeholder="مثلاً 0.5">`) : fld("ilcoef", "💪 معامل الخدمة (1 = عادي · 1.5 ولا 2 = كياخد خدمة كثر · 0.5 = ساهل)", `<input id="ilcoef" name="ilcoef" class="big-in" inputmode="decimal" value="${it.lcoef ? fmt(it.lcoef) : ""}" placeholder="1">`) : ""}${kind === "final" ? isMgr() ? moneyIn("iprice", "💰 ثمن البيع", it.price ? fmt(it.price) : "") + moneyIn("icomp", "🏷️ ثمن المنافسة (اختياري)", it.comp ? fmt(it.comp) : "") + `<div id="pxadv">${it.id ? pxAdvice(it, it.price, 0, it.comp) : ""}</div>` : `<div class="stat" style="background:var(--bg)"><span>💰 ثمن البيع (كيحددو المسير)</span><b>${money(it.price)}</b></div><input type="hidden" id="iprice" name="iprice" value="${it.price || ""}">` : ""}
+      })() : ""}${kind === "final" && !isW(f.iunit.value) ? fld("ibaked", "⚖️ وزن القطعة من بعد الطهي (غ، اختياري: للقيمة الغذائية)", `<input id="ibaked" name="ibaked" class="big-in" inputmode="decimal" value="${it.bakedG ? fmt(it.bakedG) : ""}" placeholder="وزنها ملي تبرد">`) : ""}${kind === "final" ? allocOf(ws) === "time" ? fld("ilmin", "⏱️ وقت الخدمة لكل " + esc(f.iunit.value) + " (بالدقائق)", `<input id="ilmin" name="ilmin" class="big-in" inputmode="decimal" value="${it.lmin ? fmt(it.lmin) : ""}" placeholder="مثلاً 0.5">`) : fld("ilcoef", "💪 معامل الخدمة (1 = عادي · 1.5 ولا 2 = كياخد خدمة كثر · 0.5 = ساهل)", `<input id="ilcoef" name="ilcoef" class="big-in" inputmode="decimal" value="${it.lcoef ? fmt(it.lcoef) : ""}" placeholder="1">`) : ""}${kind === "final" ? isMgr() ? moneyIn("iprice", "💰 ثمن البيع (حبة وحدة)", it.price ? fmt(it.price) : "") + `<div class="two">${moneyIn("iprice2", "2️⃣ ثمن الحبة إلا شرا 2 (اختياري)", it.price2 ? fmt(it.price2) : "")}${moneyIn("iprice3", "3️⃣ ثمن الحبة إلا شرا 3 ولا كثر (اختياري)", it.price3 ? fmt(it.price3) : "")}</div><div id="pxadv">${it.id ? pxAdvice(it, it.price, 0, 0) : ""}</div>` : `<div class="stat" style="background:var(--bg)"><span>💰 ثمن البيع (كيحددو المسير)</span><b>${money(it.price)}</b></div><input type="hidden" id="iprice" name="iprice" value="${it.price || ""}">` : ""}
        <div class="box"><div class="head"><h3>📋 الفيش تكنيك</h3><span class="tag acc" id="icostl">التكلفة: —</span></div><div id="itheo"></div><div id="ifull"></div><div id="inut"></div>${id && ((_d = (_c = (_b = S.items[id]) == null ? void 0 : _b.recipe) == null ? void 0 : _c.lines) == null ? void 0 : _d.length) ? bomBox(S.items[id]).replace("🧾 الفيش تكنيك بالتفصيل (المواد الأولية)", "🧾 الفيش تكنيك بالتفصيل (المواد الأولية · حسب آخر حفظ)") : ""}
        ${isW(f.iunit.value) ? `<div class="stat" style="background:var(--bg)"><span>⚖️ الوصفة كتعطي (أوتوماتيك = مجموع وزن المكونات)</span><b class="num" id="iyieldl">—</b></div><p class="muted" style="margin:0" id="iyskip"></p>${fld("iyp", "📉 المردود % (100 = بلا نقص · مثلاً عصير الحامض 35%، ولا الوزن اللي كينقص فالفور)", `<input id="iyp" name="iyp" class="big-in" inputmode="decimal" value="${fmt(+((_e = it.recipe) == null ? void 0 : _e.yp) > 0 ? +it.recipe.yp : 100)}">`)}<input type="hidden" id="iyield" name="iyield" value="${fmt(((_f = it.recipe) == null ? void 0 : _f.yield) || 1)}">` : fld("iyield", "الوصفة كتعطي شحال؟ (" + esc(f.iunit.value) + ")", `<input id="iyield" name="iyield" class="big-in" inputmode="decimal" value="${fmt(((_g = it.recipe) == null ? void 0 : _g.yield) || 1)}">`) + '<p class="muted" id="iuwl" style="margin:0"></p>'}
        <p class="muted" style="margin:0">لكل مكون، اختار الوحدة اللي بغيتي (مثلاً غ ولا مل). التطبيق كيحول بوحدو للوحدة اللي شريتي بها.</p>
