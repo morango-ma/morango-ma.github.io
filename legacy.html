@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112145923" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112154226" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4197,7 +4197,7 @@ function sheetItemView(id, back) {
    ${((_c = (_b = it.recipe) == null ? void 0 : _b.lines) == null ? void 0 : _c.length) ? `<div class="box"><h3>📋 الفيش تكنيك (كتعطي ${fmt(yld(it))} ${esc(it.unit)}${isW(it.unit) ? " ⚖️ أوتوماتيك" : ""})</h3>${it.recipe.lines.map((l) => prow(l.item, "", `<b class="num">${fmtq(l.qty)} ${esc(l.unit || iunit(l.item))}</b>`)).join("")}${isMgr() ? `<div class="muted" style="margin-top:6px">التكلفة دابا: <b>${money(costOf(id, 0, it.ws || null))}</b> لكل ${esc(it.unit)}</div>` : ""}${it.rnote ? `<div class="alert" style="cursor:default;margin-top:6px"><div>♻️ ${esc(it.rnote)}</div></div>` : ""}</div>` : ""}${it.kind === "final" && isMgr() ? (() => {
     const b = priceBar(it, null, true);
     return b ? `<div class="box"><h3>📊 تركيبة ثمن البيع</h3>${b}</div>` : "";
-  })() : ""}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
+  })() : ""}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
 }
 function sheetDelItem(id) {
   if (!isMgr()) return;
@@ -10264,11 +10264,57 @@ function ficheTable(it, mg) {
   const y = yld(it);
   const rows = it.recipe.lines.map((l) => {
     const ch = S.items[l.item];
-    const c = mg ? lineQty(l) * costOf(l.item, 0, it.ws || null) : 0;
-    return `<tr><td>${ico(l.item)} ${esc((ch == null ? void 0 : ch.name) || "?")}${ch && !isBought(ch.kind) ? ' <span style="color:#9a2236;font-size:11px">(وصفة تحت)</span>' : ""}</td><td class="n">${fmtq(Math.round((+l.qty || 0) * 1e3) / 1e3)} ${fUnit(l)}</td>${mg ? `<td class="n">${money(c)}</td>` : ""}</tr>`;
+    const up = mg ? costOf(l.item, 0, it.ws || null) : 0;
+    const c = mg ? lineQty(l) * up : 0;
+    const miss = mg && ch && !(up > 0);
+    return `<tr${miss ? ' style="background:#fff0f0"' : ""}><td>${ico(l.item)} ${esc((ch == null ? void 0 : ch.name) || "?")}${ch && !isBought(ch.kind) ? ' <span style="color:#9a2236;font-size:11px">(وصفة تحت)</span>' : ""}</td><td class="n">${fmtq(Math.round((+l.qty || 0) * 1e3) / 1e3)} ${fUnit(l)}</td>${mg ? `<td class="n">${miss ? '<b style="color:#c0142f">⚠️ الثمن ما دخلش</b>' : money(up) + " / " + esc((ch == null ? void 0 : ch.unit) || "")}</td><td class="n">${miss ? "—" : money(c)}</td>` : ""}</tr>`;
   }).join("");
   const tot = mg ? costOf(it.id, 0, it.ws || null) * y : 0;
-  return `<table><thead><tr><th>المكون</th><th style="width:150px">الكمية</th>${mg ? '<th style="width:120px">التكلفة</th>' : ""}</tr></thead><tbody>${rows}${mg ? `<tr class="t"><td>المجموع ديال الروسيطة</td><td></td><td class="n">${money(tot)}</td></tr>` : ""}</tbody></table>`;
+  return `<table><thead><tr><th>المكون</th><th style="width:130px">الكمية</th>${mg ? '<th style="width:150px">ثمن الوحدة</th><th style="width:110px">التكلفة</th>' : ""}</tr></thead><tbody>${rows}${mg ? `<tr class="t"><td>المجموع ديال الروسيطة</td><td></td><td></td><td class="n">${money(tot)}</td></tr>` : ""}</tbody></table>`;
+}
+function priceHist(id) {
+  return allOps().filter((o) => o.type === "purchase").flatMap((o) => (o.lines || []).filter((l) => l.item === id && +l.price > 0 && !l.noPrice).map((l) => ({ ts: o.ts, date: o.date, price: +l.price, sup: o.supplier || "" }))).sort((a, b) => a.ts - b.ts);
+}
+function priceAt(id, ts) {
+  var _a, _b, _c, _d;
+  const H = priceHist(id);
+  let p = null;
+  for (const h of H) {
+    if (h.ts <= ts) p = h.price;
+    else break;
+  }
+  return p != null ? p : (_d = (_a = H[0]) == null ? void 0 : _a.price) != null ? _d : +((_b = S.items[id]) == null ? void 0 : _b.cost) || +((_c = S.items[id]) == null ? void 0 : _c.lastPrice) || 0;
+}
+function ficheEvo(id) {
+  const it = S.items[id];
+  const acc = {};
+  try {
+    explode(id, yld(it), [], acc);
+  } catch (_) {
+  }
+  const y = yld(it) || 1;
+  const raws = Object.entries(acc).map(([k, a]) => ({ k: a.miss || k, q: +a.qty || 0 })).filter((x) => S.items[x.k]);
+  if (!raws.length) return "";
+  const miss = raws.filter((x) => !(priceAt(x.k, Date.now()) > 0));
+  const H = raws.map((x) => __spreadProps(__spreadValues({}, x), { h: priceHist(x.k) }));
+  const first = Math.min(...H.flatMap((x) => x.h.map((h) => h.ts)).concat([Date.now()]));
+  const months = [];
+  const d = /* @__PURE__ */ new Date();
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 6; i++) {
+    const e = new Date(d.getFullYear(), d.getMonth() - i + 1, 1).getTime() - 1;
+    if (e < first && i > 0) break;
+    months.unshift({ l: new Date(e).toLocaleDateString("fr-MA", { month: "short", year: "2-digit" }), e: Math.min(e, Date.now()) });
+  }
+  const cost = (t) => raws.reduce((a, x) => a + x.q * priceAt(x.k, t), 0) / y;
+  const C = months.map((m) => __spreadProps(__spreadValues({}, m), { c: cost(m.e) }));
+  const pct = (a, b) => a > 0 ? (b - a) / a * 100 : 0;
+  const sg = (v) => v > 0.05 ? '<b style="color:#c0142f">▲ ' + fmt(r2(v)) + "%</b>" : v < -0.05 ? '<b style="color:#15803d">▼ ' + fmt(r2(-v)) + "%</b>" : "=";
+  const ch = H.filter((x) => x.h.length).map((x) => __spreadProps(__spreadValues({}, x), { p0: x.h[0].price, p1: x.h[x.h.length - 1].price, n: x.h.length })).sort((a, b) => Math.abs(pct(b.p0, b.p1)) - Math.abs(pct(a.p0, a.p1)));
+  return `${miss.length ? `<div class="alg" style="border-color:#e02843;background:#fff0f0">⚠️ ما دخلش الثمن ديال: ${miss.map((x) => esc(S.items[x.k].name)).join(" · ")} — التكلفة ناقصة حتى يدخل الثمن.</div>` : ""}
+   <h2 class="sec">📈 تطور التكلفة ديال ${esc(it.unit)} واحد (حسب أثمنة الشراء)</h2><table><thead><tr><th>الشهر</th><th style="width:150px">التكلفة</th><th style="width:120px">التغيير</th></tr></thead><tbody>${C.map((m, i) => `<tr><td>${esc(m.l)}</td><td class="n">${money(m.c)}</td><td class="n">${i ? sg(pct(C[i - 1].c, m.c)) : "—"}</td></tr>`).join("")}${C.length > 1 ? `<tr class="t"><td>من ${esc(C[0].l)} حتى دابا</td><td class="n">${money(C[C.length - 1].c)}</td><td class="n">${sg(pct(C[0].c, C[C.length - 1].c))}</td></tr>` : ""}</tbody></table>
+   ${ch.length ? `<h3>🌾 تطور الثمن ديال المواد الأولية</h3><table><thead><tr><th>المادة</th><th style="width:120px">أول ثمن</th><th style="width:120px">آخر ثمن</th><th style="width:100px">التغيير</th></tr></thead><tbody>${ch.map((x) => `<tr><td>${ico(x.k)} ${esc(S.items[x.k].name)} <span style="color:#7a5a62;font-size:11px">(${x.n} شرية)</span></td><td class="n">${money(x.p0)}</td><td class="n">${money(x.p1)}</td><td class="n">${sg(pct(x.p0, x.p1))}</td></tr>`).join("")}</tbody></table>` : ""}`;
 }
 function ficheBlock(id, mg, main) {
   var _a;
@@ -10297,6 +10343,7 @@ function ficheHtml(id) {
    ${ficheBlock(id, mg, true)}
    ${subs.length ? `<h2 class="sec">الوصفات ديال المكونات (ميز أون بلاس / ممفينيش)</h2>${subs.map((x) => ficheBlock(x, mg, false)).join("")}` : ""}
    ${raws.length ? `<h2 class="sec">📋 مجموع المواد الأولية لروسيطة كاملة (${fmt(yld(it))} ${esc(it.unit)})</h2><table><thead><tr><th>المادة الأولية</th><th style="width:170px">الكمية</th></tr></thead><tbody>${raws.map((x) => `<tr><td>${ico(x.k)} ${esc(S.items[x.k].name)}</td><td class="n">${qtyTxt(x.a.qty, S.items[x.k].unit || "")}</td></tr>`).join("")}</tbody></table>` : ""}
+   ${isMgr() ? ficheEvo(id) : ""}
    ${alg.size ? `<div class="alg">⚠️ مسببات الحساسية (Allergènes): ${[...alg].map((a) => {
     const x = ALG.find((z) => z[0] === a);
     return x ? x[2] + " " + x[1] : "";
@@ -14888,6 +14935,11 @@ const ACT = {
     if (it) fichesPdf([it.id], "fiche-" + fslug(it.name) + ".pdf");
   },
   fpdfws: (el) => sheetFichePick(el.dataset.id),
+  fview: (el) => {
+    const id = el.dataset.id;
+    if (!S.items[id]) return;
+    openSheet("📋 الفيش تكنيك", `<style>${FICHE_CSS}#sheet .fp{width:100%!important;padding:6px!important;font-size:12px}#sheet .fp .hd{flex-wrap:wrap;gap:6px}#sheet .fp table{font-size:12px}</style><div style="overflow-x:auto;max-width:100%">${ficheHtml(id)}</div><button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 PDF</button>`);
+  },
   preqsup: (el) => {
     const r = S.preqs.find((x) => x.id === el.dataset.id);
     if (r) pagesPdf([preqSupHtml(r)], "bon-commande-" + String(r.id).slice(-6) + "-" + today() + ".pdf");
