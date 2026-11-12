@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112174833" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112175707" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1702,6 +1702,104 @@ const stockOf = (loc, id) => {
 };
 function blendCost(id, loc) {
   return blendOf(id).reduce((a, [x, f]) => a + f * (costOf(x, 1, loc) || lastPrice(x) || 0), 0);
+}
+const blendWs = (id) => {
+  const B = blendOf(id);
+  if (!B) return null;
+  const W = Object.keys(S.stock || {}).filter((l) => B.some(([x]) => +((S.stock[l] || {}).items || {})[x] > 0));
+  return W[0] || null;
+};
+const blendCostAt = (id, B) => {
+  const w = blendWs(id);
+  return B.reduce((a, [x, f]) => a + f * (costOf(x, 1, w) || lastPrice(x) || 0), 0);
+};
+function blendOpt(id, target) {
+  const B = blendOf(id);
+  if (!B) return null;
+  const w = blendWs(id);
+  const pr = (x) => costOf(x, 1, w) || lastPrice(x) || 0;
+  const cur = B.map(([x, f]) => ({ x, f, lo: f * 0.7, hi: Math.min(1, f * 1.3), p: pr(x) }));
+  const cost = () => cur.reduce((a, o) => a + o.f * o.p, 0);
+  let guard = 0;
+  while (cost() > target && guard++ < 200) {
+    const ex = cur.filter((o) => o.f > o.lo + 1e-6).sort((a, b) => b.p - a.p)[0], ch = cur.filter((o) => o.f < o.hi - 1e-6).sort((a, b) => a.p - b.p)[0];
+    if (!ex || !ch || ex.p <= ch.p) break;
+    const m = Math.min(ex.f - ex.lo, ch.hi - ch.f, 0.01);
+    ex.f -= m;
+    ch.f += m;
+  }
+  const g = cur.map((o) => ({ x: o.x, g: Math.round(o.f * 100) * 10 }));
+  const t = g.reduce((a, o) => a + o.g, 0);
+  if (t !== 1e3) {
+    const m = g.sort((a, b) => b.g - a.g)[0];
+    m.g += 1e3 - t;
+  }
+  return { grams: Object.fromEntries(g.map((o) => [o.x, o.g])), cost: g.reduce((a, o) => a + o.g / 1e3 * pr(o.x), 0) };
+}
+function blendBox(it) {
+  const B = blendOf(it.id);
+  if (!B) return "";
+  const w = blendWs(it.id);
+  const c = blendCostAt(it.id, B);
+  const tg = +it.blendTarget || 0;
+  return `<div class="box" style="gap:6px"><div class="head"><h3 style="margin:0">🥣 الوصفة ديال المخلوط (1 ${esc(it.unit)})</h3>${isMgr() ? `<button type="button" class="btn small" data-act="blendedit" data-id="${it.id}">✏️ بدل</button>` : ""}</div><p class="muted" style="margin:0">كيتشراو بوحدهم، وفالاستعمال كينقصو مخلطين بهاد النسب وبالثمن المتوسط ديال كل واحد.</p>
+   ${B.map(([x, f]) => prow(x, money(costOf(x, 1, w) || lastPrice(x)) + " / " + esc(iunit(x)), `<b class="num">${fmt(Math.round(f * 1e3))} غ</b>`)).join("")}
+   <div class="prow"><b>💰 التكلفة ديال ${esc(it.unit)}</b><b class="num ${tg && c > tg ? "neg" : ""}">${money(c)}${tg ? " · الهدف " + money(tg) : ""}</b></div>${tg && c > tg + 5e-3 && isMgr() ? `<button type="button" class="btn primary block" data-act="blendfix" data-id="${it.id}">💡 الثمن طلع: شوف الاقتراح باش ترجع تحت ${money(tg)}</button>` : ""}</div>`;
+}
+function sheetBlendEdit(id) {
+  const it = S.items[id];
+  const B = blendOf(id);
+  if (!it || !B || !isMgr()) return;
+  openSheet("✏️ الوصفة ديال " + it.name, `${B.map(([x, f]) => fld("bg_" + x, esc(iname(x)) + " (غرام فـ1 كغ)", `<input name="bg_${x}" class="big-in" inputmode="decimal" value="${Math.round(f * 1e3)}">`)).join("")}${moneyIn("btg", "🎯 أقصى تكلفة للكيلو (التنبيه إلا فاتتها)", it.blendTarget ? fmt(it.blendTarget) : "")}<p class="muted" id="bsum" style="margin:0"></p>${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`, async (f) => {
+    const g = {};
+    B.forEach(([x]) => {
+      g[x] = num(f["bg_" + x].value) || 0;
+    });
+    const T = Object.values(g).reduce((a, b) => a + b, 0);
+    if (Math.abs(T - 1e3) > 0.5) return ferr("المجموع خاصو يكون 1000 غ (دابا " + fmt(T) + ").");
+    busy(f, true);
+    try {
+      await db.doc("items/" + id).update({ blend: g, blendTarget: num(f.btg.value) || 0, updBy: meName(), updTs: Date.now() });
+      it.blend = g;
+      it.blendTarget = num(f.btg.value) || 0;
+      closeSheet();
+      toast("🥣 الوصفة تسجلات");
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    const up = () => {
+      const g = B.map(([x]) => [x, num(f["bg_" + x].value) || 0]);
+      const T = g.reduce((a, [, v]) => a + v, 0);
+      $("#bsum", f).innerHTML = "المجموع: <b>" + fmt(T) + " غ</b>" + (T ? " · التكلفة: <b>" + money(g.reduce((a, [x, v]) => a + v / 1e3 * (costOf(x, 1, blendWs(id)) || lastPrice(x) || 0), 0) * 1e3 / T) + "</b> للكيلو" : "");
+    };
+    f.addEventListener("input", up);
+    up();
+  });
+}
+function sheetBlendFix(id) {
+  const it = S.items[id];
+  const B = blendOf(id);
+  if (!it || !B || !isMgr()) return;
+  const tg = +it.blendTarget || 0;
+  const c = blendCostAt(id, B);
+  const o = blendOpt(id, tg);
+  const w = blendWs(id);
+  openSheet("💡 " + it.name + ": الثمن طلع", `<p class="muted" style="margin:0">الأثمنة ديال بعض المواد تبدلو. هاد الاقتراح كيبدل النسب غير بشوية (±30%) باش يبقى المخلوط متناسق ويرجع للتكلفة الأقل.</p>
+   <div style="display:grid;grid-template-columns:1fr 70px 70px;gap:4px;font-size:.9rem"><b>المادة</b><b>دابا</b><b>الاقتراح</b>${B.map(([x, f]) => `<span>${esc(iname(x))} <span class="muted">${money(costOf(x, 1, w) || lastPrice(x))}</span></span><span class="num">${Math.round(f * 1e3)} غ</span><b class="num">${o.grams[x]} غ</b>`).join("")}<b>💰 للكيلو</b><b class="num neg">${money(c)}</b><b class="num ${o.cost <= tg + 5e-3 ? "pos" : "neg"}">${money(o.cost)}</b></div>
+   ${o.cost > tg + 5e-3 ? `<div class="alert warn" style="cursor:default">⚠️ حتى بهاد التبديل ما وصلناش لـ${money(tg)}. خاص مورد أرخص ولا تبدل الهدف.</div>` : ""}
+   <div class="btns"><button type="button" class="btn" data-act="blendedit" data-id="${id}">✏️ بدل بيدي</button><button type="button" class="btn primary" id="bapply">✅ اعتمد الاقتراح</button></div>`, null, (f) => {
+    $("#bapply", f).onclick = async () => {
+      try {
+        await db.doc("items/" + id).update({ blend: o.grams, updBy: meName(), updTs: Date.now() });
+        it.blend = o.grams;
+        closeSheet();
+        toast("🥣 الوصفة الجديدة تسجلات");
+      } catch (e) {
+        toast(e.message, true);
+      }
+    };
+  });
 }
 function blendSplit(loc, id, qty) {
   const out = {};
@@ -3357,6 +3455,10 @@ function alertsFor() {
 }
 function alertsFor0() {
   const r = me.role, A = [];
+  if (isMgr()) itemsArr().filter((i) => i.active !== false && blendOf(i.id) && +i.blendTarget > 0).forEach((i) => {
+    const c = blendCostAt(i.id, blendOf(i.id));
+    if (c > +i.blendTarget + 5e-3) A.push(`<div class="alert warn" data-act="blendfix" data-id="${i.id}"><div class="lead"><span class="em">🥣</span><div><b>${esc(i.name)} طلع لـ ${money(c)} (الهدف ${money(i.blendTarget)})</b><div class="muted">الأثمنة ديال المواد تبدلو · شوف الاقتراح ديال الوصفة</div></div></div><span class="tag warn">💡</span></div>`);
+  });
   if (canDpSend()) (S.dplans || []).filter((p) => p.date <= today() && p.date >= daysAgo(1) && (dpLate(p) || dpSoon(p))).forEach((p) => A.push(`<div class="alert ${dpLate(p) ? "bad" : "acc"}" data-act="go" data-v="dispatch" data-id="${p.id}${dpLate(p) ? "L" : "S"}"><div class="lead"><span class="em">🚚</span><div><b>${dpLate(p) ? "⏰ متأخر: " : "🔜 قريب: "}الإرسال ديال ${esc(p.time || "")} لـ${esc(LOC[p.pos] || "")}</b><div class="muted">${(p.lines || []).length} منتوج · ${dpState(p) === "part" ? "تصيفط شي" : "ما تصيفط والو"}</div></div></div><span class="tag ${dpLate(p) ? "bad" : "acc"}">صيفط</span></div>`));
   vldOps().forEach((o) => {
     const t = vldTodo(o), S1 = opSum(o);
@@ -4329,7 +4431,7 @@ function sheetItemView(id, back) {
    ${((_c = (_b = it.recipe) == null ? void 0 : _b.lines) == null ? void 0 : _c.length) ? `<div class="box"><h3>📋 الفيش تكنيك (كتعطي ${fmt(yld(it))} ${esc(it.unit)}${isW(it.unit) ? " ⚖️ أوتوماتيك" : ""})</h3>${it.recipe.lines.map((l) => prow(l.item, "", `<b class="num">${fmtq(l.qty)} ${esc(l.unit || iunit(l.item))}</b>`)).join("")}${isMgr() ? `<div class="muted" style="margin-top:6px">التكلفة دابا: <b>${money(costOf(id, 0, it.ws || null))}</b> لكل ${esc(it.unit)}</div>` : ""}${it.rnote ? `<div class="alert" style="cursor:default;margin-top:6px"><div>♻️ ${esc(it.rnote)}</div></div>` : ""}</div>` : ""}${it.kind === "final" && isMgr() ? (() => {
     const b = priceBar(it, null, true);
     return b ? `<div class="box"><h3>📊 تركيبة ثمن البيع</h3>${b}</div>` : "";
-  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, 0)}</div>` : "") : ""}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
+  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, 0)}</div>` : "") : ""}${blendBox(it)}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
 }
 function sheetDelItem(id) {
   if (!isMgr()) return;
@@ -15953,6 +16055,8 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  blendedit: (el) => sheetBlendEdit(el.dataset.id),
+  blendfix: (el) => sheetBlendFix(el.dataset.id),
   purchedit: (el) => sheetPurchEdit(el.dataset.id),
   sups: () => sheetSuppliers(),
   rcvlist: () => {
