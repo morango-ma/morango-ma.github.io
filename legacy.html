@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112175707" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112195046" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -9705,7 +9705,7 @@ function supDD(inp2) {
   const q = String(inp2.value || "").trim().toLowerCase();
   const L = supList();
   const A = q ? [...L.filter((n) => n.toLowerCase().startsWith(q)), ...L.filter((n) => !n.toLowerCase().startsWith(q) && n.toLowerCase().includes(q))] : L;
-  d.innerHTML = (A.length ? A.map((n) => `<button type="button" data-sp="${esc(n)}" style="display:block;width:100%;text-align:start;border:0;background:none;color:inherit;font:inherit;padding:10px 12px;border-radius:8px;cursor:pointer">🏪 ${esc(n)}</button>`).join("") : "") + (q && !L.some((n) => n.toLowerCase() === q) ? `<div class="muted" style="padding:8px 12px;font-size:.85rem">➕ «${esc(inp2.value.trim())}» غادي يتزاد كمورد جديد</div>` : "");
+  d.innerHTML = (A.length ? A.map((n) => `<button type="button" data-sp="${esc(n)}" style="display:block;width:100%;text-align:start;border:0;background:none;color:inherit;font:inherit;padding:10px 12px;border-radius:8px;cursor:pointer">🏪 ${esc(n)}</button>`).join("") : "") + (q && !L.some((n) => n.toLowerCase() === q) ? `<button type="button" data-spnew="1" style="display:block;width:100%;text-align:start;border:2px dashed var(--acc,#e02843);background:none;color:var(--acc,#e02843);font:inherit;font-weight:700;padding:10px 12px;border-radius:8px;cursor:pointer;margin-top:4px">➕ زيد «${esc(inp2.value.trim())}» للائحة الموردين</button>` : `<button type="button" data-spnew="0" style="display:block;width:100%;text-align:start;border:0;background:none;color:var(--muted,#7a5a62);font:inherit;padding:8px 12px;cursor:pointer">➕ مورد جديد؟ كتب السمية ديالو</button>`);
   const r = inp2.getBoundingClientRect();
   d.style.left = r.left + "px";
   d.style.width = Math.max(r.width, 200) + "px";
@@ -9719,6 +9719,22 @@ function supDD(inp2) {
   }
   d.hidden = !d.innerHTML;
   d.onmousedown = (e) => {
+    const nb = e.target.closest("[data-spnew]");
+    if (nb) {
+      e.preventDefault();
+      if (nb.dataset.spnew === "1") {
+        const n = inp2.value.trim();
+        supSave(n).then(() => {
+          inp2.value = n;
+          d.hidden = true;
+          toast("🏪 تزاد " + n);
+        });
+      } else {
+        inp2.value = "";
+        inp2.focus();
+      }
+      return;
+    }
     const b = e.target.closest("[data-sp]");
     if (!b) return;
     e.preventDefault();
@@ -9767,9 +9783,16 @@ async function supAdd(sel) {
   });
   sel.value = n;
 }
+async function supSave(n) {
+  n = String(n || "").trim();
+  const L = S.sups || [];
+  if (!n || L.some((x) => x.toLowerCase() === n.toLowerCase())) return;
+  await db.doc("config/suppliers").set({ list: [...L, n], updTs: Date.now(), by: meName() }, { merge: true });
+  S.sups = [...L, n];
+}
 function sheetSuppliers() {
   if (!canBuy()) return;
-  openSheet("🏪 لائحة الموردين", `<p class="muted" style="margin:0">مورد واحد فكل سطر. كيبانو فالشراء باش تختار المورد ديال كل مادة.</p>${fld("supl", "", `<textarea id="supl" name="supl" rows="14">${esc(supList().join("\n"))}</textarea>`)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`, async (f) => {
+  openSheet("🏪 لائحة الموردين", `<div class="prow" style="gap:6px"><input id="supnew" placeholder="سمية المورد الجديد" autocomplete="off" style="flex:1;height:46px;border-radius:12px;border:2px solid var(--line);background:var(--surface);padding:0 10px;font:inherit"><button type="button" class="btn primary" id="supadd">➕ زيد</button></div><p class="muted" style="margin:0">ولا بدل اللائحة نيشان: مورد واحد فكل سطر.</p>${fld("supl", "", `<textarea id="supl" name="supl" rows="14">${esc(supList().join("\n"))}</textarea>`)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`, async (f) => {
     const L = [...new Set(f.supl.value.split("\n").map((x) => x.trim()).filter(Boolean))];
     busy(f, true);
     try {
@@ -9779,6 +9802,27 @@ function sheetSuppliers() {
     } catch (e) {
       fail(f, e);
     }
+  }, (f) => {
+    const add = async () => {
+      const n = $("#supnew", f).value.trim();
+      if (!n) return;
+      if ((S.sups || []).some((x) => x.toLowerCase() === n.toLowerCase())) return toast("كاين ديجا", true);
+      try {
+        await supSave(n);
+        f.supl.value = supList().join("\n");
+        $("#supnew", f).value = "";
+        toast("🏪 تزاد " + n);
+      } catch (e) {
+        toast(e.message, true);
+      }
+    };
+    $("#supadd", f).onclick = add;
+    $("#supnew", f).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        add();
+      }
+    });
   });
 }
 function sheetPurchase(req) {
