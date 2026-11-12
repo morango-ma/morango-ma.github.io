@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112224358" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112225411" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4261,6 +4261,52 @@ function pxRow(it, old) {
   const ic = { bad: "🔴", warn: "🟠", good: "🟢", none: "⚪" }[lvl];
   return { v, fc, lvl, tag: `<button type="button" class="tag ${lvl === "good" ? "good" : lvl === "bad" ? "bad" : "warn"}" data-pxt="${it.id}" onclick="const a=document.querySelector('[data-pxa=\\'${it.id}\\']');if(a)a.hidden=!a.hidden" style="border:0;cursor:pointer;white-space:nowrap;font-size:.75rem;padding:4px 6px;justify-self:end">${ic} ${fc != null ? Math.round(fc) + "%" : !(cp.mat > 0) ? "تكلفة ؟" : "بلا ثمن"} ▾</button>` };
 }
+async function setGram(id, G) {
+  var _a, _b;
+  const it = S.items[id];
+  const cur = uwG(it);
+  if (!((_b = (_a = it == null ? void 0 : it.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) || !(cur > 0)) throw new Error("ما عندوش وصفة بالوزن");
+  if (!(G > 0)) throw new Error("الوزن ماشي صحيح");
+  const k = G / cur;
+  const lines = it.recipe.lines.map((l) => __spreadProps(__spreadValues({}, l), { qty: Math.round((+l.qty || 0) * k * 1e3) / 1e3 }));
+  const old = Math.round(cur);
+  await db.doc("items/" + id).update({ recipe: __spreadProps(__spreadValues({}, it.recipe), { lines }), gramHist: [...it.gramHist || [], { ts: Date.now(), by: meName(), from: old, to: G }], updBy: meName(), updTs: Date.now() });
+  it.recipe = __spreadProps(__spreadValues({}, it.recipe), { lines });
+  return { old, k };
+}
+function sheetGram(id) {
+  const it = S.items[id];
+  if (!it || !canPrice()) return;
+  const cur = Math.round(uwG(it) || 0);
+  if (!cur) return toast("⚖️ هاد المنتوج ما عندوش وصفة بالوزن", true);
+  openSheet(
+    "⚖️ الوزن ديال " + it.name,
+    `<p class="muted" style="margin:0">بدل الوزن ديال ${esc(it.unit)} وحدة. كاع الكميات ديال الوصفة كيتبدلو بنفس النسبة، والتكلفة كتتحسب من جديد.</p>${fld("gnew", "⚖️ الوزن الجديد (غرام)", `<input name="gnew" class="big-in" inputmode="decimal" value="${cur}">`)}<p class="muted" id="gprev" style="margin:0"></p>
+   ${(it.gramHist || []).length ? `<details><summary class="muted">🕘 التبديلات اللي فاتو</summary>${it.gramHist.slice().reverse().map((h) => `<div class="muted" style="font-size:.85rem">${dhm(h.ts)} · ${esc(h.by)}: ${fmt(h.from)} ← ${fmt(h.to)} غ</div>`).join("")}</details>` : ""}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,
+    async (f) => {
+      const G = num(f.gnew.value);
+      if (!(G > 0)) return ferr("دخل الوزن بالغرام.");
+      if (Math.round(G) === cur) return closeSheet();
+      busy(f, true);
+      try {
+        const r = await setGram(id, G);
+        closeSheet();
+        toast("⚖️ " + it.name + ": " + r.old + " ← " + G + " غ");
+      } catch (e) {
+        fail(f, e);
+      }
+    },
+    (f) => {
+      const up = () => {
+        const G = num(f.gnew.value);
+        const c = costOf(id);
+        $("#gprev", f).innerHTML = G > 0 ? `التكلفة ديال الحبة: <b>${money(c)}</b> ← <b>${money(c * G / cur)}</b>` : "";
+      };
+      f.addEventListener("input", up);
+      up();
+    }
+  );
+}
 function inlineFinal(rows, title, w) {
   const L = [...rows].filter((i) => i.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name), "ar"));
   const inS = "height:40px;border-radius:10px;border:2px solid var(--line);background:var(--surface);padding:0 6px;font:inherit;min-width:0;width:100%;text-align:center";
@@ -4270,12 +4316,15 @@ function inlineFinal(rows, title, w) {
    <p class="muted" style="margin:0">ببدل ثمن البيع نيشان هنا، كيتسجل بوحدو. الـ% = شحال كياكلو المواد والتغليف من الثمن (🟢 تحت 35% · 🟠 35-50% · 🔴 فوق 50%). ضغط على اللون باش تشوف التفاصيل.</p>
    <input type="search" placeholder="🔍 قلب..." style="${inS};height:44px;text-align:start" oninput="const v=nrm(this.value);document.querySelectorAll('[data-fr]').forEach(r=>r.style.display=!v||nrm(r.dataset.nm).includes(v)?'':'none')" aria-label="قلب">
    <div class="muted" style="display:grid;grid-template-columns:24px minmax(0,1fr) clamp(40px,10vw,64px) clamp(58px,15vw,84px) clamp(58px,14vw,84px);gap:5px;font-size:.75rem;padding:0 2px"><span></span><span>المنتوج</span><span>المواد</span><span>ثمن البيع</span><span></span></div>
-   ${R.map(({ i, r }) => `<div data-fr="${i.id}" data-nm="${esc(i.name)}" style="border-bottom:1px solid var(--line);padding:3px 0"><div style="display:grid;grid-template-columns:24px minmax(0,1fr) clamp(40px,10vw,64px) clamp(58px,15vw,84px) clamp(58px,14vw,84px);gap:5px;align-items:center">
+   ${R.map(({ i, r }) => {
+    var _a, _b;
+    return `<div data-fr="${i.id}" data-nm="${esc(i.name)}" style="border-bottom:1px solid var(--line);padding:3px 0"><div style="display:grid;grid-template-columns:24px minmax(0,1fr) clamp(40px,10vw,64px) clamp(58px,15vw,84px) clamp(58px,14vw,84px);gap:5px;align-items:center">
      <button type="button" class="link" data-act="itemview" data-id="${i.id}" aria-label="شوف" style="font-size:1.05rem">👁️</button><b style="font-size:.9rem;line-height:1.2">${esc(i.name)}</b><span class="num muted" style="font-size:.85rem;text-align:center">${r.v > 0 ? fmt(Math.round(r.v * 100) / 100) : "؟"}</span>
      <input value="${+i.price > 0 ? fmt(i.price) : ""}" inputmode="decimal" placeholder="—" style="${inS};font-weight:700${+i.price > 0 ? "" : ";border-color:var(--bad,#dc2626)"}" onchange="inlineSave('${i.id}','sprice',this)" aria-label="ثمن البيع ${esc(i.name)}">
 ${r.tag}</div>
-     <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:3px;font-size:.8rem"><span class="muted">ثمن الحبة إلا شرا</span><span>2️⃣</span><input value="${+i.price2 > 0 ? fmt(i.price2) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price2',this)" aria-label="ثمن الحبة إلا شرا 2"><span>3️⃣+</span><input value="${+i.price3 > 0 ? fmt(i.price3) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price3',this)" aria-label="ثمن الحبة إلا شرا 3 ولا كثر"></div>
-     <div data-pxa="${i.id}" hidden style="margin-top:4px">${pxAdvice(i, i.price, 0, 0)}</div></div>`).join("")}</section>`;
+     <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:3px;font-size:.8rem">${uwG(i) > 0 && ((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) ? `<span>⚖️</span><input value="${Math.round(uwG(i))}" inputmode="decimal" style="${inS};width:58px;height:34px" onchange="inlineSave('${i.id}','gram',this)" aria-label="الوزن ديال الحبة بالغرام"><span class="muted">غ</span><span style="width:6px"></span>` : ""}<span class="muted">ثمن الحبة إلا شرا</span><span>2️⃣</span><input value="${+i.price2 > 0 ? fmt(i.price2) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price2',this)" aria-label="ثمن الحبة إلا شرا 2"><span>3️⃣+</span><input value="${+i.price3 > 0 ? fmt(i.price3) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price3',this)" aria-label="ثمن الحبة إلا شرا 3 ولا كثر"></div>
+     <div data-pxa="${i.id}" hidden style="margin-top:4px">${pxAdvice(i, i.price, 0, 0)}</div></div>`;
+  }).join("")}</section>`;
 }
 function inlineRaw(rows, title, kk) {
   kk = kk === "cons" || kk === "pack" ? kk : S.cat === "pack" ? "pack" : "raw";
@@ -4315,6 +4364,25 @@ async function inlineSave(id, k, el) {
       return;
     }
     d.unit = v;
+  } else if (k === "gram") {
+    const G = num(v);
+    const cur = Math.round(uwG(it) || 0);
+    if (!(G > 0) || Math.round(G) === cur) {
+      el.value = cur;
+      return;
+    }
+    el.style.borderColor = "var(--acc,#f59e0b)";
+    try {
+      const r = await setGram(id, G);
+      el.style.borderColor = "var(--good,#16a34a)";
+      toast("⚖️ " + it.name + ": " + r.old + " ← " + G + " غ");
+      const t = document.querySelector('[data-pxt="' + id + '"]');
+      if (t) t.outerHTML = pxRow(it).tag;
+    } catch (e) {
+      el.value = cur;
+      toast(e.message, true);
+    }
+    return;
   } else if (k === "price2" || k === "price3") {
     const p = v.trim() === "" ? 0 : num(v);
     if (!(p >= 0)) {
@@ -4417,7 +4485,7 @@ function usesHtml(id) {
 }
 let IVH = [], CURIV = null;
 function sheetItemView(id, back) {
-  var _a, _b, _c, _d, _e;
+  var _a, _b, _c, _d, _e, _f, _g;
   const it = S.items[id];
   if (!it) return;
   if (back) IVH.pop();
@@ -4432,7 +4500,7 @@ function sheetItemView(id, back) {
    ${((_c = (_b = it.recipe) == null ? void 0 : _b.lines) == null ? void 0 : _c.length) ? `<div class="box"><h3>📋 الفيش تكنيك (كتعطي ${fmt(yld(it))} ${esc(it.unit)}${isW(it.unit) ? " ⚖️ أوتوماتيك" : ""})</h3>${it.recipe.lines.map((l) => prow(l.item, "", `<b class="num">${fmtq(l.qty)} ${esc(l.unit || iunit(l.item))}</b>`)).join("")}${isMgr() ? `<div class="muted" style="margin-top:6px">التكلفة دابا: <b>${money(costOf(id, 0, it.ws || null))}</b> لكل ${esc(it.unit)}</div>` : ""}${it.rnote ? `<div class="alert" style="cursor:default;margin-top:6px"><div>♻️ ${esc(it.rnote)}</div></div>` : ""}</div>` : ""}${it.kind === "final" && isMgr() ? (() => {
     const b = priceBar(it, null, true);
     return b ? `<div class="box"><h3>📊 تركيبة ثمن البيع</h3>${b}</div>` : "";
-  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, 0)}</div>` : "") : ""}${blendBox(it)}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
+  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, 0)}</div>` : "") : ""}${blendBox(it)}${canPrice() && !isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) && uwG(it) > 0 ? `<button type="button" class="btn block" data-act="gramedit" data-id="${it.id}">⚖️ الوزن ديال ${esc(it.unit)}: ${fmt(Math.round(uwG(it)))} غ · بدل</button>` : ""}${stepsBox(it)}${!isBought(it.kind) && ((_g = (_f = it.recipe) == null ? void 0 : _f.lines) == null ? void 0 : _g.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
 }
 function sheetDelItem(id) {
   if (!isMgr()) return;
@@ -16100,6 +16168,7 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  gramedit: (el) => sheetGram(el.dataset.id),
   blendedit: (el) => sheetBlendEdit(el.dataset.id),
   blendfix: (el) => sheetBlendFix(el.dataset.id),
   purchedit: (el) => sheetPurchEdit(el.dataset.id),
