@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112143033" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112143241" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1732,7 +1732,7 @@ const isAdmin = () => (me == null ? void 0 : me.role) === "admin";
 const isMgr = () => (me == null ? void 0 : me.role) === "admin" || (me == null ? void 0 : me.role) === "manager";
 const isProd = () => (me == null ? void 0 : me.role) === "prod";
 const canPrice = () => isMgr() || (me == null ? void 0 : me.role) === "buyer";
-const canBuy = canPrice;
+const canBuy = () => canPrice() || (me == null ? void 0 : me.role) === "prod";
 const meName = () => (me == null ? void 0 : me.name) || "";
 const roleLabel = (u) => {
   var _a;
@@ -3160,7 +3160,7 @@ function homeTiles(arr) {
   if (r === "driver") T.push({ i: "🚚", l: "السلعة اللي معايا", a: "go", v: "send", b: pendT.filter((o) => o.status === "with_driver").length, c: 4 }, { i: "📝", l: "طلبيات للتوصيل", a: "go", v: "orders", b: act.filter((o) => o.status === "ready" || o.status === "transit").length, c: 3 });
   if (r === "prod") T.push({ i: "🥣", l: "إنتاج ميز أون بلاس", a: "produce", k: "semi", c: 2 }, { i: "🧊", l: "إنتاج ممفينيش", a: "produce", k: "pre", c: 3 }, { i: "🧁", l: "إنتاج منتوج مفيني", a: "produce", k: "final", c: 1 }, { i: "🚚", l: "إرسال لنقطة البيع", a: "newsend", c: 4 }, { i: "↩️", l: "المرتجعات", a: "go", v: "returns", b: pendR.length, c: 6 }, { i: "📝", l: "طلبيات الورشات", a: "go", v: "orders", b: act.filter((o) => o.status === "new" || o.status === "production").length, c: 3 }, { i: "📦", l: "مخزون الورشات", a: "go", v: "prod", b: lowList().length, c: 5 });
   if (r === "admin" || r === "manager") T.unshift({ i: "🗓️", l: "برنامج الإنتاج (أوامر الإنتاج)", a: "go", v: "plan", c: 3 }, { i: "📥", l: "طلبات الشراء", a: "go", v: "preqs", b: S.preqs.filter((x) => ["pending", "approved", "partial"].includes(x.status)).length, c: 2 });
-  if (r === "buyer") T.push({ i: "📥", l: "طلبات الشراء", a: "go", v: "preqs", b: S.preqs.filter((x) => ["pending", "approved", "partial"].includes(x.status)).length, c: 2 }, { i: "🛒", l: "شراء مباشر", a: "newpurchase", c: 1 }, { i: "⚠️", l: "المخزون الناقص", a: "go", v: "prod", b: lowList().length, c: 6 }, { i: "📋", l: "المشتريات", a: "go", v: "purchases", c: 5 });
+  if (r === "buyer" || r === "prod") T.push({ i: "📥", l: "طلبات الشراء", a: "go", v: "preqs", b: S.preqs.filter((x) => ["pending", "approved", "partial"].includes(x.status)).length, c: 2 }, { i: "🛒", l: "شراء مباشر", a: "newpurchase", c: 1 }, { i: "⚠️", l: "المخزون الناقص", a: "go", v: "prod", b: lowList().length, c: 6 }, { i: "📋", l: "المشتريات", a: "go", v: "purchases", c: 5 });
   if (r === "manager") T.push({ i: "🛒", l: "شراء جديد", a: "newpurchase", c: 2 }, { i: "⚠️", l: "المخزون الناقص", a: "go", v: "prod", b: lowList().length, c: 6 });
   if (r === "admin" || r === "manager") T.push({ i: "🛍️", l: "نقاط البيع", a: "go", v: "pos", c: 1 }, { i: "🧁", l: "الإنتاج", a: "go", v: "prod", c: 2 }, { i: "🚚", l: "الإرسال", a: "go", v: "send", b: pendT.length, c: 4 }, { i: "📝", l: "الطلبيات", a: "go", v: "orders", b: act.length, c: 3 });
   if (r === "admin") T.push({ i: "📈", l: "الأرباح حسب الورشة", a: "go", v: "report", c: 5 }, { i: "📒", l: "الكتالوج والوصفات", a: "go", v: "catalog", c: 6 });
