@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112165924" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112171102" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2292,6 +2292,11 @@ async function boot() {
     db.doc("config/receipt").onSnapshot((d) => {
       S.cfg = d.exists ? d.data() : {};
     }, err);
+    db.doc("config/suppliers").onSnapshot((d) => {
+      S.sups = d.exists ? d.data().list || [] : [];
+      render();
+    }, () => {
+    });
     db.collection("clients").orderBy("total", "desc").limit(500).onSnapshot((q) => {
       S.clients = q.docs.map((d) => __spreadValues({ id: d.id }, d.data()));
       if (S.view === "loyalty") render();
@@ -3288,6 +3293,7 @@ function homeTiles(arr) {
   }
   if (r === "admin" || r === "manager") T.push({ i: "🎯", l: "مراقبة الأثمنة", a: "go", v: "pxcheck", c: 5, b: 0 });
   if (r === "prod" || r === "admin" || r === "manager") T.push({ i: "🗓️", l: "برنامج الإرسال", a: "go", v: "dispatch", c: 4, b: (S.dplans || []).filter((p) => p.date === today() && dpState(p) !== "sent").length });
+  if (r === "prod" || r === "admin" || r === "manager") T.push({ i: "🏪", l: "لائحة الموردين", a: "sups", c: 6 });
   if (r === "prod") T.push({ i: "🔧", l: "طلب أدوات العمل (لورشة)", a: "newpreq", k: "tools", c: 2, b: 0 });
   if (r === "ws") T.push({ i: "🔧", l: "طلب أدوات العمل", a: "newpreq", k: "tools", c: 2, b: 0 }, { i: "⚙️", l: "المعدات ديال الورشة", v: "equip", c: 3, b: eqDue(me.loc) ? 1 : 0 });
   if (r === "ws" && consOf(me.loc).length) T.push({ i: "🧷", l: "المواد الثانوية", a: "consuse", v: me.loc, c: 5, b: 0 });
@@ -9551,6 +9557,45 @@ function sheetXferOpen(id) {
     } : null
   );
 }
+const supList = () => [...S.sups || []].sort((a, b) => a.localeCompare(b));
+async function supAdd(sel) {
+  const n = (prompt("🏪 سمية المورد الجديد:") || "").trim();
+  if (!n) {
+    sel.value = "";
+    return;
+  }
+  const L = S.sups || [];
+  if (!L.some((x) => x.toLowerCase() === n.toLowerCase())) {
+    try {
+      await db.doc("config/suppliers").set({ list: [...L, n], updTs: Date.now(), by: meName() }, { merge: true });
+      S.sups = [...L, n];
+    } catch (e) {
+      toast(e.message, true);
+    }
+  }
+  document.querySelectorAll("select[data-psp]").forEach((s) => {
+    if (![...s.options].some((o) => o.value === n)) {
+      const o = document.createElement("option");
+      o.textContent = n;
+      s.insertBefore(o, s.querySelector('option[value="__new"]'));
+    }
+  });
+  sel.value = n;
+}
+function sheetSuppliers() {
+  if (!canBuy()) return;
+  openSheet("🏪 لائحة الموردين", `<p class="muted" style="margin:0">مورد واحد فكل سطر. كيبانو فالشراء باش تختار المورد ديال كل مادة.</p>${fld("supl", "", `<textarea id="supl" name="supl" rows="14">${esc(supList().join("\n"))}</textarea>`)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`, async (f) => {
+    const L = [...new Set(f.supl.value.split("\n").map((x) => x.trim()).filter(Boolean))];
+    busy(f, true);
+    try {
+      await db.doc("config/suppliers").set({ list: L, updTs: Date.now(), by: meName() });
+      closeSheet();
+      toast("🏪 تسجلات " + L.length + " مورد");
+    } catch (e) {
+      fail(f, e);
+    }
+  });
+}
 function sheetPurchase(req) {
   var _a;
   if (!canBuy()) return openSheet("🛒 شراء جديد", emptyB("🔒", "الشراء كيسجلو غير المسير ولا المشرف العام."));
@@ -9566,13 +9611,14 @@ function sheetPurchase(req) {
     if (!l) return "";
     return Math.max(0, r2(l.qty - ((req.delivered || {})[id] || 0))) || "";
   };
-  openSheet(req ? "🚚 تسليم للورشة · " + LOC[req.ws] : "🛒 شراء جديد", `${req ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📥</span><div><b>طلب من ${esc(req.by)}</b><div class="muted">الكميات معمرة بالباقي ديال الطلب. دخل شنو وصل بالضبط: إلا كان أقل، التسليم غادي يكون جزئي.</div></div></div></div>` : ""}${choice("pws", "لفين؟", [...WS, ...POS].map((x) => ({ v: x.id, l: x.name, i: x.i })), ws0, 3)}${inp("psup", "🏷️ المورد *", "", "text", 'autocomplete="off"')}
+  openSheet(req ? "🚚 تسليم للورشة · " + LOC[req.ws] : "🛒 شراء جديد", `${req ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📥</span><div><b>طلب من ${esc(req.by)}</b><div class="muted">الكميات معمرة بالباقي ديال الطلب. دخل شنو وصل بالضبط: إلا كان أقل، التسليم غادي يكون جزئي.</div></div></div></div>` : ""}${choice("pws", "لفين؟", [...WS, ...POS].map((x) => ({ v: x.id, l: x.name, i: x.i })), ws0, 3)}
    ${(() => {
     const row = (i) => {
       var _a2, _b, _c;
       const rl = (_a2 = req == null ? void 0 : req.lines) == null ? void 0 : _a2.find((x) => x.item === i.id);
       return `<div class="box" style="gap:4px" data-prow="${i.id}"><div class="prow" style="border:0;padding:0"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}</b><span class="muted">${esc(i.unit)}</span></div></div>${stepper("data-pq", i.id, preq(i.id), i.unit)}</div>${rl && (brandOf(rl) || rl.note || ((_b = rl.photos) == null ? void 0 : _b.length)) ? `<div class="muted" style="font-size:.9rem">${brandOf(rl) ? "🏷️ الماركة المطلوبة: <b>" + esc(brandOf(rl)) + "</b> " : ""}${rl.note ? "· 📝 " + esc(rl.note) : ""}</div>${((_c = rl.photos) == null ? void 0 : _c.length) ? `<div class="media">${mediaBtns(rl.photos, i.name, "📷")}</div>` : ""}` : ""}
      ${rl ? `<div class="muted" style="font-size:.85rem">📋 مطلوب ${qtyTxt(rl.qty, i.unit)}${(req.delivered || {})[i.id] ? " · وصل قبل " + qtyTxt(req.delivered[i.id], i.unit) : ""} · باقي <b>${qtyTxt(+preq(i.id) || 0, i.unit)}</b></div>` : ""}
+     <div class="prow" style="padding:4px 0 0;gap:6px"><span class="muted">🏪 المورد *</span><select data-psp="${i.id}" style="flex:1;min-width:0;height:38px;border-radius:10px;border:2px solid var(--line);background:var(--surface);padding:0 6px" aria-label="المورد ${esc(i.name)}" onchange="if(this.value==='__new'){supAdd(this)}"><option value="">— اختار المورد —</option>${supList().map((n) => `<option ${n === ((rl == null ? void 0 : rl.sup) || i.lastSup || "") ? "selected" : ""}>${esc(n)}</option>`).join("")}<option value="__new">➕ مورد جديد...</option></select></div>
      <div class="prow" style="padding:4px 0 0;gap:6px"><span class="muted">🏷️ الماركة *</span><input type="text" data-pbr="${i.id}" value="${esc((rl == null ? void 0 : rl.brand) || i.brand || "")}" placeholder="الماركة اللي وصلات" style="flex:1;min-width:0;height:38px;border-radius:10px;border:2px solid var(--line);background:var(--surface);padding:0 8px" aria-label="الماركة ${esc(i.name)}"></div>
      <div class="prow" style="padding:4px 0 0"><span class="muted">💰 ثمن ${esc(i.unit)} (د.م) *</span><input class="qty" style="width:96px" data-pp="${i.id}" type="text" inputmode="decimal" value="${lastPrice(i.id) ? fmt(lastPrice(i.id)) : ""}" aria-label="ثمن ${esc(i.name)}"></div>
      <div class="prow" style="padding:4px 0 0;gap:6px"><span class="muted">📅 DLC *</span><input type="date" data-pd="${i.id}" style="height:38px;border-radius:10px;border:2px solid var(--line);background:var(--surface);padding:0 6px;flex:1;min-width:0" aria-label="DLC ${esc(i.name)}"><input type="text" data-pl2="${i.id}" placeholder="لوط المورد *" style="width:96px;height:38px;border-radius:10px;border:2px solid var(--line);background:var(--surface);padding:0 6px" aria-label="لوط المورد"></div>${photoField("pph_" + i.id, "📷 صورة " + esc(i.name.split(" (")[0]) + " (المنتوج والتيكيت ديالو) *")}</div>`;
@@ -9586,13 +9632,16 @@ function sheetPurchase(req) {
    <div class="box"><h3>💸 مصاريف إضافية (اختيارية)</h3><div class="two">${fld("pfc", "🤝 الكوميسيون (د.م)", '<input id="pfc" name="pfc" class="big-in" inputmode="decimal" placeholder="0">')}${fld("pft", "🪙 البوربوار (د.م)", '<input id="pft" name="pft" class="big-in" inputmode="decimal" placeholder="0">')}</div>${fld("pfh", "💪 الحمالة / Manutention (د.م)", '<input id="pfh" name="pfh" class="big-in" inputmode="decimal" placeholder="0">')}<p class="muted" style="margin:0">كيتزادو على التكلفة ديال المواد (بالنسبة لثمن كل مادة) باش يكون الثمن المتوسط حقيقي.</p></div>
    <div class="receipt"><div class="prow" style="padding:0"><span class="muted">🛒 المواد</span><span id="psub">0.00 د.م</span></div><div class="prow" style="padding:0"><span class="muted">💸 المصاريف الإضافية</span><span id="pfee">0.00 د.م</span></div><div class="tot"><span>المجموع</span><span id="ptot">0.00 د.م</span></div><div class="muted">الثمن المتوسط (CMUP) ديال الورشة غادي يتحسب أوتوماتيكياً.</div></div>
    <div class="box"><h3>🧾 الفواتير والوصولات *</h3>${photoField("inv", "📷 صور فاتورة · عاود ضغط باش تزيد فاتورة أخرى (قد ما بغيتي) *")}</div><p class="muted" style="margin:0">✍️ المسؤول ديال ${req ? esc(LOC[req.ws || req.pos] || "") : "الورشة"} غادي يتوصل بتنبيه باش يأكد الاستلام ويوقع.</p>${errP}<button class="btn primary block" type="submit">${req ? "✅ أكد التسليم" : "✅ سجل الشراء"}</button>`, async (f) => {
-    var _a2, _b, _c, _d;
+    var _a2, _b, _c, _d, _e;
     const lines = $$("input[data-pq]", f).map((i) => {
-      var _a3, _b2, _c2;
-      return { item: i.dataset.pq, qty: num(i.value), price: num($(`input[data-pp="${i.dataset.pq}"]`, f).value), dlc: ((_a3 = $(`input[data-pd="${i.dataset.pq}"]`, f)) == null ? void 0 : _a3.value) || "", lotSup: (((_b2 = $(`input[data-pl2="${i.dataset.pq}"]`, f)) == null ? void 0 : _b2.value) || "").trim(), brand: (((_c2 = $(`input[data-pbr="${i.dataset.pq}"]`, f)) == null ? void 0 : _c2.value) || "").trim() };
+      var _a3, _b2, _c2, _d2;
+      return { item: i.dataset.pq, qty: num(i.value), price: num($(`input[data-pp="${i.dataset.pq}"]`, f).value), dlc: ((_a3 = $(`input[data-pd="${i.dataset.pq}"]`, f)) == null ? void 0 : _a3.value) || "", lotSup: (((_b2 = $(`input[data-pl2="${i.dataset.pq}"]`, f)) == null ? void 0 : _b2.value) || "").trim(), brand: (((_c2 = $(`input[data-pbr="${i.dataset.pq}"]`, f)) == null ? void 0 : _c2.value) || "").trim(), sup: (((_d2 = $(`select[data-psp="${i.dataset.pq}"]`, f)) == null ? void 0 : _d2.value) || "").replace("__new", "") };
     }).filter((l) => l.qty > 0);
     if (!lines.length) return ferr("زيد الكمية ديال مادة وحدة على الأقل.");
-    if (!f.psup.value.trim()) return ferr("🏷️ كتب سمية المورد.");
+    {
+      const ns = lines.filter((l) => !l.sup);
+      if (ns.length) return ferr("🏪 اختار المورد ديال: " + ns.map((l) => iname(l.item).split(" (")[0]).join("، "));
+    }
     for (const l of lines) {
       const n = iname(l.item).split(" (")[0];
       if (!l.brand) return ferr("🏷️ كتب الماركة ديال " + n + ".");
@@ -9629,15 +9678,24 @@ function sheetPurchase(req) {
         l.landed = pc[l.item];
       });
       await moveStock(ws, d, pc);
-      for (const l of lines) if (!l.noPrice && l.price !== lastPrice(l.item)) await db.doc("items/" + l.item).update({ lastPrice: l.price, cost: l.price });
-      const pid = await newOp({ type: "purchase", ws, supplier: f.psup.value.trim(), lines, sub, fees, feesTotal, total, photos, invoice, sig, req: (req == null ? void 0 : req.id) || null, rcv: "pending" });
+      for (const l of lines) {
+        const u = {};
+        if (!l.noPrice && l.price !== lastPrice(l.item)) {
+          u.lastPrice = l.price;
+          u.cost = l.price;
+        }
+        if (l.sup && l.sup !== ((_e = S.items[l.item]) == null ? void 0 : _e.lastSup)) u.lastSup = l.sup;
+        if (Object.keys(u).length) await db.doc("items/" + l.item).update(u);
+      }
+      const sups = [...new Set(lines.map((l) => l.sup))];
+      const pid = await newOp({ type: "purchase", ws, supplier: sups.length === 1 ? sups[0] : sups.join(" · "), suppliers: sups, lines, sub, fees, feesTotal, total, photos, invoice, sig, req: (req == null ? void 0 : req.id) || null, rcv: "pending" });
       const lotIds = [];
       for (const l of lines) {
         const it = S.items[l.item];
         if ((it == null ? void 0 : it.kind) !== "raw" && !l.dlc) continue;
         const ref = db.collection("lots").doc();
         const n = lotNo("L");
-        const doc = { n, type: "purchase", item: l.item, loc: ws, qty0: l.qty, qty: l.qty, unit: (it == null ? void 0 : it.unit) || "", recv: today(), date: today(), dlc: l.dlc || "", supplier: f.psup.value.trim(), lotSup: l.lotSup || "", brand: l.brand || "", photos: l.photos || [], price: l.price, purchaseId: pid, status: "active", by: meName(), byId: me.id, ts: Date.now(), events: [{ ts: Date.now(), by: meName(), act: "create", qty: l.qty }] };
+        const doc = { n, type: "purchase", item: l.item, loc: ws, qty0: l.qty, qty: l.qty, unit: (it == null ? void 0 : it.unit) || "", recv: today(), date: today(), dlc: l.dlc || "", supplier: l.sup || "", lotSup: l.lotSup || "", brand: l.brand || "", photos: l.photos || [], price: l.price, purchaseId: pid, status: "active", by: meName(), byId: me.id, ts: Date.now(), events: [{ ts: Date.now(), by: meName(), act: "create", qty: l.qty }] };
         await ref.set(doc);
         S.lotm = __spreadProps(__spreadValues({}, S.lotm || {}), { [ref.id]: __spreadValues({ id: ref.id }, doc) });
         lotIds.push(ref.id);
@@ -15723,6 +15781,7 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  sups: () => sheetSuppliers(),
   rcvlist: () => {
     const p = me.loc || S.pos;
     const L = S.pend.filter((o) => o.type === "transfer" && o.pos === p);
