@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112154226" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112154617" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2845,7 +2845,7 @@ function draw() {
     if (!(S.kf.step === "msg" && $("#ktext") || S.kf.step === "cand" && $("#cname") || S.kf.step === "idle" && $(".attract"))) $("#main").innerHTML = vKiosk();
     return;
   }
-  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, dispatch: vDispatch }[S.view] || vHome;
+  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
   const y = window.scrollY;
   $("#main").innerHTML = V();
   window.scrollTo(0, y);
@@ -3039,6 +3039,29 @@ async function dpMark(pre, lines, tid) {
   lines.forEach((l) => s[l.item] = r2((+s[l.item] || 0) + l.qty));
   await db.doc("dplans/" + p.id).update({ sent: s, transfers: [...p.transfers || [], tid], lastSent: Date.now() });
   p.sent = s;
+}
+function vPxCheck() {
+  if (!isMgr()) return vHome();
+  const F = itemsArr().filter((i) => i.kind === "final" && i.active !== false);
+  const FR = fullRates();
+  const rows = F.map((it) => {
+    const pr = +it.price || 0;
+    const cp = costParts(it, pr, FR);
+    const v = cp.mat + cp.pack + (cp.md || 0);
+    const fc = pr > 0 && cp.mat > 0 ? v / pr * 100 : null;
+    const lvl = !(pr > 0) ? "noprice" : !(cp.mat > 0) ? "nocost" : pr - v <= 0 ? "bad" : fc > 50 ? "bad" : fc > 35 ? "warn" : "good";
+    return { it, pr, v, fc, lvl, q: itemSales30(it.id).q };
+  });
+  const f = S.pxf || "alert";
+  const L = rows.filter((r) => f === "all" || (f === "alert" ? ["bad", "warn"].includes(r.lvl) : r.lvl === f)).sort((a, b) => {
+    var _a, _b;
+    return ((_a = b.fc) != null ? _a : 999) - ((_b = a.fc) != null ? _b : 999);
+  });
+  const C = (k) => rows.filter((r) => r.lvl === k).length;
+  const T = { bad: ["🔴", "خاسر ولا رخيص بزاف"], warn: ["🟠", "ضعيف"], good: ["🟢", "مزيان"], nocost: ["⚪", "التكلفة ما معروفاش"], noprice: ["⚪", "بلا ثمن"] };
+  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">🎯 مراقبة الأثمنة</h2></div><p class="muted" style="margin:0">نتا كتحط الثمن. هنا كنقولو ليك واش كيخلي هامش: المواد والتغليف خاصهم يكونو تحت 35% من الثمن.</p>
+   <div class="chips">${[["alert", "⚠️ اللي خاصهم انتباه", C("bad") + C("warn")], ["bad", "🔴", C("bad")], ["warn", "🟠", C("warn")], ["good", "🟢", C("good")], ["nocost", "⚪ بلا تكلفة", C("nocost")], ["all", "الكل", rows.length]].map(([k, l, n]) => `<button type="button" class="chip ${f === k ? "on" : ""}" onclick="S.pxf='${k}';render()">${l} (${n})</button>`).join("")}</div></section>
+   <section class="card">${L.length ? L.map((r) => `<div class="prow clk" data-act="item" data-id="${r.it.id}"><div class="lead"><span class="em">${ico(r.it.id)}</span><div><b>${esc(r.it.name)}</b><div class="muted">${r.pr > 0 ? money(r.pr) : "بلا ثمن"}${r.v > 0 ? " · المواد " + money(r.v) : ""}${r.it.comp ? " · المنافسة " + money(r.it.comp) : ""}${r.q ? " · 🛍️ " + fmt(r.q) + " ف30 يوم" : ""}</div></div></div><span class="tag ${r.lvl === "good" ? "good" : r.lvl === "bad" ? "bad" : "warn"}">${T[r.lvl][0]} ${r.fc != null ? Math.round(r.fc) + "%" : T[r.lvl][1]}</span></div>`).join("") : emptyB("✨", "ما كاين والو هنا.")}</section>`;
 }
 function vLogins() {
   if (!(isAdmin() || me.role === "manager")) return vHome();
@@ -3259,6 +3282,7 @@ function homeTiles(arr) {
     if (sh) T.push({ i: "🔒", l: "إغلاق النوبة والجرد", a: "closeshift", c: 6 });
     T.push({ i: "↩️", l: "إرجاع غير المباع", a: "returnpos", c: sh ? 2 : 6 });
   }
+  if (r === "admin" || r === "manager") T.push({ i: "🎯", l: "مراقبة الأثمنة", a: "go", v: "pxcheck", c: 5, b: 0 });
   if (r === "prod" || r === "admin" || r === "manager") T.push({ i: "🗓️", l: "برنامج الإرسال", a: "go", v: "dispatch", c: 4, b: (S.dplans || []).filter((p) => p.date === today() && dpState(p) !== "sent").length });
   if (r === "prod") T.push({ i: "🔧", l: "طلب أدوات العمل (لورشة)", a: "newpreq", k: "tools", c: 2, b: 0 });
   if (r === "ws") T.push({ i: "🔧", l: "طلب أدوات العمل", a: "newpreq", k: "tools", c: 2, b: 0 }, { i: "⚙️", l: "المعدات ديال الورشة", v: "equip", c: 3, b: eqDue(me.loc) ? 1 : 0 });
@@ -4197,7 +4221,7 @@ function sheetItemView(id, back) {
    ${((_c = (_b = it.recipe) == null ? void 0 : _b.lines) == null ? void 0 : _c.length) ? `<div class="box"><h3>📋 الفيش تكنيك (كتعطي ${fmt(yld(it))} ${esc(it.unit)}${isW(it.unit) ? " ⚖️ أوتوماتيك" : ""})</h3>${it.recipe.lines.map((l) => prow(l.item, "", `<b class="num">${fmtq(l.qty)} ${esc(l.unit || iunit(l.item))}</b>`)).join("")}${isMgr() ? `<div class="muted" style="margin-top:6px">التكلفة دابا: <b>${money(costOf(id, 0, it.ws || null))}</b> لكل ${esc(it.unit)}</div>` : ""}${it.rnote ? `<div class="alert" style="cursor:default;margin-top:6px"><div>♻️ ${esc(it.rnote)}</div></div>` : ""}</div>` : ""}${it.kind === "final" && isMgr() ? (() => {
     const b = priceBar(it, null, true);
     return b ? `<div class="box"><h3>📊 تركيبة ثمن البيع</h3>${b}</div>` : "";
-  })() : ""}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
+  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, it.comp)}</div>` : "") : ""}${stepsBox(it)}${!isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
 }
 function sheetDelItem(id) {
   if (!isMgr()) return;
@@ -7607,6 +7631,52 @@ function costParts(it, price, FR) {
   const lab = mdv > 0 ? mdv : labP * pr, oh = ohP * pr;
   const full = mat + pack + lab + oh;
   return { mat, pack, lab, oh, full, labP, ohP, md: mdv, ok: FR.oh != null && (mdv > 0 || FR.lab[it.ws] != null) };
+}
+function itemSales30(id) {
+  const from = daysAgo(30);
+  const days = /* @__PURE__ */ new Set();
+  let q = 0;
+  (S.shifts || []).filter((x) => x.date >= from).forEach((x) => {
+    days.add(x.date);
+    (x.tickets || []).forEach((t) => (t.lines || []).forEach((l) => {
+      if (l.item === id) q += +l.qty || 0;
+    }));
+  });
+  return { q, d: Math.max(1, days.size), pd: q / Math.max(1, days.size) };
+}
+function pxAdvice(it, price, old, comp, mat) {
+  price = +price || 0;
+  old = +old || 0;
+  comp = +comp || 0;
+  if (!(price > 0)) return "";
+  const FR = fullRates();
+  const cp = costParts(it, price, FR);
+  if (mat != null) cp.mat = +mat || 0;
+  const v = cp.mat + cp.pack + (cp.md || 0);
+  if (!(cp.mat > 0)) return `<div class="alert bad" style="cursor:default">⚠️ التكلفة ديال المواد ما معروفاش (الوصفة ولا أثمنة المواد ناقصين). ما نقدرش نحكم على الثمن.</div>`;
+  const c = price - v, cP = c / price * 100, fc = v / price * 100;
+  const S30 = itemSales30(it.id);
+  const cOld = old > 0 ? old - v : null;
+  const lvl = c <= 0 ? "bad" : fc > 50 ? "bad" : fc > 35 ? "warn" : "good";
+  const ic = { bad: "🔴", warn: "🟠", good: "🟢" }[lvl];
+  const head = c <= 0 ? "كتخسر فكل حبة: الثمن قل من التكلفة ديال المواد والتغليف" : fc > 50 ? "الثمن رخيص بزاف: المواد كياكلو " + Math.round(fc) + "% من الثمن" : fc > 35 ? "الثمن مقبول ولكن ضعيف: خاصك تبيع بزاف" : "الثمن مزيان: كيبقى ليك هامش مزيان";
+  const L = [];
+  L.push(`🌾 المواد والتغليف: <b>${money(v)}</b> = <b>${Math.round(fc)}%</b> من الثمن <span class="muted">(المزيان: تحت 35%)</span>`);
+  L.push(`💵 كل حبة كتخلي: <b>${money(c)}</b> (${Math.round(cP)}%) باش تخلص الخدامة والكرا والمصاريف وتربح`);
+  if (comp > 0) L.push(price < comp ? `🏷️ أرخص من المنافسة بـ <b>${money(comp - price)}</b> (−${Math.round((comp - price) / comp * 100)}%) 👍` : `🏷️ <b style="color:var(--bad,#b91c1c)">ماشي أرخص من المنافسة</b> (${money(comp)})`);
+  if (old > 0 && Math.abs(old - price) > 4e-3) {
+    if (cOld > 0 && c > 0) {
+      const need = cOld / c;
+      const pct = Math.round((need - 1) * 100);
+      L.push(price < old ? `📈 باش تربح بحال ما كنتي كتربح بـ${money(old)}: خاصك تبيع <b>+${pct}%</b> كثر${S30.q ? " (≈ <b>" + fmt(Math.ceil(S30.pd * need)) + "</b> فالنهار بلاصة " + fmt(Math.round(S30.pd * 10) / 10) + ")" : ""}` : `📉 بهاد الثمن تقدر تبيع <b>${Math.abs(pct)}%</b> قل وتربح نفس الشي`);
+    } else if (c <= 0) L.push("📈 ما كاين حتى كمية كتعوض: كل حبة كتخسر.");
+  }
+  if (S30.q) L.push(`🛍️ المبيعات ديال 30 يوم: <b>${fmt(S30.q)}</b> (≈ ${fmt(Math.round(S30.pd * 10) / 10)} فالنهار) · كتجيب ≈ <b>${money(S30.pd * 30 * c)}</b> فالشهر بهاد الثمن`);
+  const tips = [];
+  if (fc > 35 && c > 0) tips.push("شوف واش تقدر تنقص التكلفة: مورد أرخص، حجم أصغر شوية، ولا تغليف أرخص.");
+  if (lvl !== "bad" && comp > 0 && price < comp) tips.push("ثمن مزيان باش تجيب كليان جداد. تبع المبيعات ديالو هاد السيمانات.");
+  if (c <= 0) tips.push("طلع الثمن على الأقل لـ " + money(Math.ceil(v / 0.65 * 2) / 2) + " (المواد 65% من الثمن).");
+  return `<div class="alert ${lvl === "good" ? "acc" : lvl}" style="cursor:default;flex-direction:column;align-items:stretch;gap:6px"><b>${ic} ${head}</b>${L.map((x) => `<div style="font-size:.92rem">${x}</div>`).join("")}${tips.length ? `<div class="muted" style="font-size:.88rem">💡 ${tips.join(" ")}</div>` : ""}</div>`;
 }
 const sugPrice = (it, P, FR) => {
   FR = FR || fullRates();
@@ -14292,6 +14362,7 @@ function sheetItem(id) {
       doc.steps = (((_g = f.isteps) == null ? void 0 : _g.value) || "").trim();
       doc.ws = f.iws.value;
       doc.price = kind === "final" ? num(f.iprice.value) || 0 : 0;
+      if (f.icomp) doc.comp = num(f.icomp.value) || 0;
       if (f.ibarcode) doc.barcode = String(f.ibarcode.value || "").trim();
       if (kind === "final") {
         if (f.isgoal) doc.sgoal = num(f.isgoal.value) || 0;
@@ -14413,7 +14484,7 @@ function sheetItem(id) {
     };
     ISYNC = sync;
     const costUpd = () => {
-      var _a2, _b, _c, _d, _e, _f;
+      var _a2, _b, _c, _d, _e, _f, _g, _h, _i;
       const l = $("#icostl", f);
       if (!l) return;
       sync();
@@ -14450,6 +14521,10 @@ function sheetItem(id) {
       if (fu) {
         fu.innerHTML = f.ikind.value === "final" && isMgr() ? costCard(__spreadProps(__spreadValues({}, it), { kind: "final", unit: f.iunit.value, price: num((_d = f.iprice) == null ? void 0 : _d.value) || 0, lcoef: num((_e = f.ilcoef) == null ? void 0 : _e.value) || 0, lmin: num((_f = f.ilmin) == null ? void 0 : _f.value) || 0, recipe: { yield: y, lines: lines.filter((x) => x.item && +x.qty > 0) }, pack: plines.filter((x) => x.item && +x.qty > 0) }), c) : "";
       }
+      {
+        const pa = $("#pxadv", f);
+        if (pa) pa.innerHTML = f.ikind.value === "final" && isMgr() ? pxAdvice(__spreadProps(__spreadValues({}, it), { kind: "final", ws: ((_g = f.iws) == null ? void 0 : _g.value) || it.ws, pack: plines.filter((x) => x.item && +x.qty > 0) }), num((_h = f.iprice) == null ? void 0 : _h.value), it.price, num((_i = f.icomp) == null ? void 0 : _i.value), c) : "";
+      }
       const th = $("#itheo", f);
       if (th) {
         th.innerHTML = id && f.ikind.value === "semi" ? theoBox(id, isW(f.iunit.value) ? num(f.iyield.value) : y, "روسيطة وحدة كتعطي تيوريكمون") : "";
@@ -14476,7 +14551,7 @@ function sheetItem(id) {
       ex.innerHTML = `${choice("iws", "الورشة", WS.map((x) => ({ v: x.id, l: x.name, i: x.i })), ws, 3)}${kind === "semi" ? choice("istage", "النوع", [{ v: "inter", l: "منتوج ميز أون بلاس · Mise en place (بيسكوي، كريمة، كادر، عجين...)", i: "🥣" }, { v: "pre", l: "منتوج ممفينيش · Non fini (ترونش ممفينيش...)", i: "🧊" }], it.stage === "pre" ? "pre" : "inter", 2) : ""}<div class="box" style="gap:6px">${choice("ifrz", "❄️ هاد المنتوج يمكن يدخل للكونجيلاتور؟", [{ v: "0", l: "لا", i: "🚫" }, { v: "1", l: "إيه، إلا بغينا", i: "❄️" }], it.frz ? "1" : "0", 2)}${it.frz ? fld("ifrzd", "⛔ شحال كيبقى مزيان فالكونجيلاتور؟ (بالأيام)", `<input id="ifrzd" name="ifrzd" class="big-in" inputmode="decimal" value="${it.frzDays ? fmt(it.frzDays) : ""}" placeholder="مثلاً 30">`) : ""}${kind === "semi" ? choice("istep", "🧭 المرحلة ديال الإنتاج (كل مرحلة فنهار بوحدها)", [{ v: "", l: "بلا مرحلة", i: "➖" }, { v: "cuis", l: "الطياب", i: "🔥" }, { v: "crem", l: "الكريمات والحشوات", i: "🥄" }, { v: "mont", l: "المونطاج", i: "🧱" }, { v: "coup", l: "التقطيع", i: "🔪" }], it.step || "", 3) : ""}${kind === "semi" ? `<div class="two">${fld("ismin", "⚖️ المخزون الأدنى (ديما خاص يكون)", `<input id="ismin" name="ismin" class="big-in" inputmode="decimal" value="${+it.smin > 0 ? fmt(it.smin) : ""}" placeholder="مثلاً 1">`)}${fld("ismax", "🔝 المخزون الأقصى", `<input id="ismax" name="ismax" class="big-in" inputmode="decimal" value="${+it.smax > 0 ? fmt(it.smax) : ""}" placeholder="مثلاً 2">`)}</div>` : ""}${kind === "semi" ? fld("ilead", "⏳ كيتصاوب قبل بشحال من نهار من الاستعمال ديالو؟ (0 = نفس النهار · العادي 1)", `<input id="ilead" name="ilead" class="big-in" inputmode="decimal" value="${it.lead != null && it.lead !== "" ? fmt(it.lead) : ""}" placeholder="${it.split ? 0 : 1}">`) : ""}</div>${kind === "final" ? `<div class="two">${fld("ivmin", "🪟 نبه البائعة ملي يبقى (فالفيترينة)", `<input id="ivmin" name="ivmin" class="big-in" inputmode="decimal" value="${it.vmin ? fmt(it.vmin) : ""}" placeholder="مثلاً 5">`)}${fld("ivqty", "🔁 كمية الشارج المعتادة", `<input id="ivqty" name="ivqty" class="big-in" inputmode="decimal" value="${it.vqty ? fmt(it.vqty) : ""}" placeholder="مثلاً 20">`)}</div>${fld("ibarcode", "🔫 الباركود (اختياري)", `<input id="ibarcode" name="ibarcode" class="big-in" inputmode="numeric" data-bc="1" value="${esc(it.barcode || "")}" placeholder="سكاني ولا كتب الرقم" autocomplete="off">`)}${fld("isgoal", "🎯 هدف البيع فالنهار (حبات · لكل لاكيس)", `<input id="isgoal" name="isgoal" class="big-in" inputmode="decimal" value="${it.sgoal ? fmt(it.sgoal) : ""}" placeholder="مثلاً 30">`)}` : ""}${kind === "final" ? fld("ifstep", "🧊 كيتفينا بمضاعفات ديال (اختياري · مثلاً 10: إلا طلبو 5 كيتفيناو 10 و5 كيبقاو فالمخزون)", `<input id="ifstep" name="ifstep" class="big-in" inputmode="decimal" value="${+it.fstep > 0 ? fmt(it.fstep) : ""}" placeholder="فارغ = قد ما تطلب">`) : ""}${kind === "final" ? fld("idmin", "🗓️ أقل كمية فالنهار (للبرنامج الأوتوماتيكي، مزيان للمنتوجات الجداد)", `<input id="idmin" name="idmin" class="big-in" inputmode="decimal" value="${it.dmin ? fmt(it.dmin) : ""}" placeholder="مثلاً 10">`) : ""}${kind === "final" ? `<div class="two">${fld("icmin", "📏 أقل عدد من الروسيطة (للتكلفة)", `<input id="icmin" name="icmin" class="big-in" inputmode="decimal" value="${it.cntMin ? fmt(it.cntMin) : ""}" placeholder="مثلاً 46">`)}${fld("icmax", "📏 أكثر عدد", `<input id="icmax" name="icmax" class="big-in" inputmode="decimal" value="${it.cntMax ? fmt(it.cntMax) : ""}" placeholder="مثلاً 50">`)}</div><p class="muted" style="margin:0">إلا دخلتي «أقل عدد»، الكمية من النصف مصنع فالوصفة كتولي 1 ÷ هاد العدد (التكلفة محسوبة على الأقل باش تكون مضمونة).</p>` : ""}${kind === "final" ? (() => {
         const cs = catsOf(ws);
         return cs.length ? choice("icat", "🏷️ الفئة", [...cs.map((c) => ({ v: c, l: c, i: "🏷️" })), { v: "", l: "بلا فئة", i: "📦" }], cs.includes(it.cat) ? it.cat : "", 2) : "";
-      })() : ""}${kind === "final" && !isW(f.iunit.value) ? fld("ibaked", "⚖️ وزن القطعة من بعد الطهي (غ، اختياري: للقيمة الغذائية)", `<input id="ibaked" name="ibaked" class="big-in" inputmode="decimal" value="${it.bakedG ? fmt(it.bakedG) : ""}" placeholder="وزنها ملي تبرد">`) : ""}${kind === "final" ? allocOf(ws) === "time" ? fld("ilmin", "⏱️ وقت الخدمة لكل " + esc(f.iunit.value) + " (بالدقائق)", `<input id="ilmin" name="ilmin" class="big-in" inputmode="decimal" value="${it.lmin ? fmt(it.lmin) : ""}" placeholder="مثلاً 0.5">`) : fld("ilcoef", "💪 معامل الخدمة (1 = عادي · 1.5 ولا 2 = كياخد خدمة كثر · 0.5 = ساهل)", `<input id="ilcoef" name="ilcoef" class="big-in" inputmode="decimal" value="${it.lcoef ? fmt(it.lcoef) : ""}" placeholder="1">`) : ""}${kind === "final" ? isMgr() ? moneyIn("iprice", "💰 ثمن البيع", it.price ? fmt(it.price) : "") : `<div class="stat" style="background:var(--bg)"><span>💰 ثمن البيع (كيحددو المسير)</span><b>${money(it.price)}</b></div><input type="hidden" id="iprice" name="iprice" value="${it.price || ""}">` : ""}
+      })() : ""}${kind === "final" && !isW(f.iunit.value) ? fld("ibaked", "⚖️ وزن القطعة من بعد الطهي (غ، اختياري: للقيمة الغذائية)", `<input id="ibaked" name="ibaked" class="big-in" inputmode="decimal" value="${it.bakedG ? fmt(it.bakedG) : ""}" placeholder="وزنها ملي تبرد">`) : ""}${kind === "final" ? allocOf(ws) === "time" ? fld("ilmin", "⏱️ وقت الخدمة لكل " + esc(f.iunit.value) + " (بالدقائق)", `<input id="ilmin" name="ilmin" class="big-in" inputmode="decimal" value="${it.lmin ? fmt(it.lmin) : ""}" placeholder="مثلاً 0.5">`) : fld("ilcoef", "💪 معامل الخدمة (1 = عادي · 1.5 ولا 2 = كياخد خدمة كثر · 0.5 = ساهل)", `<input id="ilcoef" name="ilcoef" class="big-in" inputmode="decimal" value="${it.lcoef ? fmt(it.lcoef) : ""}" placeholder="1">`) : ""}${kind === "final" ? isMgr() ? moneyIn("iprice", "💰 ثمن البيع", it.price ? fmt(it.price) : "") + moneyIn("icomp", "🏷️ ثمن المنافسة (اختياري)", it.comp ? fmt(it.comp) : "") + `<div id="pxadv">${it.id ? pxAdvice(it, it.price, 0, it.comp) : ""}</div>` : `<div class="stat" style="background:var(--bg)"><span>💰 ثمن البيع (كيحددو المسير)</span><b>${money(it.price)}</b></div><input type="hidden" id="iprice" name="iprice" value="${it.price || ""}">` : ""}
        <div class="box"><div class="head"><h3>📋 الفيش تكنيك</h3><span class="tag acc" id="icostl">التكلفة: —</span></div><div id="itheo"></div><div id="ifull"></div><div id="inut"></div>${id && ((_d = (_c = (_b = S.items[id]) == null ? void 0 : _b.recipe) == null ? void 0 : _c.lines) == null ? void 0 : _d.length) ? bomBox(S.items[id]).replace("🧾 الفيش تكنيك بالتفصيل (المواد الأولية)", "🧾 الفيش تكنيك بالتفصيل (المواد الأولية · حسب آخر حفظ)") : ""}
        ${isW(f.iunit.value) ? `<div class="stat" style="background:var(--bg)"><span>⚖️ الوصفة كتعطي (أوتوماتيك = مجموع وزن المكونات)</span><b class="num" id="iyieldl">—</b></div><p class="muted" style="margin:0" id="iyskip"></p>${fld("iyp", "📉 المردود % (100 = بلا نقص · مثلاً عصير الحامض 35%، ولا الوزن اللي كينقص فالفور)", `<input id="iyp" name="iyp" class="big-in" inputmode="decimal" value="${fmt(+((_e = it.recipe) == null ? void 0 : _e.yp) > 0 ? +it.recipe.yp : 100)}">`)}<input type="hidden" id="iyield" name="iyield" value="${fmt(((_f = it.recipe) == null ? void 0 : _f.yield) || 1)}">` : fld("iyield", "الوصفة كتعطي شحال؟ (" + esc(f.iunit.value) + ")", `<input id="iyield" name="iyield" class="big-in" inputmode="decimal" value="${fmt(((_g = it.recipe) == null ? void 0 : _g.yield) || 1)}">`) + '<p class="muted" id="iuwl" style="margin:0"></p>'}
        <p class="muted" style="margin:0">لكل مكون، اختار الوحدة اللي بغيتي (مثلاً غ ولا مل). التطبيق كيحول بوحدو للوحدة اللي شريتي بها.</p>
