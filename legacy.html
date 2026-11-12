@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112165612" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112165924" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -5060,7 +5060,7 @@ function sheetOpenShift() {
   if ((me == null ? void 0 : me.role) === "seller" && posRoleOf(me) === "v") return openSheet("🔓 لاكيس", `${emptyB("🛍️", "نتي بائعة: كتبيعي وكتديري البون للزبون، ولكن ما كتحليش لاكيس وما كتقبضيش الفلوس. خاص اللي مكلف بلاكيس يحلها.")}`);
   const p = S.pos;
   const h = (/* @__PURE__ */ new Date()).getHours();
-  openSheet("🔓 فتح النوبة · " + LOC[p], `${choice("steam", "النوبة", [{ v: "صباحية", l: "الصباح", i: "☀️" }, { v: "مسائية", l: "العشية", i: "🌙" }], h < 13 ? "صباحية" : "مسائية", 2)}
+  openSheet("🔓 فتح النوبة · " + LOC[p], `${choice("steam", "النوبة", [{ v: "صباحية", l: "الصباح (6:30 ← 14:30)", i: "☀️" }, { v: "مسائية", l: "العشية (14:30 ← 22:30)", i: "🌙" }], (/* @__PURE__ */ new Date()).getHours() * 60 + (/* @__PURE__ */ new Date()).getMinutes() < 14 * 60 + 30 ? "صباحية" : "مسائية", 2)}
    <div class="lead">${avatar(me)}<div><b>${esc(me.name)}</b><div class="muted">البائعة المسؤولة (لاكيس)</div></div></div>${posRoleOf(me) === "v" && me.role === "seller" ? '<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">💵</span><div><b>نتي مسجلة فوندوز</b><div class="muted">إلا فتحتي النوبة، غادي تخدمي فوندوز كيسيير: الفلوس، الباساسيون والإغلاق عليك.</div></div></div></div>' : ""}
    <div class="lbl" style="font-weight:700">💵 Fond de caisse: كتبي شحال من درهم كاين من كل نوع (مثلاً: ديال 0.50 كاين 20 د.م)، والتطبيق كيحسب شحال من قطعة</div>${cashCountHtml("fc")}
    ${moneyIn("sfloat", "💵 المجموع ديال fond de caisse (كيتعمر بوحدو)")}${errP}<button class="btn primary block" type="submit">🚀 يلاه نبداو</button>`, async (f) => {
@@ -5119,7 +5119,7 @@ function cartPackFinal(p) {
   });
   return o;
 }
-const SLOTS = [["am", "الصباح", "☀️", "صباحية"], ["pm", "العشية", "🌙", "مسائية"]];
+const SLOTS = [["am", "الصباح (6:30 ← 14:30)", "☀️", "صباحية"], ["pm", "العشية (14:30 ← 22:30)", "🌙", "مسائية"]];
 const slotOf = (team) => team === "مسائية" ? "pm" : "am";
 const rosterRole = (d, p, sl, uid) => {
   var _a, _b, _c;
