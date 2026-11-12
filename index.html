@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112143647"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112143931"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -982,7 +982,7 @@ function homeTiles(arr){
     T.push({i:'📨',l:'طلب من الورشة',a:'go',v:'posreqs',b:S.posreqs.filter(x=>x.pos===p&&(x.status==='accepted'||(x.replies||[]).length&&x.updTs>Date.now()-36e5*3)).length,c:6});
     T.push({i:'📦',l:'استلام السلعة',a:'go',v:'pos',b:pendT.filter(o=>o.pos===p).length,c:4},{i:'📝',l:'طلبية جديدة',a:'neworder',c:2},{i:'📋',l:'الطلبيات',a:'go',v:'orders',b:act.filter(o=>o.pos===p).length,c:3});
     if(sh)T.push({i:'🔒',l:'إغلاق النوبة والجرد',a:'closeshift',c:6});T.push({i:'↩️',l:'إرجاع غير المباع',a:'returnpos',c:sh?2:6})}
-  if(r==='ws')T.push({i:'🔧',l:'طلب أدوات العمل',a:'newpreq',k:'tools',c:2,b:0},{i:'⚙️',l:'المعدات ديال الورشة',v:'equip',c:3,b:eqDue(me.loc)?1:0});if(r==='ws'&&consOf(me.loc).length)T.push({i:'🧷',l:'المواد الثانوية',a:'consuse',v:me.loc,c:5,b:0});
+  if(r==='prod')T.push({i:'🔧',l:'طلب أدوات العمل (لورشة)',a:'newpreq',k:'tools',c:2,b:0});if(r==='ws')T.push({i:'🔧',l:'طلب أدوات العمل',a:'newpreq',k:'tools',c:2,b:0},{i:'⚙️',l:'المعدات ديال الورشة',v:'equip',c:3,b:eqDue(me.loc)?1:0});if(r==='ws'&&consOf(me.loc).length)T.push({i:'🧷',l:'المواد الثانوية',a:'consuse',v:me.loc,c:5,b:0});
   if(r==='ws'||r==='prod')T.unshift({i:'📱',l:'آراء الزبناء',a:'go',v:'feedback',b:myFb().filter(x=>x.wsStatus==='new').length,c:1});
   if(r==='ws'||r==='prod')T.unshift({i:'📨',l:'طلبات نقاط البيع',a:'go',v:'posreqs',b:myPosreqs().filter(x=>x.status==='new').length,c:4});
   if(r==='ws')T.push({i:'👷',l:'العاملين والحضور',a:'go',v:'workers',c:5,b:wsWorkers(me.loc).filter(x=>!attRow(me.loc,x.id).status).length},{i:'💬',l:'طلبات العمال',a:'go',v:'tickets',c:3,b:visibleTickets().filter(t=>t.status==='new').length});
@@ -3516,7 +3516,7 @@ const myPreqs=()=>me.role==='ws'?S.preqs.filter(r=>r.ws===me.loc):me.role==='sel
 const preqOpenCount=()=>myPreqs().filter(r=>['pending','approved','partial'].includes(r.status)).length;
 const remainOf=(r,id)=>{const l=r.lines.find(x=>x.item===id);return l?Math.max(0,r2(l.qty-((r.delivered||{})[id]||0))):0};
 const dateQuick=(name,label,val)=>`${choice(name,label,[{v:today(),l:'اليوم',i:'⚡'},{v:daysAgo(-1),l:'غدا',i:'🌅'},{v:daysAgo(-2),l:'بعد غدا',i:'📆'},{v:daysAgo(-7),l:'من هنا سيمانة',i:'🗓️'}],val,4)}${inp(name+'2','ولا تاريخ آخر','','date')}`;
-function sheetNewPreq(purpose){if(invGuard())return;if(me.role!=='ws')return toast('📝 طلبات الشراء كيديرهم غير مسؤول الورشة',true);if(purpose!=='tools')return sheetToolsPreq();
+function sheetNewPreq(purpose){if(invGuard())return;if(me.role!=='ws'&&me.role!=='prod')return toast('📝 طلبات الشراء كيديرهم مسؤول الورشة ولا عون الإدخال',true);if(purpose!=='tools')return sheetToolsPreq();
   if(purpose!=='normal'&&purpose!=='order'&&purpose!=='tools')return openSheet('📝 طلب شراء جديد',`<p class="muted">لاش محتاج هاد المواد؟</p><div class="acts"><button type="button" class="act c5" data-act="newpreq" data-k="normal" style="min-height:120px"><span class="big">🔄</span><b>للاستهلاك العادي</b></button><button type="button" class="act c2" data-act="newpreq" data-k="order" style="min-height:120px"><span class="big">📝</span><b>لطلبية زبون</b></button><button type="button" class="act c3" data-act="newpreq" data-k="tools" style="min-height:120px"><span class="big">🔧</span><b>أدوات العمل</b></button></div>`);
   if(purpose==='tools')return sheetToolsPreq();
   const raws=itemsArr().filter(i=>i.kind==='raw'&&!i.noStock);if(!raws.length)return openSheet('📝 طلب شراء',emptyB('🌾','ما كاينة حتى مادة أولية فالكتالوج.'));
@@ -3687,7 +3687,7 @@ function vPreqs(){
   const PP=['order','tools'].includes(S.prp)?S.prp:'normal';const pOf=x=>x.purpose==='order'?'order':x.purpose==='tools'?'tools':'normal';const ofP=x=>pOf(x)===PP;const openOf=x=>['pending','approved','partial'].includes(x.status);
   const cnt=k=>myPreqs().filter(x=>pOf(x)===k&&openOf(x)).length;const W2=[{id:'normal',name:'الاستهلاك ('+cnt('normal')+')',i:'🔄'},{id:'order',name:'الطلبيات ('+cnt('order')+')',i:'📝'},{id:'tools',name:'أدوات العمل ('+cnt('tools')+')',i:'🔧'}];
   let l=myPreqs().filter(ofP);l=S.prf==='open'?l.filter(r=>['pending','approved','partial'].includes(r.status)).sort((a,b)=>(b.urgent?1:0)-(a.urgent?1:0)||String(a.deadline).localeCompare(String(b.deadline))):l.filter(r=>r.status===S.prf);
-  const canAsk=me.role==='ws'&&PP==='tools';
+  const canAsk=(me.role==='ws'||me.role==='prod')&&PP==='tools';
   const all=myPreqs().filter(ofP),since=Date.now()-30*864e5;const dn=all.filter(r=>r.status==='done'&&r.doneTs>since);const dec=all.filter(r=>r.decidedTs&&r.decidedTs>since);
   const onTime=dn.filter(r=>!r.deadline||dstr(new Date(r.doneTs))<=r.deadline).length;
   const stats=`<div class="stats"><div class="stat"><span>⏳ كتسنى القرار</span><b>${all.filter(r=>r.status==='pending').length}</b></div><div class="stat"><span>✅ مقبولين، كيتسناو</span><b>${all.filter(r=>r.status==='approved').length}</b></div><div class="stat"><span>🟡 تسليم جزئي</span><b>${all.filter(r=>r.status==='partial').length}</b></div><div class="stat"><span>⏰ متأخرين</span><b class="${all.filter(preqLate).length?'neg':''}">${all.filter(preqLate).length}</b></div>
