@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112233512" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112235507" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4342,7 +4342,7 @@ function inlineFinal(rows, title, w) {
      <button type="button" class="link" data-act="itemview" data-id="${i.id}" aria-label="شوف" style="font-size:1.05rem">👁️</button><b style="font-size:.9rem;line-height:1.2">${esc(i.name)}</b><span class="num muted" style="font-size:.85rem;text-align:center">${r.v > 0 ? fmt(Math.round(r.v * 100) / 100) : "؟"}</span>
      <input value="${+i.price > 0 ? fmt(i.price) : ""}" inputmode="decimal" placeholder="—" style="${inS};font-weight:700${+i.price > 0 ? "" : ";border-color:var(--bad,#dc2626)"}" onchange="inlineSave('${i.id}','sprice',this)" aria-label="ثمن البيع ${esc(i.name)}">
 ${r.tag}</div>
-     <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:3px;font-size:.8rem">${uwG(i) > 0 && ((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) ? `<span>⚖️</span><input value="${Math.round(uwG(i))}" inputmode="decimal" style="${inS};width:58px;height:34px" onchange="inlineSave('${i.id}','gram',this)" aria-label="الوزن ديال الحبة بالغرام"><span class="muted">غ</span><span style="width:6px"></span>` : ""}<span class="muted">ثمن الحبة إلا شرا</span><span>2️⃣</span><input value="${+i.price2 > 0 ? fmt(i.price2) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price2',this)" aria-label="ثمن الحبة إلا شرا 2"><span>3️⃣+</span><input value="${+i.price3 > 0 ? fmt(i.price3) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price3',this)" aria-label="ثمن الحبة إلا شرا 3 ولا كثر"></div>
+     <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:3px;font-size:.8rem">${canPrice() && !i.bundle ? `<button type="button" class="btn small" data-act="recedit" data-id="${i.id}" style="margin-inline-end:auto">📋 الفيش</button>` : ""}${uwG(i) > 0 && ((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) ? `<span>⚖️</span><input value="${Math.round(uwG(i))}" inputmode="decimal" style="${inS};width:58px;height:34px" onchange="inlineSave('${i.id}','gram',this)" aria-label="الوزن ديال الحبة بالغرام"><span class="muted">غ</span><span style="width:6px"></span>` : ""}<span class="muted">ثمن الحبة إلا شرا</span><span>2️⃣</span><input value="${+i.price2 > 0 ? fmt(i.price2) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price2',this)" aria-label="ثمن الحبة إلا شرا 2"><span>3️⃣+</span><input value="${+i.price3 > 0 ? fmt(i.price3) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price3',this)" aria-label="ثمن الحبة إلا شرا 3 ولا كثر"></div>
      <div data-pxa="${i.id}" hidden style="margin-top:4px">${pxAdvice(i, i.price, 0, 0)}</div></div>`;
   }).join("")}</section>`;
 }
@@ -4520,7 +4520,7 @@ function sheetItemView(id, back) {
    ${((_c = (_b = it.recipe) == null ? void 0 : _b.lines) == null ? void 0 : _c.length) ? `<div class="box"><h3>📋 الفيش تكنيك (كتعطي ${fmt(yld(it))} ${esc(it.unit)}${isW(it.unit) ? " ⚖️ أوتوماتيك" : ""})</h3>${it.recipe.lines.map((l) => prow(l.item, "", `<b class="num">${fmtq(l.qty)} ${esc(l.unit || iunit(l.item))}</b>`)).join("")}${isMgr() ? `<div class="muted" style="margin-top:6px">التكلفة دابا: <b>${money(costOf(id, 0, it.ws || null))}</b> لكل ${esc(it.unit)}</div>` : ""}${it.rnote ? `<div class="alert" style="cursor:default;margin-top:6px"><div>♻️ ${esc(it.rnote)}</div></div>` : ""}</div>` : ""}${it.kind === "final" && isMgr() ? (() => {
     const b = priceBar(it, null, true);
     return b ? `<div class="box"><h3>📊 تركيبة ثمن البيع</h3>${b}</div>` : "";
-  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, 0)}</div>` : "") : ""}${it.bundle && bundleOf(it.id) ? `<div class="box" style="gap:4px"><h3 style="margin:0">📦 باك</h3><div>${fmt(it.bundle.qty)} × ${esc(iname(it.bundle.item))} · ${money(it.bundle.pu)} للحبة = <b>${money(it.price)}</b></div><div class="muted">كيتباع من المخزون ديال ${esc(iname(it.bundle.item))}: كاين ${fmt(stockOf(S.pos || "p1", it.id))} باك فالمحل.</div>${canPrice() ? `<button type="button" class="btn small" data-act="bundle" data-id="${it.id}">✏️ بدل الباك</button>` : ""}</div>` : ""}${blendBox(it)}${canPrice() && !isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) && uwG(it) > 0 ? `<button type="button" class="btn block" data-act="gramedit" data-id="${it.id}">⚖️ الوزن ديال ${esc(it.unit)}: ${fmt(Math.round(uwG(it)))} غ · بدل</button>` : ""}${stepsBox(it)}${!isBought(it.kind) && ((_g = (_f = it.recipe) == null ? void 0 : _f.lines) == null ? void 0 : _g.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
+  })() + (+it.price > 0 ? `<div class="box"><h3>🎯 واش هاد الثمن مزيان؟</h3>${pxAdvice(it, it.price, 0, 0)}</div>` : "") : ""}${it.bundle && bundleOf(it.id) ? `<div class="box" style="gap:4px"><h3 style="margin:0">📦 باك</h3><div>${fmt(it.bundle.qty)} × ${esc(iname(it.bundle.item))} · ${money(it.bundle.pu)} للحبة = <b>${money(it.price)}</b></div><div class="muted">كيتباع من المخزون ديال ${esc(iname(it.bundle.item))}: كاين ${fmt(stockOf(S.pos || "p1", it.id))} باك فالمحل.</div>${canPrice() ? `<button type="button" class="btn small" data-act="bundle" data-id="${it.id}">✏️ بدل الباك</button>` : ""}</div>` : ""}${blendBox(it)}${canPrice() && !isBought(it.kind) && ((_e = (_d = it.recipe) == null ? void 0 : _d.lines) == null ? void 0 : _e.length) && uwG(it) > 0 ? `<button type="button" class="btn block" data-act="gramedit" data-id="${it.id}">⚖️ الوزن ديال ${esc(it.unit)}: ${fmt(Math.round(uwG(it)))} غ · بدل</button>` : ""}${stepsBox(it)}${canPrice() && !isBought(it.kind) && !it.bundle && !it.blend ? `<button type="button" class="btn primary block" data-act="recedit" data-id="${id}">✏️ بدل الفيش تكنيك (الكميات والمكونات)</button>` : ""}${!isBought(it.kind) && ((_g = (_f = it.recipe) == null ? void 0 : _f.lines) == null ? void 0 : _g.length) ? `<button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 طبع الفيش تكنيك (PDF)</button><button type="button" class="btn block" data-act="fview" data-id="${id}">👁️ شوف الفيش تكنيك (الأثمنة والتطور)</button>` : ""}${bomBox(it)}${isMgr() && it.kind === "final" ? costCard(it, costOf(id, 0, it.ws || null)) : ""}${nutBox(it)}${it.kind === "semi" ? theoBox(id, yld(it), "روسيطة وحدة (" + fmt(yld(it)) + " " + esc(it.unit) + ") كتعطي تيوريكمون") + (it.ws && stockOf(it.ws, id) > 0 ? theoBox(id, stockOf(it.ws, id), "المخزون اللي كاين دابا (" + fmt(stockOf(it.ws, id)) + " " + esc(it.unit) + ") كيعطي") : "") : ""}${it.active === false && isMgr() ? `<div class="btns"><button type="button" class="btn" data-act="item" data-id="${id}">✏️ بدل</button><button type="button" class="btn primary" data-act="restore" data-id="${id}">✅ رجع أكتيف</button></div>` : ""}`);
 }
 function sheetDelItem(id) {
   if (!isMgr()) return;
@@ -9967,6 +9967,90 @@ function sheetBundle(id) {
       $("#bsel", f).innerHTML = "✅ <b>" + esc(iname(pick)) + "</b> · " + money(S.items[pick].price) + " للحبة";
       if (!f.bpu.value) f.bpu.value = fmt(S.items[pick].price);
       up();
+    });
+  });
+}
+function sheetRecipeEdit(id) {
+  const it = S.items[id];
+  if (!it || !canPrice()) return;
+  const R0 = it.recipe || { yield: 1, lines: [] };
+  let L = (R0.lines || []).map((l) => __spreadValues({}, l));
+  const uc = (i) => costOf(i, 0, it.ws || null) || lastPrice(i) || 0;
+  const pool = itemsArr().filter((i) => i.id !== id && i.active !== false && !i.bundle).sort((a, b) => a.name.localeCompare(b.name));
+  const iS = "height:40px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:inherit;padding:0 6px;font:inherit;min-width:0;width:100%";
+  const G = "display:grid;grid-template-columns:minmax(0,1fr) 74px 64px 30px;gap:6px;align-items:center";
+  const calc = (f) => {
+    const y = num(f.ryld.value) || 1;
+    let c = 0;
+    L.forEach((l) => {
+      c += lineQty(l) * uc(l.item);
+    });
+    $("#rcost", f).innerHTML = `💰 تكلفة الروسيطة: <b>${money(c)}</b> · ديال ${esc(it.unit || "وحدة")} وحدة: <b>${money(c / y)}</b>${+it.price > 0 ? ` · ثمن البيع ${money(it.price)} (${Math.round(c / y / it.price * 100)}%)` : ""}`;
+  };
+  const draw2 = (f) => {
+    $("#rlines", f).innerHTML = L.length ? L.map((l, k) => {
+      const u = l.unit || iunit(l.item);
+      return `<div style="${G};padding:5px 0;border-bottom:1px solid var(--line)"><span style="font-size:.9rem;overflow-wrap:anywhere">${ico(l.item)} ${esc(iname(l.item))}<br><span class="muted" style="font-size:.76rem">${money(uc(l.item))}/${esc(iunit(l.item))}</span></span><input data-rq="${k}" value="${fmt(+l.qty || 0)}" inputmode="decimal" style="${iS};text-align:center"><select data-ru="${k}" style="${iS}">${[.../* @__PURE__ */ new Set([...UNITS, u])].map((x) => `<option ${x === u ? "selected" : ""}>${esc(x)}</option>`).join("")}</select><button type="button" class="link neg" data-rd="${k}" aria-label="حيد" style="font-size:1.1rem">🗑️</button></div>`;
+    }).join("") : '<p class="muted">ما كاين حتى مكون.</p>';
+    calc(f);
+  };
+  openSheet("✏️ الفيش · " + it.name, `${fld("ryld", "📦 الروسيطة كتعطي شحال (" + esc(it.unit || "") + ")", `<input name="ryld" id="ryld" class="big-in" inputmode="decimal" value="${fmt(+R0.yield || 1)}">`)}
+   <div class="muted" style="${G};font-size:.78rem"><span>المكون</span><span>الكمية</span><span>الوحدة</span><span></span></div><div id="rlines"></div>
+   <div class="box" style="gap:6px"><b>➕ زيد مكون</b><input id="radd" placeholder="🔍 كتب السمية..." autocomplete="off" style="${iS};height:44px"><div id="raddl" style="max-height:28vh;overflow:auto"></div></div>
+   <p id="rcost" class="muted" style="margin:0"></p>${fld("rwhy", "💬 علاش كتبدل؟ (اختياري)", '<input name="rwhy" id="rwhy" style="height:44px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:inherit;padding:0 10px;width:100%">')}${errP}<button class="btn primary block" type="submit">✅ حفظ الفيش</button>`, async (f) => {
+    const y = num(f.ryld.value);
+    if (!(y > 0)) return ferr("دخل شحال كتعطي الروسيطة.");
+    if (L.some((l) => !(+l.qty > 0))) return ferr("كل مكون خاصو كمية (ولا حيدو 🗑️).");
+    busy(f, true);
+    try {
+      const rec = __spreadProps(__spreadValues({}, R0), { yield: y, lines: L.map((l) => __spreadProps(__spreadValues({}, l), { item: l.item, qty: +l.qty, unit: l.unit || iunit(l.item) })) });
+      await db.doc("items/" + id).update({ recipe: rec, recHist: [...(it.recHist || []).slice(-29), { ts: Date.now(), by: meName(), why: f.rwhy.value.trim(), before: R0 }] });
+      it.recipe = rec;
+      closeSheet();
+      toast("📋 الفيش تسجلات");
+      render();
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    draw2(f);
+    f.addEventListener("input", (e) => {
+      const q = e.target.closest("[data-rq]");
+      if (q) {
+        L[+q.dataset.rq].qty = num(q.value) || 0;
+        calc(f);
+      }
+      if (e.target.name === "ryld") calc(f);
+      if (e.target.id === "radd") {
+        const t = e.target.value.trim().toLowerCase();
+        $("#raddl", f).innerHTML = t ? pool.filter((i) => (i.name || "").toLowerCase().includes(t)).slice(0, 30).map((i) => `<button type="button" data-ra="${i.id}" style="display:flex;justify-content:space-between;width:100%;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:start;padding:9px 4px"><span>${ico(i.id)} ${esc(i.name)}</span><span class="muted">${esc(i.unit || "")}</span></button>`).join("") : "";
+      }
+    });
+    f.addEventListener("change", (e) => {
+      const u = e.target.closest("[data-ru]");
+      if (u) {
+        L[+u.dataset.ru].unit = u.value;
+        calc(f);
+      }
+    });
+    f.addEventListener("click", (e) => {
+      var _a;
+      const d = e.target.closest("[data-rd]"), a = e.target.closest("[data-ra]");
+      if (d) {
+        e.preventDefault();
+        L.splice(+d.dataset.rd, 1);
+        draw2(f);
+      }
+      if (a) {
+        e.preventDefault();
+        const x = S.items[a.dataset.ra];
+        L.push({ item: x.id, qty: 0, unit: x.unit === "كغ" ? "غ" : x.unit === "لتر" ? "مل" : x.unit });
+        $("#radd", f).value = "";
+        $("#raddl", f).innerHTML = "";
+        draw2(f);
+        const ins = $$("[data-rq]", f);
+        (_a = ins[ins.length - 1]) == null ? void 0 : _a.focus();
+      }
     });
   });
 }
@@ -15658,7 +15742,7 @@ const ACT = {
   fview: (el) => {
     const id = el.dataset.id;
     if (!S.items[id]) return;
-    openSheet("📋 الفيش تكنيك", `<style>${FICHE_CSS}#sheet .fp{width:100%!important;padding:6px!important;font-size:12px}#sheet .fp .hd{flex-wrap:wrap;gap:6px}#sheet .fp table{font-size:12px}</style><div style="overflow-x:auto;max-width:100%">${ficheHtml(id)}</div><button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 PDF</button>`);
+    openSheet("📋 الفيش تكنيك", `<style>${FICHE_CSS}#sheet .fp{width:100%!important;padding:6px!important;font-size:12px}#sheet .fp .hd{flex-wrap:wrap;gap:6px}#sheet .fp table{font-size:12px}</style>${canPrice() ? `<button type="button" class="btn primary block" data-act="recedit" data-id="${id}">✏️ بدل الفيش (الكميات والمكونات)</button>` : ""}<div style="overflow-x:auto;max-width:100%">${ficheHtml(id)}</div><button type="button" class="btn block" data-act="fpdf" data-id="${id}">📄 PDF</button>`);
   },
   preqsup: (el) => {
     const r = S.preqs.find((x) => x.id === el.dataset.id);
@@ -16286,6 +16370,7 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  recedit: (el) => sheetRecipeEdit(el.dataset.id),
   bundle: (el) => {
     var _a;
     return sheetBundle((_a = el == null ? void 0 : el.dataset) == null ? void 0 : _a.id);
