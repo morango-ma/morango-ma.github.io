@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112164920" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112165044" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2712,7 +2712,7 @@ function allTiles() {
   add({ i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 });
   if (vendRole()) {
     const sh = openShift(me.loc || S.pos);
-    return [{ i: "🛍️", l: sh ? "البيع" : "البيع (لاكيس مسدودة)", a: "go", v: "pos", c: 1 }, { i: "✅", l: "الجرد (عاوني فالجرد)", a: "mytasks", c: 5, b: helperPending(me.id).length }, { i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 }];
+    return [{ i: "🛍️", l: sh ? "البيع" : "البيع (لاكيس مسدودة)", a: "go", v: "pos", c: 1 }, { i: "✅", l: "المهام ديالي والجرد", a: "mytasks", c: 5, b: helperPending(me.id).length }, ...frOf(me.loc || S.pos).length ? [{ i: "🌡️", l: "الحرارة ديال الفيترينات", a: "tempin", b: tempDue(me.loc || S.pos).length, c: 4 }] : [], { i: "📸", l: "صور الفيترينة والنظافة", a: "vitshot", c: 3 }, { i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 }];
   }
   return out;
 }
@@ -3315,7 +3315,13 @@ function homeTiles(arr) {
   return `<div class="acts">${T.map((t) => `<button class="act c${t.c}" data-act="${t.a}"${t.v ? ` data-v="${t.v}"` : ""}${t.k ? ` data-k="${t.k}"` : ""}><span class="big">${t.i}</span><b>${t.l}</b>${t.b ? `<span class="badge">${t.b}</span>` : ""}</button>`).join("")}</div>`;
 }
 function alertsFor() {
-  if (vendRole()) return helperPending(me.id).map((x) => `<div class="alert bad" data-act="helpconf" data-id="${x.id}"><div class="lead"><span class="em">🤝</span><div><b>أكدي الجرد ديال النوبة ديال ${esc(x.seller || "")}</b><div class="muted">حسبي معاها وأكدي</div></div></div><span class="tag bad">أكدي</span></div>`);
+  if (vendRole()) {
+    const keep = alertsFor0().filter((h) => /data-act="(tempin|vitshot)"/.test(h));
+    return keep.concat(helperPending(me.id).map((x) => `<div class="alert bad" data-act="helpconf" data-id="${x.id}"><div class="lead"><span class="em">🤝</span><div><b>أكدي الجرد ديال النوبة ديال ${esc(x.seller || "")}</b><div class="muted">حسبي معاها وأكدي</div></div></div><span class="tag bad">أكدي</span></div>`));
+  }
+  return alertsFor0();
+}
+function alertsFor0() {
   const r = me.role, A = [];
   if (canDpSend()) (S.dplans || []).filter((p) => p.date <= today() && p.date >= daysAgo(1) && (dpLate(p) || dpSoon(p))).forEach((p) => A.push(`<div class="alert ${dpLate(p) ? "bad" : "acc"}" data-act="go" data-v="dispatch" data-id="${p.id}${dpLate(p) ? "L" : "S"}"><div class="lead"><span class="em">🚚</span><div><b>${dpLate(p) ? "⏰ متأخر: " : "🔜 قريب: "}الإرسال ديال ${esc(p.time || "")} لـ${esc(LOC[p.pos] || "")}</b><div class="muted">${(p.lines || []).length} منتوج · ${dpState(p) === "part" ? "تصيفط شي" : "ما تصيفط والو"}</div></div></div><span class="tag ${dpLate(p) ? "bad" : "acc"}">صيفط</span></div>`));
   vldOps().forEach((o) => {
@@ -5311,7 +5317,7 @@ function sheetHelpIssues() {
 const posRoleOf = (u) => (u == null ? void 0 : u.posRole) === "v" ? "v" : "c";
 const vendOnly = () => (me == null ? void 0 : me.role) === "seller" && !!openShift(me.loc) && posMode(me.loc) === "v";
 const vendRole = () => (me == null ? void 0 : me.role) === "seller" && posRoleOf(me) === "v";
-const VO_V = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
+const VO_V = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "tempin", "vitshot", "myplan", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
 const VO_OK = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cart", "cust", "custclear", "wawel", "devices", "fs", "logout", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "myplan", "mytasks", "disp", "pbtog", "appquit", "fsoff", "afbnew", "afbopen", "afba", "afbf", "refillreq", "tempin", "vitshot", "helpconf", "order", "ofilter", "neworder", "ost", "oadv", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser"]);
 const posMode = (p) => {
   const sh = openShift(p);
@@ -12043,7 +12049,7 @@ const RMD_MIN = () => {
 };
 function remindTick() {
   try {
-    if (!me || me.role !== "seller" || vendRole() || !RMD_MIN()) return;
+    if (!me || me.role !== "seller" || !RMD_MIN()) return;
     const p = me.loc;
     if (!p || p[0] !== "p" || !openShift(p)) return;
     const k = "bk-rmd-" + me.id;
@@ -16039,11 +16045,11 @@ setInterval(() => {
   if (me.role === "seller") {
     const td = tempDue(me.loc);
     const tk = td.length ? td.some((x) => x.lock) ? "lock" : "due" : "";
-    if (tk && tk !== TEMPLAST && !vendRole()) notify(tk === "lock" ? "🔒" : "🌡️", tk === "lock" ? "البيع تسد: سجلي الحرارة" : "وقت تسجيل الحرارة", "الرقم ديال كل فيترينة مبردة + صورة الشاشة.", "temp" + tk + Date.now(), [() => sheetTemp(me.loc), "🌡️ سجلي دابا"]);
+    if (tk && tk !== TEMPLAST) notify(tk === "lock" ? "🔒" : "🌡️", tk === "lock" ? "البيع تسد: سجلي الحرارة" : "وقت تسجيل الحرارة", "الرقم ديال كل فيترينة مبردة + صورة الشاشة.", "temp" + tk + Date.now(), [() => sheetTemp(me.loc), "🌡️ سجلي دابا"]);
     TEMPLAST = tk;
     const vd = vitDue(me.loc);
     const k = vd ? vd.late ? "late" : "due" : "";
-    if (k && k !== VITLAST && !vendRole()) notify(k === "late" ? "🔒" : "📸", k === "late" ? VC().lock !== false ? "البيع تسد: صوري الفيترينة" : "تأخرتي فتصوير الفيترينة!" : "وقت تصوير الفيترينة", "الفيترينات، الكولوار، والبلاصة ديال الزبناء.", "vit" + k + Date.now(), [() => sheetVitShot(), "📸 صوري دابا"]);
+    if (k && k !== VITLAST) notify(k === "late" ? "🔒" : "📸", k === "late" ? VC().lock !== false ? "البيع تسد: صوري الفيترينة" : "تأخرتي فتصوير الفيترينة!" : "وقت تصوير الفيترينة", "الفيترينات، الكولوار، والبلاصة ديال الزبناء.", "vit" + k + Date.now(), [() => sheetVitShot(), "📸 صوري دابا"]);
     VITLAST = k;
     (S.bons || []).filter((b) => b.byId === me.id && b.status === "open" && bonAge(b) >= BON_LATE).forEach((b) => notify("⏰", (b.name || "الزبون") + " ما خلصش (" + b.no + ")", "هادي " + bonAge(b) + " دقيقة. ردي البال معاه وتنسقي مع لاكيس.", "late" + b.id));
   }
