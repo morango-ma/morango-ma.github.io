@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261111213507" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112130218" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -13726,7 +13726,7 @@ function sheetOrdCat() {
 function sheetOrdSp() {
   recReset();
   openSheet("✨ طلبية خاصة", `${inp("os_t", "🎂 شنو هو؟ (مثلاً: كيكة عيد ميلاد 3 طبقات)", "", "text", 'autocomplete="off"')}${stepper("data-osq", "q", "1", "")}${choice("os_ws", "🏭 شكون غادي يصاوبها؟", WS.map((x) => ({ v: x.id, l: x.name, i: x.i })), "w1", 3)}
-   ${fld("os_note", "📝 التفاصيل (الحجم، الكتابة، الألوان، الذوق...)", '<textarea id="os_note" name="os_note" rows="3"></textarea>')}${photoField("osph", "📷 صور (نموذج...)")}${voiceBox()}
+   ${fld("os_note", "📝 التفاصيل (الحجم، الكتابة، الألوان، الذوق...) · إجبارية", '<textarea id="os_note" name="os_note" rows="3"></textarea>')}${photoField("osph", "📷 صور (نموذج...) · إجبارية")}${voiceBox().replace("سجل بالصوت (اختياري)", "سجل بالصوت · إجباري")}
    <p class="muted" style="margin:0">💰 الثمن كيعطيه المسير قبل ما تدوز الطلبية.</p>${errP}<div class="btns"><button type="button" class="btn" id="os_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
     const t = f.os_t.value.trim();
     if (!t) return ferr("كتب شنو هي الطلبية.");
@@ -13734,7 +13734,8 @@ function sheetOrdSp() {
     const q = num($("input[data-osq]", f).value);
     if (!(q > 0)) return ferr("دخل العدد.");
     const note = f.os_note.value.trim();
-    if (!note && !(PH.osph || []).length && !REC.data) return ferr("زيد التفاصيل: كتابة، صورة ولا صوت.");
+    const miss = [note.length < 3 ? "📝 الكتابة" : "", (PH.osph || []).length ? "" : "📷 الصور", REC.data ? "" : "🎤 الصوت"].filter(Boolean);
+    if (miss.length) return ferr("خاص فالطلبية الخاصة: " + miss.join("، "));
     OD.lines.push({ kind: "sp", title: t, qty: q, ws: f.os_ws.value, note, photos: [...PH.osph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
     recReset();
     sheetNewOrder(true);
