@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112143931" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112145351" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2250,6 +2250,11 @@ async function boot() {
       S.pend = s.docs.map((d) => __spreadValues({ id: d.id }, d.data())).sort((a, b) => b.ts - a.ts);
       render();
     }, err);
+    db.collection("dplans").orderBy("ts", "desc").limit(400).onSnapshot((q) => {
+      S.dplans = q.docs.map((d) => __spreadValues({ id: d.id }, d.data()));
+      render();
+    }, () => {
+    });
     db.collection("logins").orderBy("ts", "desc").limit(600).onSnapshot((q) => {
       S.logins = q.docs.map((d) => __spreadValues({ id: d.id }, d.data()));
       if (S.view === "logins") render();
@@ -2840,7 +2845,7 @@ function draw() {
     if (!(S.kf.step === "msg" && $("#ktext") || S.kf.step === "cand" && $("#cname") || S.kf.step === "idle" && $(".attract"))) $("#main").innerHTML = vKiosk();
     return;
   }
-  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins }[S.view] || vHome;
+  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, dispatch: vDispatch }[S.view] || vHome;
   const y = window.scrollY;
   $("#main").innerHTML = V();
   window.scrollTo(0, y);
@@ -2926,6 +2931,109 @@ async function doSetup() {
     e.textContent = "ما تسجلش الحساب: " + (er.code || er.message);
     e.hidden = false;
   }
+}
+const dpSent = (p) => p.sent || {};
+const dpState = (p) => {
+  const L = p.lines || [];
+  const s = dpSent(p);
+  const done = L.filter((l) => (+s[l.item] || 0) >= l.qty - 1e-9).length;
+  return !done ? "todo" : done === L.length ? "sent" : "part";
+};
+const dpLate = (p) => dpState(p) !== "sent" && (p.date < today() || p.date === today() && (p.time || "99:99") < (/* @__PURE__ */ new Date()).toTimeString().slice(0, 5));
+const dpSoon = (p) => {
+  if (dpState(p) === "sent" || p.date !== today()) return false;
+  const [h, m] = (p.time || "0:0").split(":").map(Number);
+  const t = /* @__PURE__ */ new Date();
+  t.setHours(h, m, 0, 0);
+  return t - Date.now() <= 30 * 6e4;
+};
+const canDp = () => isMgr();
+const canDpSend = () => isMgr() || (me == null ? void 0 : me.role) === "prod";
+function vDispatch() {
+  if (!(isMgr() || me.role === "prod")) return emptyB("🔒", "ما عندكش الحق.");
+  const d = S.dpd || today();
+  const L = (S.dplans || []).filter((p) => p.date === d).sort((a, b) => (a.time || "").localeCompare(b.time || "") || (a.pos || "").localeCompare(b.pos || ""));
+  const days = [[daysAgo(1), "البارح"], [today(), "اليوم"], [daysAgo(-1), "غدا"], [daysAgo(-2), "بعد غدا"]];
+  const card = (p) => {
+    const st = dpState(p), late = dpLate(p), s = dpSent(p);
+    const byWs = {};
+    (p.lines || []).forEach((l) => {
+      var _a;
+      const w = ((_a = S.items[l.item]) == null ? void 0 : _a.ws) || "w1";
+      const left = r2(l.qty - (+s[l.item] || 0));
+      if (left > 0) (byWs[w] = byWs[w] || []).push({ item: l.item, qty: left });
+    });
+    return `<section class="card" style="gap:8px;${late ? "border:2px solid var(--bad,#e02843)" : ""}"><div class="head"><h2 style="margin:0">⏰ ${esc(p.time || "")} · ${LOCI[p.pos] || ""} ${esc(LOC[p.pos] || "")}</h2><span class="tag ${st === "sent" ? "good" : late ? "bad" : st === "part" ? "warn" : "acc"}">${st === "sent" ? "✅ تصيفط" : late ? "⏰ متأخر" : st === "part" ? "🟡 تصيفط شي" : "⏳ باقي"}</span></div>
+     ${(p.lines || []).map((l) => {
+      var _a;
+      const w = ((_a = S.items[l.item]) == null ? void 0 : _a.ws) || "";
+      const sn = +s[l.item] || 0;
+      const av = stockOf(w, l.item);
+      return prow(l.item, `<span class="muted">${esc(LOC[w] || "")} · فالمخزون ${fmt(av)}</span>`, `<b class="num ${sn >= l.qty ? "" : "neg"}">${fmt(sn)} / ${fmt(l.qty)} ${esc(iunit(l.item))}</b>`);
+    }).join("")}
+     ${p.note ? `<p class="muted" style="margin:0">📝 ${esc(p.note)}</p>` : ""}<div class="muted" style="font-size:.85rem">✍️ ${esc(p.by || "")}</div>
+     <div class="btns" style="margin:0">${canDpSend() ? Object.entries(byWs).map(([w, ls]) => `<button type="button" class="btn primary" data-act="dpsend" data-id="${p.id}" data-w="${w}">🚚 صيفط من ${esc(LOC[w] || w)} (${ls.length})</button>`).join("") : ""}${canDp() ? `<button type="button" class="btn" data-act="dpedit" data-id="${p.id}">✏️ بدل</button><button type="button" class="btn danger" data-act="dpdel" data-id="${p.id}">🗑️</button>` : ""}</div></section>`;
+  };
+  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">🗓️ برنامج الإرسال</h2>${canDp() ? '<button type="button" class="btn primary" data-act="dpedit">➕ زيد</button>' : ""}</div>
+   <div class="chips">${days.map(([v, l]) => `<button type="button" class="chip ${d === v ? "on" : ""}" onclick="S.dpd='${v}';render()">${l}</button>`).join("")}<input type="date" value="${d}" onchange="S.dpd=this.value||'${today()}';render()" style="height:40px;border-radius:12px;border:2px solid var(--line);background:var(--surface);padding:0 8px"></div>
+   ${canDp() && !L.length && (S.dplans || []).some((p) => p.date === daysAgo(1) && d >= today()) ? `<button type="button" class="btn block" data-act="dpcopy">📋 نسخ البرنامج ديال البارح لهاد النهار</button>` : ""}</section>
+   ${L.length ? L.map(card).join("") : `<section class="card">${emptyB("🗓️", "ما كاين حتى إرسال مبرمج فهاد النهار.")}</section>`}`;
+}
+function sheetDpEdit(id) {
+  if (!canDp()) return;
+  const p = id ? (S.dplans || []).find((x) => x.id === id) : null;
+  const q = {};
+  ((p == null ? void 0 : p.lines) || []).forEach((l) => q[l.item] = l.qty);
+  const fin = itemsArr().filter((i) => i.kind === "final" && i.active !== false);
+  const G = WS.map((w) => ({ w, L: fin.filter((i) => i.ws === w.id) })).filter((g) => g.L.length);
+  openSheet(p ? "✏️ بدل الإرسال" : "➕ إرسال مبرمج", `${choice("dpp", "🏪 لفين؟", POS.map((x) => ({ v: x.id, l: x.name, i: x.i })), (p == null ? void 0 : p.pos) || "p1", 2)}<div class="two">${inp("dpd", "📅 النهار", (p == null ? void 0 : p.date) || S.dpd || today(), "date")}${inp("dpt", "⏰ الساعة", (p == null ? void 0 : p.time) || "", "time")}</div>
+   ${inp("dpf", "🔍 قلب على منتوج", "", "text", 'autocomplete="off"')}${G.map((g) => `<details class="box" ${g.L.some((i) => q[i.id]) ? "open" : ""}><summary style="cursor:pointer;font-weight:700">${g.w.i} ${esc(g.w.name)} <span class="muted">(${g.L.length})</span></summary>${g.L.map((i) => `<div data-dpr data-n="${esc(i.name.toLowerCase())}">${prow(i.id, `<span class="muted">فالمخزون ${fmt(stockOf(i.ws, i.id))}</span>`, stepper("data-dq", i.id, q[i.id] ? fmt(q[i.id]) : "", i.unit))}</div>`).join("")}</details>`).join("")}
+   ${fld("dpn", "📝 ملاحظة (اختيارية)", `<textarea id="dpn" name="dpn" rows="2">${esc((p == null ? void 0 : p.note) || "")}</textarea>`)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`, async (f) => {
+    const lines = $$("input[data-dq]", f).map((i) => ({ item: i.dataset.dq, qty: num(i.value) })).filter((l) => l.qty > 0);
+    const date = f.dpd.value, time = f.dpt.value;
+    if (!date) return ferr("📅 اختار النهار.");
+    if (!time) return ferr("⏰ اختار الساعة.");
+    if (!lines.length) return ferr("🧺 زيد على الأقل منتوج واحد.");
+    busy(f, true);
+    try {
+      const d = { pos: f.dpp.value, date, time, lines, note: f.dpn.value.trim(), by: meName(), byId: me.id, ts: Date.now() };
+      if (p) await db.doc("dplans/" + p.id).update(d);
+      else await db.collection("dplans").add(__spreadProps(__spreadValues({}, d), { sent: {}, transfers: [] }));
+      S.dpd = date;
+      closeSheet();
+      toast("🗓️ تسجل");
+      render();
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    f.dpf.addEventListener("input", () => {
+      const t = f.dpf.value.trim().toLowerCase();
+      $$("[data-dpr]", f).forEach((r) => {
+        r.style.display = !t || r.dataset.n.includes(t) ? "" : "none";
+      });
+      if (t) $$("details", f).forEach((x) => x.open = true);
+    });
+  });
+}
+function dpSendSheet(id, w) {
+  const p = (S.dplans || []).find((x) => x.id === id);
+  if (!p || !canDpSend()) return;
+  const s = dpSent(p);
+  const lines = (p.lines || []).filter((l) => {
+    var _a;
+    return (((_a = S.items[l.item]) == null ? void 0 : _a.ws) || "w1") === w;
+  }).map((l) => ({ item: l.item, qty: r2(l.qty - (+s[l.item] || 0)) })).filter((l) => l.qty > 0);
+  if (!lines.length) return toast("✅ كلشي تصيفط من هاد الورشة");
+  sheetSend({ ws: w, pos: p.pos, lines, dplan: p.id, by: "برنامج الإرسال ⏰ " + (p.time || "") });
+}
+async function dpMark(pre, lines, tid) {
+  const p = (S.dplans || []).find((x) => x.id === pre.dplan);
+  if (!p) return;
+  const s = __spreadValues({}, dpSent(p));
+  lines.forEach((l) => s[l.item] = r2((+s[l.item] || 0) + l.qty));
+  await db.doc("dplans/" + p.id).update({ sent: s, transfers: [...p.transfers || [], tid], lastSent: Date.now() });
+  p.sent = s;
 }
 function vLogins() {
   if (!(isAdmin() || me.role === "manager")) return vHome();
@@ -3146,6 +3254,7 @@ function homeTiles(arr) {
     if (sh) T.push({ i: "🔒", l: "إغلاق النوبة والجرد", a: "closeshift", c: 6 });
     T.push({ i: "↩️", l: "إرجاع غير المباع", a: "returnpos", c: sh ? 2 : 6 });
   }
+  if (r === "prod" || r === "admin" || r === "manager") T.push({ i: "🗓️", l: "برنامج الإرسال", a: "go", v: "dispatch", c: 4, b: (S.dplans || []).filter((p) => p.date === today() && dpState(p) !== "sent").length });
   if (r === "prod") T.push({ i: "🔧", l: "طلب أدوات العمل (لورشة)", a: "newpreq", k: "tools", c: 2, b: 0 });
   if (r === "ws") T.push({ i: "🔧", l: "طلب أدوات العمل", a: "newpreq", k: "tools", c: 2, b: 0 }, { i: "⚙️", l: "المعدات ديال الورشة", v: "equip", c: 3, b: eqDue(me.loc) ? 1 : 0 });
   if (r === "ws" && consOf(me.loc).length) T.push({ i: "🧷", l: "المواد الثانوية", a: "consuse", v: me.loc, c: 5, b: 0 });
@@ -3174,6 +3283,7 @@ function homeTiles(arr) {
 }
 function alertsFor() {
   const r = me.role, A = [];
+  if (canDpSend()) (S.dplans || []).filter((p) => p.date <= today() && p.date >= daysAgo(1) && (dpLate(p) || dpSoon(p))).forEach((p) => A.push(`<div class="alert ${dpLate(p) ? "bad" : "acc"}" data-act="go" data-v="dispatch" data-id="${p.id}${dpLate(p) ? "L" : "S"}"><div class="lead"><span class="em">🚚</span><div><b>${dpLate(p) ? "⏰ متأخر: " : "🔜 قريب: "}الإرسال ديال ${esc(p.time || "")} لـ${esc(LOC[p.pos] || "")}</b><div class="muted">${(p.lines || []).length} منتوج · ${dpState(p) === "part" ? "تصيفط شي" : "ما تصيفط والو"}</div></div></div><span class="tag ${dpLate(p) ? "bad" : "acc"}">صيفط</span></div>`));
   vldOps().forEach((o) => {
     const t = vldTodo(o), S1 = opSum(o);
     A.push(`<div class="alert ${t === "fix" ? "bad" : "acc"}" data-act="vld" data-id="${o.id}"><div class="lead"><span class="em">${t === "sign" ? "✍️" : t === "fix" ? "⛔" : "✅"}</span><div><b>${t === "sign" ? "خاص الشاف يسني: " : t === "fix" ? "ترفضات: " : "كتسنى الموافقة ديالك: "}${S1.t}</b><div class="muted">${esc(S1.ws)} · ${S1.it} · ${esc(o.by)} ${hm(o.ts)}</div></div></div><span class="tag acc">شوف</span></div>`);
@@ -4668,7 +4778,11 @@ function sheetSend(pre) {
       const d = {};
       lines.forEach((l) => d[l.item] = -l.qty);
       await bumpStock(ws, d);
-      const tid = await newOp({ type: "transfer", ws, pos, lines, photos, driver, driverSig: sig, status: pos === "p2" ? "with_driver" : "sent", posreq: (pre == null ? void 0 : pre.id) || null });
+      const tid = await newOp({ type: "transfer", ws, pos, lines, photos, driver, driverSig: sig, status: pos === "p2" ? "with_driver" : "sent", posreq: (pre == null ? void 0 : pre.id) || null, dplan: (pre == null ? void 0 : pre.dplan) || null });
+      if (pre == null ? void 0 : pre.dplan) try {
+        await dpMark(pre, lines, tid);
+      } catch (_) {
+      }
       if (pre == null ? void 0 : pre.id) await db.doc("posreqs/" + pre.id).update({ status: "done", transferId: tid, doneBy: meName(), doneTs: Date.now(), sent: lines.map((l) => ({ item: l.item, qty: l.qty })) });
       closeSheet();
       toast(pos === "p2" ? "🚚 السلعة مع السائق" : "📦 تصيفطات، البائعة غادي تحسب وتأكد");
@@ -15391,6 +15505,28 @@ const ACT = {
   newpurchase: () => sheetPurchase(),
   opdetail: (el) => sheetOpDetail(el.dataset.id),
   neworder: () => sheetNewOrder(),
+  dpedit: (el) => sheetDpEdit(el.dataset.id),
+  dpsend: (el) => dpSendSheet(el.dataset.id, el.dataset.w),
+  dpdel: async (el) => {
+    const p = (S.dplans || []).find((x) => x.id === el.dataset.id);
+    if (!p || !confirm("🗑️ نمسحو هاد الإرسال المبرمج؟")) return;
+    try {
+      await db.doc("dplans/" + p.id).delete();
+      toast("🗑️ تمسح");
+    } catch (e) {
+      toast(e.message, true);
+    }
+  },
+  dpcopy: async () => {
+    const d = S.dpd || today(), src = (S.dplans || []).filter((p) => p.date === daysAgo(1));
+    if (!src.length || !confirm("📋 ننسخو " + src.length + " إرسال من البارح لـ " + d + "؟")) return;
+    try {
+      for (const p of src) await db.collection("dplans").add({ pos: p.pos, date: d, time: p.time, lines: p.lines, note: p.note || "", by: meName(), byId: me.id, ts: Date.now(), sent: {}, transfers: [] });
+      toast("📋 تنسخ");
+    } catch (e) {
+      toast(e.message, true);
+    }
+  },
   vld: (el) => sheetVld(el.dataset.id),
   pushon: () => pushSub(true),
   ochef: (el) => sheetOrdChef(el.dataset.id, el.dataset.w, el.dataset.d),
