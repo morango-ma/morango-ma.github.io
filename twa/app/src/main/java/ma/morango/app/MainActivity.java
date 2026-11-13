@@ -177,7 +177,7 @@ public class MainActivity extends Activity {
         String cur;
 
         @JavascriptInterface
-        public String version() { return "5"; }
+        public String version() { return "7"; }
 
         /* alert: always vibrate; when the phone is not on silent, also play the alarm sound (loud) */
         @JavascriptInterface
@@ -245,6 +245,16 @@ public class MainActivity extends Activity {
             close();
             try {
                 if (id.startsWith("bt:")) {
+                    if (Build.VERSION.SDK_INT >= 31) {
+                        java.util.ArrayList<String> miss = new java.util.ArrayList<>();
+                        if (checkSelfPermission("android.permission.BLUETOOTH_CONNECT") != PackageManager.PERMISSION_GRANTED) miss.add("android.permission.BLUETOOTH_CONNECT");
+                        if (checkSelfPermission("android.permission.BLUETOOTH_SCAN") != PackageManager.PERMISSION_GRANTED) miss.add("android.permission.BLUETOOTH_SCAN");
+                        if (!miss.isEmpty()) {
+                            final String[] arr = miss.toArray(new String[0]);
+                            runOnUiThread(() -> requestPermissions(arr, REQ_PERM));
+                            return "عطي الإذن «Appareils à proximité» (الأجهزة القريبة) وعاود اختار الطابعة";
+                        }
+                    }
                     BluetoothAdapter ad = BluetoothAdapter.getDefaultAdapter();
                     if (ad == null) return "ما كاينش Bluetooth فهاد الجهاز";
                     if (!ad.isEnabled()) return "شعل Bluetooth";
