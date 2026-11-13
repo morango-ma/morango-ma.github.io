@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113221545" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113221937" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -5740,16 +5740,17 @@ function avisStats(L) {
   return o;
 }
 function vCam() {
-  var _a, _b, _c, _d;
+  var _a, _b, _c, _d, _e, _f;
   if (!isMgr()) return emptyB("🔒", "ما عندكش الحق.");
   const d = S.camD || today();
-  if (((_a = S.camL) == null ? void 0 : _a.d) !== d && !((_b = S.camL) == null ? void 0 : _b.busy)) {
-    S.camL = { d, busy: true, L: [] };
+  if ((((_a = S.camL) == null ? void 0 : _a.d) !== d || Date.now() - (((_b = S.camL) == null ? void 0 : _b.t) || 0) > 15e3) && !((_c = S.camL) == null ? void 0 : _c.busy)) {
+    const keep = ((_d = S.camL) == null ? void 0 : _d.d) === d ? S.camL.L : [];
+    S.camL = { d, busy: !keep.length, L: keep, t: Date.now(), ld: 1 };
     db.collection("camclips").where("date", "==", d).get().then((q) => {
-      S.camL = { d, L: q.docs.map((x) => __spreadValues({ id: x.id }, x.data())).sort((a, b) => (b.ts || 0) - (a.ts || 0)) };
+      S.camL = { d, t: Date.now(), L: q.docs.map((x) => __spreadValues({ id: x.id }, x.data())).sort((a, b) => (b.ts || 0) - (a.ts || 0)) };
       render();
     }).catch(() => {
-      S.camL = { d, L: [] };
+      S.camL = { d, t: Date.now(), L: keep };
       render();
     });
     if (isAdmin() && !S.camGc) {
@@ -5768,12 +5769,12 @@ function vCam() {
       });
     }
   }
-  const L = ((_c = S.camL) == null ? void 0 : _c.L) || [];
+  const L = ((_e = S.camL) == null ? void 0 : _e.L) || [];
   const days = [[today(), "اليوم"], [daysAgo(1), "البارح"], [daysAgo(2), "قبل البارح"]];
-  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">📹 فيديوهات لاكيس</h2><span class="tag">${L.length}</span></div>
+  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">📹 فيديوهات لاكيس</h2><span class="tag">${L.length}</span><button type="button" class="btn small" onclick="S.camL=null;render()">🔄</button></div>
    <div class="chips">${days.map(([v, l]) => `<button type="button" class="chip ${d === v ? "on" : ""}" onclick="S.camD='${v}';render()">${l}</button>`).join("")}<input type="date" value="${d}" onchange="S.camD=this.value||'${today()}';render()" style="height:40px;border-radius:12px;border:2px solid var(--line);background:var(--surface);padding:0 8px"></div>
    <p class="muted" style="margin:0">كل مرة كتحل لاكيس ديال الفلوس كيتسجل فيديو. كيبقاو 21 يوم ومن بعد كيتمسحو بوحدهم.</p></section>
-   <section class="card" style="gap:4px">${((_d = S.camL) == null ? void 0 : _d.busy) ? emptyB("⏳", "كيتحمل…") : L.length ? L.map((c) => `<div class="prow"><div><b>⏰ ${hm(c.ts)} · ${esc(LOC[c.pos] || c.pos || "")}</b><div class="muted">${esc(c.reason || "")}${c.ref ? " · 🧾 " + esc(c.ref) : ""} · 👤 ${esc(c.by || "")} · ${Math.round((c.size || 0) / 1024)} KB</div></div><button type="button" class="btn small" onclick="camPlay('${c.id}')">▶️ شوف</button></div>`).join("") : emptyB("📹", "ما كاين حتى فيديو فهاد النهار.")}</section>`;
+   <section class="card" style="gap:4px">${((_f = S.camL) == null ? void 0 : _f.busy) ? emptyB("⏳", "كيتحمل…") : L.length ? L.map((c) => `<div class="prow"><div><b>⏰ ${hm(c.ts)} · ${esc(LOC[c.pos] || c.pos || "")}</b><div class="muted">${esc(c.reason || "")}${c.ref ? " · 🧾 " + esc(c.ref) : ""} · 👤 ${esc(c.by || "")} · ${Math.round((c.size || 0) / 1024)} KB</div></div><button type="button" class="btn small" onclick="camPlay('${c.id}')">▶️ شوف</button></div>`).join("") : emptyB("📹", "ما كاين حتى فيديو فهاد النهار.")}</section>`;
 }
 async function camPlay(id) {
   var _a;
