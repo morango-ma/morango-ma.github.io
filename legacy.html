@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112235841" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113001445" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -9651,7 +9651,7 @@ function sheetXfer() {
   if (!mine.length) return;
   const src0 = mine[0];
   openSheet(
-    "🔄 تحويل مواد لورشة أخرى",
+    "🔄 تحويل لورشة أخرى (مواد ولا منتوجات)",
     `${choice("xfs", "من الورشة", WS.filter((w) => mine.includes(w.id)).map((x) => ({ v: x.id, l: x.name, i: x.i })), src0, 3)}${choice("xft", "لـ الورشة", WS.map((x) => ({ v: x.id, l: x.name, i: x.i })), (_a = WS.find((w) => w.id !== src0)) == null ? void 0 : _a.id, 3)}
    <input id="xfq" class="big-in" type="search" placeholder="🔍 قلب على مادة..." autocomplete="off"><div id="xfl"></div>
    ${fld("xfn", "📝 ملاحظة (اختيارية)", '<input id="xfn" name="xfn" class="big-in" placeholder="مثلاً: سلف حتى يوصل الشرا">')}${errP}<button class="btn primary block" type="submit">🔄 صيفط التحويل</button>`,
@@ -9695,7 +9695,7 @@ function sheetXfer() {
         const s2 = f.xfs.value;
         if (s2 === src) return;
         src = s2;
-        const L = itemsArr().filter((i) => isBought(i.kind) && stockOf(s2, i.id) > 0);
+        const L = itemsArr().filter((i) => !i.bundle && !i.blend && stockOf(s2, i.id) > 0).sort((a, b) => (isBought(a.kind) ? 1 : 0) - (isBought(b.kind) ? 1 : 0));
         $("#xfl", f).innerHTML = L.length ? L.map((i) => prow(i.id, "فـ" + esc(LOC[s2]) + ": " + qtyTxt(stockOf(s2, i.id), i.unit), stepper("data-xq", i.id, "", i.unit))).join("") : emptyB("📦", "ما كاين حتى مادة فالمخزون ديال هاد الورشة.");
       };
       f.addEventListener("click", (e) => {
