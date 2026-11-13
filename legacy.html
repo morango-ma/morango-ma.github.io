@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113210121" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113211218" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2418,6 +2418,27 @@ async function boot() {
     db.collection("bons").where("date", ">=", daysAgo(14)).onSnapshot((q) => {
       const old = S.bons;
       S.bons = q.docs.map((d) => __spreadValues({ id: d.id }, d.data())).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      try {
+        Object.entries(S.bonPay || {}).forEach(([pp, bid]) => {
+          const b = S.bons.find((x) => x.id === bid);
+          if (!b) return;
+          S.bonSeen = S.bonSeen || {};
+          const k = bid + ":" + (b.editTs || 0);
+          if (b.editTs && S.bonSeen[pp] && S.bonSeen[pp] !== k && b.status === "open") {
+            S.cart[pp] = {};
+            b.lines.forEach((l) => S.cart[pp][l.item] = (S.cart[pp][l.item] || 0) + l.qty);
+            S.packEdit[pp] = __spreadValues({}, b.pack || {});
+            toast("✏️ البائعة بدلات البون ديال " + (b.name || "") + " · المجموع الجديد " + money(b.total));
+            try {
+              if (!$("#sheet").hidden) sheetCart();
+            } catch (_) {
+            }
+          }
+          S.bonSeen[pp] = k;
+        });
+      } catch (_) {
+      }
+      ;
       try {
         if (old && (me == null ? void 0 : me.role) === "seller" && openShift(me.loc) && posMode(me.loc) === "c") {
           const om = new Map(old.map((b) => [b.id, b]));
@@ -5563,8 +5584,8 @@ function sheetHelpIssues() {
 const posRoleOf = (u) => (u == null ? void 0 : u.posRole) === "v" ? "v" : "c";
 const vendOnly = () => (me == null ? void 0 : me.role) === "seller" && !!openShift(me.loc) && posMode(me.loc) === "v";
 const vendRole = () => (me == null ? void 0 : me.role) === "seller" && posRoleOf(me) === "v";
-const VO_V = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "tempin", "vitshot", "myplan", "neworder", "order", "ofilter", "media", "ocancel", "oslip", "transfer", "receive", "rcvlist", "tasting", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
-const VO_OK = /* @__PURE__ */ new Set(["add", "cdel", "cclear", "cart", "cust", "custclear", "wawel", "devices", "fs", "logout", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "myplan", "mytasks", "disp", "pbtog", "appquit", "fsoff", "afbnew", "afbopen", "afba", "afbf", "refillreq", "tempin", "vitshot", "helpconf", "order", "ofilter", "neworder", "ost", "oadv", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser"]);
+const VO_V = /* @__PURE__ */ new Set(["bonedit", "add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "tempin", "vitshot", "myplan", "neworder", "order", "ofilter", "media", "ocancel", "oslip", "transfer", "receive", "rcvlist", "tasting", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
+const VO_OK = /* @__PURE__ */ new Set(["bonedit", "add", "cdel", "cclear", "cart", "cust", "custclear", "wawel", "devices", "fs", "logout", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "myplan", "mytasks", "disp", "pbtog", "appquit", "fsoff", "afbnew", "afbopen", "afba", "afbf", "refillreq", "tempin", "vitshot", "helpconf", "order", "ofilter", "neworder", "ost", "oadv", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser"]);
 const posMode = (p) => {
   const sh = openShift(p);
   if (!sh || !me) return "c";
@@ -5704,8 +5725,10 @@ function vAvis() {
    ${bads.length ? `<section class="card" style="gap:6px"><h2 style="margin:0">😞 الآراء السلبية</h2>${bads.map((b) => `<div class="prow"><span>${esc(b.by || "")} · ${esc(b.avis.why || "")}</span><span class="muted">${esc(b.date || "")} ${hm(b.ts)} · ${esc(b.no || "")}</span></div>`).join("")}</section>` : ""}`;
 }
 async function bonShow(b) {
-  openSheet("✅ تصيفطات لاكيس", `<div class="receipt" style="text-align:center"><div class="muted">سمية الزبون</div><div class="disp" style="font-size:2.2rem;font-weight:800">👤 ${esc(b.name || "—")}</div><div class="muted">${esc(b.no)}</div><div class="tot"><span>المجموع</span><span>${money(b.total)}</span></div></div>
-   <p class="muted" style="margin:0">🗣️ قولي للزبون: «سير لاكيس، قول ليهم سميتك (<b>${esc(b.name || "")}</b>)، خلص وخود السلعة ديالك». 📦 حطي السلعة ديالو فلاكيس.</p>
+  openSheet("✅ تصيفطات لاكيس", `<div class="receipt" style="text-align:center"><div class="muted">سمية الزبون</div><div class="disp" style="font-size:2.2rem;font-weight:800">👤 ${esc(b.name || "—")}</div><div class="muted">${esc(b.no)}</div></div>
+   <div style="text-align:center;border:3px solid var(--acc,#e02843);border-radius:18px;padding:12px"><div style="font-weight:700">💰 خاصو يخلص · À payer</div><div class="disp num" style="font-size:3rem;font-weight:900;line-height:1.1">${money(b.total)}</div></div>
+   <p style="margin:0;font-weight:600">🗣️ قولي للزبون: «المجموع ديالك هو <b>${money(b.total)}</b>. سير لاكيس، قول ليهم سميتك (<b>${esc(b.name || "")}</b>)، خلص وخود السلعة ديالك». 📦 حطي السلعة ديالو فلاكيس.</p>
+   ${b.status === "open" && b.byId === (me == null ? void 0 : me.id) ? `<button type="button" class="btn block" data-act="bonedit" data-id="${b.id}">✏️ بدل البون (قبل ما يخلص)</button>` : ""}
    <button type="button" class="btn primary block" data-act="close">🛍️ زبون جديد</button>`);
 }
 function sheetBonNew() {
@@ -5716,14 +5739,15 @@ function sheetBonNew() {
   const sh = openShift(p);
   if (!sh) return;
   const total = r2(cartTotal(p));
-  openSheet("📝 بون الكوموند", `<div>${ids.map((id) => {
+  const ED = (S.bonEdit || {})[p];
+  openSheet(ED ? "✏️ تبديل البون " + ED.no : "📝 بون الكوموند", `<div>${ids.map((id) => {
     var _a2;
     return prow(id, money((_a2 = S.items[id]) == null ? void 0 : _a2.price) + " للوحدة", cartQty(id, c[id]));
   }).join("")}</div>${custChip(p)}
    <div class="receipt"><div class="tot"><span>المجموع</span><span>${money(total)}</span></div></div>
-   ${fld("bname", "👤 سمية الزبون *", `<input id="bname" name="bname" class="big-in" autocomplete="off" maxlength="40" value="${esc(((_a = S.cust[p]) == null ? void 0 : _a.name) || "")}" placeholder="سولي الزبون على سميتو" style="font-size:1.3rem;font-weight:700">`)}
+   ${fld("bname", "👤 سمية الزبون *", `<input id="bname" name="bname" class="big-in" autocomplete="off" maxlength="40" value="${esc((ED == null ? void 0 : ED.name) || ((_a = S.cust[p]) == null ? void 0 : _a.name) || "")}" placeholder="سولي الزبون على سميتو" style="font-size:1.3rem;font-weight:700">`)}
    <p class="muted" style="margin:0">🛍️ نتي «فوندوز»: ما كتشديش الفلوس وما كتعطيش للزبون حتى ورقة. سولي على سميتو وكتبيها هنا. الزبون كيمشي لاكيس، كيقول سميتو، كيخلص وكياخد السلعة.</p>${errP}
-   <div class="btns"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button><button class="btn primary paybtn" type="submit">📝 صيفط الكوموند لاكيس</button></div>`, async (f) => {
+   <div class="btns">${ED ? `<button type="button" class="btn" onclick="delete S.bonEdit['${p}'];S.cart['${p}']={};closeSheet();render()">↩️ لغي التبديل</button>` : '<button type="button" class="btn" data-act="cclear">🗑️ فرغ</button>'}<button class="btn primary paybtn" type="submit">${ED ? "✅ حفظ التبديل" : "📝 صيفط الكوموند لاكيس"}</button></div>`, async (f) => {
     const bname = f.bname.value.trim().replace(/\s+/g, " ");
     if (bname.length < 2) {
       f.bname.focus();
@@ -5732,6 +5756,33 @@ function sheetBonNew() {
     const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: unitPx(id, c[id]) }));
     const tot = r2(lines.reduce((a, l) => a + l.qty * l.price, 0));
     const pk = packEditOf(p), cu = S.cust[p];
+    if (ED) {
+      busy(f, true);
+      try {
+        const d = (await db.doc("bons/" + ED.id).get()).data() || {};
+        if (d.status !== "open") {
+          delete S.bonEdit[p];
+          throw new Error("هاد البون " + (d.status === "paid" ? "تخلص" : "ما بقاش مفتوح") + "، ما يمكنش يتبدل");
+        }
+        const up = { name: bname, lines, total: tot, pack: pk, editTs: Date.now(), edits: [...d.edits || [], { ts: Date.now(), by: meName(), before: { lines: d.lines, total: d.total, name: d.name } }] };
+        if (cu) up.cust = { id: cu.id, name: cu.name };
+        await db.doc("bons/" + ED.id).update(up);
+        const b = __spreadProps(__spreadValues(__spreadValues({}, d), up), { id: ED.id });
+        const L = S.bons || [];
+        const k = L.findIndex((x) => x.id === ED.id);
+        if (k >= 0) L[k] = b;
+        delete S.bonEdit[p];
+        S.cart[p] = {};
+        S.packEdit[p] = {};
+        delete S.cust[p];
+        render();
+        bonShow(b);
+        toast("✏️ البون تبدل · المجموع الجديد " + money(tot));
+      } catch (e) {
+        fail(f, e);
+      }
+      return;
+    }
     sheetAvis(meName(), async (av) => {
       let sq = null;
       try {
@@ -5763,6 +5814,8 @@ async function bonPay(id) {
   S.packEdit[p] = __spreadValues({}, b.pack || {});
   S.bonPay = S.bonPay || {};
   S.bonPay[p] = b.id;
+  S.bonSeen = S.bonSeen || {};
+  S.bonSeen[p] = b.id + ":" + (b.editTs || 0);
   if (b.cust) {
     try {
       const cs = await db.doc("clients/" + b.cust.id).get();
@@ -5790,6 +5843,30 @@ function sheetBons(p) {
     });
   });
 }
+async function bonEdit(id) {
+  const b = (S.bons || []).find((x) => x.id === id);
+  if (!b || b.status !== "open" || b.byId !== me.id) return toast("ما يمكنش تبدلي هاد البون", true);
+  const p = b.pos;
+  if (Object.values(cartOf(p)).some((q) => q > 0) && !confirm("كاين شي سلعة فالسلة دابا، غادي تتمسح. نكملو؟")) return;
+  S.cart[p] = {};
+  b.lines.forEach((l) => S.cart[p][l.item] = (S.cart[p][l.item] || 0) + l.qty);
+  S.packEdit[p] = __spreadValues({}, b.pack || {});
+  S.bonEdit = S.bonEdit || {};
+  S.bonEdit[p] = { id: b.id, no: b.no, name: b.name };
+  delete S.cust[p];
+  if (b.cust) {
+    try {
+      const cs = await db.doc("clients/" + b.cust.id).get();
+      if (cs.exists) S.cust[p] = __spreadValues({ id: b.cust.id }, cs.data());
+    } catch (_) {
+    }
+  }
+  S.pos = p;
+  S.view = "pos";
+  closeSheet();
+  render();
+  toast("✏️ بدلي السلعة (زيدي ولا نقصي) ومن بعد ضغطي «صيفط» باش يتسجل التبديل");
+}
 async function bonCancel(id) {
   const b = (S.bons || []).find((x) => x.id === id);
   if (!b || b.status !== "open") return;
@@ -5812,7 +5889,7 @@ function bonsCard(p) {
      ${late.length ? `<div class="alert bad" style="cursor:default"><div class="lead"><span class="em">⏰</span><div><b>${late.length} زبون ما خلصش من ${BON_LATE} دقايق ولا كثر</b><div class="muted">ردي البال مع الزبون وتنسقي مع لاكيس</div></div></div></div>` : ""}
      ${mine.length ? mine.slice(0, 15).map((b) => {
       const st = b.status === "paid" ? ["good", "✅ خلص"] : b.status === "open" ? [bonAge(b) >= BON_LATE ? "bad" : "warn", "⏳ ما زال · " + bonAge(b) + " د"] : b.status === "cancel" ? ["", "🚫 تلغى"] : ["bad", "❌ ما خلصش"];
-      return `<div class="prow"><div><b>👤 ${esc(b.name || "")} · ${esc(b.no)} · ${money(b.total)}</b><div class="muted">${hm(b.ts)}${b.status === "paid" ? " · خلص " + hm(b.paidTs) + " عند " + esc(b.paidBy || "") : ""}${b.cust ? " · ⭐ " + esc(b.cust.name) : ""}</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span class="tag ${st[0]}">${st[1]}</span>${b.status === "open" ? `<button type="button" class="btn small" data-act="bonnudge" data-id="${b.id}">🔔 نبه لاكيس</button><button type="button" class="btn small" data-act="bonshow" data-id="${b.id}">👁️</button><button type="button" class="btn small" data-act="boncancel" data-id="${b.id}">🚫</button>` : ""}</div></div>`;
+      return `<div class="prow"><div><b>👤 ${esc(b.name || "")} · ${esc(b.no)} · ${money(b.total)}</b><div class="muted">${hm(b.ts)}${b.status === "paid" ? " · خلص " + hm(b.paidTs) + " عند " + esc(b.paidBy || "") : ""}${b.cust ? " · ⭐ " + esc(b.cust.name) : ""}</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span class="tag ${st[0]}">${st[1]}</span>${b.status === "open" ? `<button type="button" class="btn small" data-act="bonnudge" data-id="${b.id}">🔔 نبه لاكيس</button><button type="button" class="btn small" data-act="bonedit" data-id="${b.id}">✏️ بدل</button><button type="button" class="btn small" data-act="bonshow" data-id="${b.id}">👁️</button><button type="button" class="btn small" data-act="boncancel" data-id="${b.id}">🚫</button>` : ""}</div></div>`;
     }).join("") : '<p class="muted" style="margin:0">ملي تخرجي بون كيبان هنا: واش الزبون خلص ولا لا.</p>'}</section>`;
   }
   const L = bonsOf(p, "open");
@@ -16622,6 +16699,7 @@ const ACT = {
     if (b && !await bonPrint(b)) toast("ربطي الطابعة من 🖨️ الأجهزة", true);
   },
   boncancel: (el) => bonCancel(el.dataset.id),
+  bonedit: (el) => bonEdit(el.dataset.id),
   bonnudge: async (el) => {
     try {
       await db.doc("bons/" + el.dataset.id).update({ nudge: Date.now() });
