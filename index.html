@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113213604"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113214134"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1820,6 +1820,34 @@ let LOGOIMG=null,LOGOSRC='';async function receiptLogo(){const src=(S.cfg||{}).l
 const receiptHtml=(sh,t)=>`<div class="receipt">${(S.cfg||{}).logo?`<div style="text-align:center"><img src="${esc(S.cfg.logo)}" alt="" style="max-width:140px;max-height:80px;object-fit:contain"></div>`:''}<div class="head"><b class="disp">${esc((S.cfg||{}).title||'Morango')} · ${esc(LOC[sh.pos])}</b><span class="muted num">وصل رقم ${esc(rNo(t))}</span></div><div class="muted num">🕒 ${dhms(t.ts)} · ${esc(sh.seller)}</div>
   <div class="tw"><table class="t"><tbody>${t.lines.map(l=>`<tr><td>${ico(l.item)} ${esc(iname(l.item))}</td><td>${rQtyU(l)} × ${money(l.price)}</td><td class="num">${money(l.qty*l.price)}</td></tr>`).join('')}</tbody></table></div>${t.discount?`<div class="muted num">خصم الوفاء −${money(t.discount)}</div>`:''}<div class="tot"><span>المجموع</span><span>${money(t.total)}</span></div>${t.client?`<div class="muted">⭐ ${esc(t.client.name)} · +${fmt(t.client.earned)} نقطة · الرصيد ${fmt(t.client.balance)}</div>`:''}${t.given!=null?`<div class="prow num" style="border:0;padding:2px 0"><span>💵 عطى الزبون</span><b>${money(t.given)}</b></div><div class="prow num" style="border:0;padding:2px 0"><span>🪙 الصرف اللي رجع ليه</span><b>${money(t.change)}</b></div>`:''}<div class="muted">💵 كاش · شكراً على الزيارة 💛</div></div>`;
 /* ---------- receipt image for thermal printers (58mm = 384px, 80mm = 576px wide) ---------- */
+/* compact QR encoder (byte mode, ECC level M, auto version 1-40, best mask) */
+const QR=(()=>{const ECC_M=[-1,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28];
+ const BLK_M=[-1,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49];
+ const rawMods=v=>{let r=(16*v+128)*v+64;if(v>=2){const n=Math.floor(v/7)+2;r-=(25*n-10)*n-55;if(v>=7)r-=36}return r};
+ const dataCw=v=>Math.floor(rawMods(v)/8)-ECC_M[v]*BLK_M[v];
+ const gfMul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x}return z&255};
+ const rsDiv=deg=>{const r=new Array(deg).fill(0);r[deg-1]=1;let root=1;for(let i=0;i<deg;i++){for(let j=0;j<r.length;j++){r[j]=gfMul(r[j],root);if(j+1<r.length)r[j]^=r[j+1]}root=gfMul(root,2)}return r};
+ const rsRem=(data,div)=>{const r=div.map(()=>0);for(const b of data){const f=b^r.shift();r.push(0);div.forEach((c,i)=>r[i]^=gfMul(c,f))}return r};
+ const align=v=>{if(v===1)return[];const n=Math.floor(v/7)+2;const step=v===32?26:Math.ceil((v*4+4)/(n*2-2))*2;const r=[6];for(let p=v*4+10;r.length<n;p-=step)r.splice(1,0,p);return r};
+ return function(text){const bytes=[...new TextEncoder().encode(text)];let v=1;for(;v<=40;v++){const cc=v<10?8:16;if(4+cc+bytes.length*8<=dataCw(v)*8)break}if(v>40)throw new Error('QR too long');
+  const bits=[];const ap=(x,n)=>{for(let i=n-1;i>=0;i--)bits.push((x>>>i)&1)};ap(4,4);ap(bytes.length,v<10?8:16);bytes.forEach(b=>ap(b,8));const cap=dataCw(v)*8;ap(0,Math.min(4,cap-bits.length));ap(0,(8-bits.length%8)%8);for(let p=0xEC;bits.length<cap;p^=0xEC^0x11)ap(p,8);
+  const dw=[];for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=b<<1|bits[i+j];dw.push(b)}
+  const nb=BLK_M[v],el=ECC_M[v],raw=Math.floor(rawMods(v)/8),ns=nb-raw%nb,sl=Math.floor(raw/nb);const div=rsDiv(el);const blocks=[];for(let i=0,k=0;i<nb;i++){const d=dw.slice(k,k+sl-el+(i<ns?0:1));k+=d.length;const e=rsRem(d,div);if(i<ns)d.push(0);blocks.push(d.concat(e))}
+  const all=[];for(let i=0;i<blocks[0].length;i++)blocks.forEach((b,j)=>{if(i!==sl-el||j>=ns)all.push(b[i])});
+  const N=v*4+17;const M=[...Array(N)].map(()=>new Array(N).fill(false)),F=[...Array(N)].map(()=>new Array(N).fill(false));const set=(x,y,d)=>{M[y][x]=d;F[y][x]=true};
+  for(let i=0;i<N;i++){set(6,i,i%2===0);set(i,6,i%2===0)}
+  const finder=(x,y)=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy)),xx=x+dx,yy=y+dy;if(xx>=0&&xx<N&&yy>=0&&yy<N)set(xx,yy,d!==2&&d!==4)}};finder(3,3);finder(N-4,3);finder(3,N-4);
+  const A=align(v);A.forEach((a,i)=>A.forEach((b,j)=>{if(!((i===0&&j===0)||(i===0&&j===A.length-1)||(i===A.length-1&&j===0)))for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)set(a+dx,b+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1)}));
+  const fmt=mask=>{const data=0<<3|mask;/* M = 00 */let r=data;for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);const b=(data<<10|r)^0x5412;const g=i=>((b>>>i)&1)===1;
+   for(let i=0;i<=5;i++)set(8,i,g(i));set(8,7,g(6));set(8,8,g(7));set(7,8,g(8));for(let i=9;i<15;i++)set(14-i,8,g(i));for(let i=0;i<8;i++)set(N-1-i,8,g(i));for(let i=8;i<15;i++)set(8,N-15+i,g(i));set(8,N-8,true)};
+  fmt(0);if(v>=7){let r=v;for(let i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1F25);const b=v<<12|r;for(let i=0;i<18;i++){const bit=((b>>>i)&1)===1,a=N-11+i%3,c=Math.floor(i/3);set(a,c,bit);set(c,a,bit)}}
+  let i=0;for(let r=N-1;r>=1;r-=2){if(r===6)r=5;for(let vt=0;vt<N;vt++)for(let j=0;j<2;j++){const x=r-j,up=((r+1)&2)===0,y=up?N-1-vt:vt;if(!F[y][x]&&i<all.length*8){M[y][x]=((all[i>>>3]>>>(7-(i&7)))&1)===1;i++}}}
+  const MF=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,x=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+  const apply=m=>{for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(!F[y][x]&&MF[m](x,y))M[y][x]=!M[y][x]};
+  const pen=()=>{let p=0;for(let y=0;y<N;y++){let run=1;for(let x=1;x<=N;x++){if(x<N&&M[y][x]===M[y][x-1])run++;else{if(run>=5)p+=run-2;run=1}}}for(let x=0;x<N;x++){let run=1;for(let y=1;y<=N;y++){if(y<N&&M[y][x]===M[y-1][x])run++;else{if(run>=5)p+=run-2;run=1}}}
+   for(let y=0;y<N-1;y++)for(let x=0;x<N-1;x++){const c=M[y][x];if(c===M[y][x+1]&&c===M[y+1][x]&&c===M[y+1][x+1])p+=3}let dark=0;M.forEach(r=>r.forEach(c=>dark+=c));p+=Math.floor(Math.abs(dark*20-N*N*10)/(N*N))*10;return p};
+  let best=0,bp=1e9;for(let m=0;m<8;m++){apply(m);fmt(m);const p=pen();if(p<bp){bp=p;best=m}apply(m)}apply(best);fmt(best);return M}})();
+function qrCanvas(txt,px){const M=QR(txt),N=M.length,q=2,m=Math.max(2,Math.floor(px/(N+2*q)));const cv=document.createElement('canvas');cv.width=cv.height=(N+2*q)*m;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.fillStyle='#000';for(let y=0;y<N;y++)for(let z=0;z<N;z++)if(M[y][z])x.fillRect((z+q)*m,(y+q)*m,m,m);return cv}
 /* Code 128-B barcode of the receipt number (the scanner on the till reads it back) */
 const C128='212222,222122,222221,121223,121322,131222,122213,122312,132212,221213,221312,231212,112232,122132,122231,113222,123122,123221,223211,221132,221231,213212,223112,312131,311222,321122,321221,312212,322112,322211,212123,212321,232121,111323,131123,131321,112313,132113,132311,211313,231113,231311,112133,112331,132131,113123,113321,133121,313121,211331,231131,213113,213311,213131,311123,311321,331121,312113,312311,332111,314111,221411,431111,111224,111422,121124,121421,141122,141221,112214,112412,122114,122411,142112,142211,241211,221114,413111,241112,134111,111242,121142,121241,114212,124112,124211,411212,421112,421211,212141,214121,412121,111143,111341,131141,114113,114311,411113,411311,113141,114131,311141,411131,211412,211214,211232,2331112'.split(',');
 function barcodeCanvas(txt,maxW,h){txt=String(txt).replace(/[^\x20-\x7e]/g,'');const codes=[104];for(const ch of txt)codes.push(ch.charCodeAt(0)-32);let sum=104;for(let i=1;i<codes.length;i++)sum+=codes[i]*i;codes.push(sum%103,106);
@@ -1851,7 +1879,7 @@ async function receiptBlob(sh,t,copy){
   if(t.given!=null){pair('عطى الزبون',money(t.given),Math.round(F*.95),true);pair('الصرف اللي رجع',money(t.change),Math.round(F*.95),true)}
   pair('طريقة الأداء','كاش',Math.round(F*.8));
   if(t.client){line();center('⭐ '+t.client.name,Math.round(F*.85),true);pair('النقاط ديال اليوم','+'+fmt(t.client.earned),Math.round(F*.8));pair('الرصيد ديالك',fmt(t.client.balance)+' نقطة',Math.round(F*.8),true)}line();gap(4);center(cfg.footer||'شكراً على الزيارة',Math.round(F*.9),true);gap(P)}
-  {const code=String(t.no||t.num||t.n||'').trim();if(code&&/^[\x20-\x7e]+$/.test(code)){const bc=barcodeCanvas(code,W-2*P,W>400?90:70);R.push({k:'g',h:8});R.push({k:'img',im:bc,w:bc.width,h:bc.height});R.push({k:'c',t:code,sz:Math.round(F*.8),b:true});R.push({k:'g',h:P})}}
+  {const code=String(t.no||t.num||t.n||'').trim();if(code&&/^[\x20-\x7e]+$/.test(code)){const bc=barcodeCanvas(code,W-2*P,W>400?90:70);R.push({k:'g',h:8});try{const qc=qrCanvas(code,W>400?200:160);R.push({k:'img',im:qc,w:qc.width,h:qc.height});R.push({k:'g',h:6})}catch(_){}R.push({k:'img',im:bc,w:bc.width,h:bc.height});R.push({k:'c',t:code,sz:Math.round(F*.8),b:true});R.push({k:'g',h:P})}}
   const lh=r=>r.k==='l'?20:r.k==='g'?r.h:r.k==='img'?r.h:Math.round(r.sz*1.45);let H=P;R.forEach(r=>H+=lh(r));
   cv.width=W;cv.height=H;x.fillStyle='#FFFFFF';x.fillRect(0,0,W,H);x.fillStyle='#000000';x.strokeStyle='#000000';x.textBaseline='middle';let y=P;
   for(const r of R){const h=lh(r);const mid=y+h/2;
