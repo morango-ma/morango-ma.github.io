@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113223038" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113225300" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4733,8 +4733,73 @@ function phThumbs(k) {
 }
 const photoField = (key, label = "صور (دليل)", cap = "environment") => {
   PH[key] = [];
-  return `<div class="field"><label class="photo-btn"><span class="em">📷</span><span>${label}</span><input type="file" accept="image/*" capture="${cap}" ${cap === "user" ? "" : "multiple"} data-photos="${key}"></label><div class="thumbs" id="th-${key}"></div></div>`;
+  return `<div class="field"><label class="photo-btn"><span class="em">📷</span><span>${label}</span><input type="file" accept="image/*" capture="${cap}" ${cap === "user" ? "" : "multiple"} data-photos="${key}"></label><button type="button" class="btn small" data-camph="${key}" style="margin-top:6px">🎥 صور بالكاميرا (حتى USB)</button><div class="thumbs" id="th-${key}"></div></div>`;
 };
+async function camSnap(key, many) {
+  var _a, _b, _c, _d;
+  let st = null;
+  const devs = (await ((_b = (_a = navigator.mediaDevices) == null ? void 0 : _a.enumerateDevices) == null ? void 0 : _b.call(_a).catch(() => [])) || []).filter((d) => d.kind === "videoinput");
+  let cur = camCfg().dev && devs.some((d) => d.deviceId === camCfg().dev) ? camCfg().dev : ((_c = devs[0]) == null ? void 0 : _c.deviceId) || "";
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483002;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px";
+  ov.innerHTML = `<video playsinline muted autoplay style="width:min(94vw,720px);max-height:70vh;border-radius:16px;background:#111"></video>${devs.length > 1 ? `<select style="max-width:94vw;padding:8px;border-radius:10px">${devs.map((d, i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? "selected" : ""}>${esc(d.label || "كاميرا " + (i + 1))}</option>`).join("")}</select>` : ""}<div style="display:flex;gap:10px"><button type="button" data-k="snap" style="background:#e02843;color:#fff;border:0;border-radius:999px;padding:14px 28px;font:inherit;font-weight:800">📸 صور</button><button type="button" data-k="x" style="background:#fff;color:#000;border:0;border-radius:999px;padding:14px 22px;font:inherit;font-weight:800">✖️ سد</button></div><div data-k="n" style="color:#fff"></div>`;
+  document.body.appendChild(ov);
+  const v = ov.querySelector("video");
+  const open = async () => {
+    try {
+      st && st.getTracks().forEach((t) => t.stop());
+    } catch (_) {
+    }
+    try {
+      st = await navigator.mediaDevices.getUserMedia({ audio: false, video: __spreadProps(__spreadValues({}, cur ? { deviceId: { exact: cur } } : { facingMode: { ideal: "environment" } }), { width: { ideal: 1280 }, height: { ideal: 960 } }) });
+      v.srcObject = st;
+    } catch (e) {
+      toast("📷 الكاميرا ما خدماتش: " + (e.message || e), true);
+    }
+  };
+  const end = () => {
+    try {
+      st && st.getTracks().forEach((t) => t.stop());
+    } catch (_) {
+    }
+    ov.remove();
+  };
+  await open();
+  (_d = ov.querySelector("select")) == null ? void 0 : _d.addEventListener("change", (e) => {
+    cur = e.target.value;
+    open();
+  });
+  let n = 0;
+  ov.addEventListener("click", async (e) => {
+    var _a2;
+    const k = (_a2 = e.target.closest("[data-k]")) == null ? void 0 : _a2.dataset.k;
+    if (k === "x") return end();
+    if (k !== "snap" || !v.videoWidth) return;
+    const c = document.createElement("canvas");
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    c.getContext("2d").drawImage(v, 0, 0);
+    const bl = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.9));
+    try {
+      PH[key] = PH[key] || [];
+      PH[key].push(await compress(new File([bl], "cam.jpg", { type: "image/jpeg" })));
+      phThumbs(key);
+    } catch (_) {
+      toast("ما قدرناش نسجلو الصورة", true);
+    }
+    n++;
+    ov.querySelector('[data-k="n"]').textContent = "✅ " + n + " صورة";
+    if (!many) end();
+  });
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-camph]");
+  if (!b) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const inp2 = document.querySelector(`input[data-photos="${b.dataset.camph}"]`);
+  camSnap(b.dataset.camph, !!(inp2 == null ? void 0 : inp2.multiple));
+}, true);
 const sigField = (id, label) => `<div class="field"><span class="lbl">✍️ ${label}</span><canvas class="sig" id="${id}" width="600" height="220"></canvas><button type="button" class="link" data-act="sigclear" data-id="${id}">مسح التوقيع</button></div>`;
 const errP = '<p class="err" id="ferr" hidden></p>';
 function ferr(m) {
