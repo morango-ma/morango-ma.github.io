@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113205921" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113210121" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -12592,6 +12592,48 @@ document.addEventListener("focusout", (e) => {
     }
   }, 60);
 });
+(() => {
+  if (!matchMedia("(pointer:coarse)").matches) return;
+  let on = false;
+  const H0 = () => window.innerHeight;
+  const set = (h) => {
+    const r = document.documentElement;
+    if (h > 0) {
+      on = true;
+      r.style.setProperty("--vkbh", h + "px");
+      document.body.style.paddingBottom = h + "px";
+    } else if (on) {
+      on = false;
+      r.style.removeProperty("--vkbh");
+      document.body.style.paddingBottom = "";
+    }
+  };
+  document.addEventListener("focusin", (e) => {
+    var _a;
+    const el = e.target;
+    if (vkbOn() || !vkbField(el)) return;
+    const h0 = H0(), v0 = ((_a = window.visualViewport) == null ? void 0 : _a.height) || h0;
+    setTimeout(() => {
+      var _a2;
+      if (document.activeElement !== el) return;
+      const vv = ((_a2 = window.visualViewport) == null ? void 0 : _a2.height) || H0();
+      if (vv < h0 - 120 || H0() < h0 - 120) return;
+      set(Math.round(h0 * (h0 > h0 * 0 + 700 ? 0.42 : 0.45)));
+      setTimeout(() => {
+        try {
+          el.scrollIntoView({ block: "center" });
+        } catch (_) {
+        }
+      }, 60);
+    }, 380);
+  });
+  document.addEventListener("focusout", () => {
+    setTimeout(() => {
+      const a = document.activeElement;
+      if (!(a && vkbField(a)) && !VK.el) set(0);
+    }, 120);
+  });
+})();
 setInterval(() => {
   if (VK.el && (!VK.el.isConnected || VK.el.offsetParent === null && getComputedStyle(VK.el).position !== "fixed")) {
     VK.el = null;
