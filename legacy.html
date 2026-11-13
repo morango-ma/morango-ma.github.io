@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113225752" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113230450" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4750,10 +4750,19 @@ async function camSnap(key, many) {
   ov.innerHTML = `<video playsinline muted autoplay style="width:min(94vw,720px);max-height:70vh;border-radius:16px;background:#111"></video>${devs.length > 1 ? `<select style="max-width:94vw;padding:8px;border-radius:10px">${devs.map((d, i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? "selected" : ""}>${esc(d.label || "كاميرا " + (i + 1))}</option>`).join("")}</select>` : ""}<div style="display:flex;gap:10px"><button type="button" data-k="snap" style="background:#e02843;color:#fff;border:0;border-radius:999px;padding:14px 28px;font:inherit;font-weight:800">📸 صور</button><button type="button" data-k="x" style="background:#fff;color:#000;border:0;border-radius:999px;padding:14px 22px;font:inherit;font-weight:800">✖️ سد</button></div><div data-k="n" style="color:#fff"></div>`;
   document.body.appendChild(ov);
   const v = ov.querySelector("video");
+  const shared = () => {
+    var _a2, _b2;
+    return CAM.st && CAM.st.getVideoTracks().some((t) => t.readyState === "live") && (!cur || ((_b2 = (_a2 = CAM.st.getVideoTracks()[0]) == null ? void 0 : _a2.getSettings) == null ? void 0 : _b2.call(_a2).deviceId) === cur);
+  };
   const open = async () => {
     try {
-      st && st.getTracks().forEach((t) => t.stop());
+      st && st !== CAM.st && st.getTracks().forEach((t) => t.stop());
     } catch (_) {
+    }
+    if (shared()) {
+      st = CAM.st;
+      v.srcObject = st;
+      return;
     }
     try {
       st = await navigator.mediaDevices.getUserMedia({ audio: false, video: __spreadProps(__spreadValues({}, cur ? { deviceId: { exact: cur } } : { facingMode: { ideal: "environment" } }), { width: { ideal: 1280 }, height: { ideal: 960 } }) });
@@ -4764,7 +4773,7 @@ async function camSnap(key, many) {
   };
   const end = () => {
     try {
-      st && st.getTracks().forEach((t) => t.stop());
+      st && st !== CAM.st && st.getTracks().forEach((t) => t.stop());
     } catch (_) {
     }
     ov.remove();
@@ -5874,8 +5883,13 @@ async function camPlay(id) {
   var _a;
   const c = (((_a = S.camL) == null ? void 0 : _a.L) || []).find((x) => x.id === id);
   if (!c) return;
+  let u = "";
   try {
-    const u = await window.morangoCam.url(c.path);
+    u = await window.morangoCam.url(c.path);
+  } catch (e) {
+    return openSheet("📹 الفيديو", `<div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:8px"><b>ما قدرناش نحلو الفيديو فهاد الجهاز.</b><span>هاد الجهاز باقي داخل بالطريقة القديمة. خرج وعاود دخل بالكود ديالك، ومن بعد عاود حل الفيديو.</span><button type="button" class="btn primary" data-act="logoutq">🚪 خروج وعاود الدخول</button></div>`);
+  }
+  try {
     openSheet("📹 " + hm(c.ts) + " · " + (LOC[c.pos] || ""), `<video src="${esc(u)}" controls autoplay playsinline style="width:100%;border-radius:12px;background:#000"></video><div class="muted">👤 ${esc(c.by || "")} · ${dhm(c.ts)} · ⏱️ ${c.secs || ""}ث · ${c.closedTs ? "✅ تسدات " + hm(c.closedTs) : "⚠️ ما تأكدش السد"}</div><b>🛍️ البيعات فهاد الفيديو</b>${camSalesHtml(c)}`);
   } catch (e) {
     toast("❌ " + (e.message || e), true);
@@ -7860,6 +7874,7 @@ async function camClip(reason, ref, o = {}) {
   }
   if (c.forPos && !o.remote && reason !== "تجربة") return;
   if (!c.on) return;
+  if (CAM.rec && Date.now() - (CAM.t0 || 0) > 2e5) CAM.rec = false;
   if (CAM.rec) {
     CAM.until = Math.max(CAM.until, Date.now() + secs * 1e3);
     CAM.closed = 0;
@@ -7871,6 +7886,7 @@ async function camClip(reason, ref, o = {}) {
   if (!st) return;
   CAM.rec = true;
   const ts = Date.now();
+  CAM.t0 = ts;
   CAM.until = ts + secs * 1e3;
   CAM.closed = 0;
   CAM.refs = ref ? [ref] : [];
@@ -7884,9 +7900,14 @@ async function camClip(reason, ref, o = {}) {
     };
     const done = new Promise((r) => mr.onstop = r);
     mr.start(1e3);
-    while (Date.now() < CAM.until && Date.now() - ts < 18e4) await new Promise((r) => setTimeout(r, 250));
-    mr.stop();
-    await done;
+    const live = () => st.getVideoTracks().some((t) => t.readyState === "live");
+    while (Date.now() < CAM.until && Date.now() - ts < 18e4 && live()) await new Promise((r) => setTimeout(r, 250));
+    try {
+      mr.state !== "inactive" && mr.stop();
+    } catch (_) {
+    }
+    await Promise.race([done, new Promise((r) => setTimeout(r, 4e3))]);
+    if (!ch.length) throw new Error("الفيديو خاوي");
     const closed = CAM.closed, refs = [...CAM.refs], n = CAM.n;
     CAM.rec = false;
     const blob = new Blob(ch, { type: (mt || "video/webm").split(";")[0] });
@@ -7896,8 +7917,11 @@ async function camClip(reason, ref, o = {}) {
     await window.morangoCam.up(path, blob);
     await db.collection("camclips").add(__spreadValues({ pos, date: d, ts, path, size: blob.size, secs: Math.round((Date.now() - ts) / 1e3), reason: reason || "", ref: refs.join(" · "), sales: n, closedTs: closed || null, by: o.by || meName(), byId: (me == null ? void 0 : me.id) || "" }, o.remote ? { camBy: meName() } : {}));
   } catch (e) {
-    CAM.rec = false;
     console.warn("cam", e);
+    const m = String((e == null ? void 0 : e.message) || e);
+    toast(/not found|row-level|403|Unauthorized|policy/i.test(m) ? "📹 الفيديو ما تسجلش: خرج وعاود دخل بالكود ديالك فهاد الجهاز" : "📹 الفيديو ما تسجلش: " + m, true);
+  } finally {
+    CAM.rec = false;
   }
 }
 function camClosed(remote) {
