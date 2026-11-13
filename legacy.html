@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113221937" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113222339" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -5774,7 +5774,7 @@ function vCam() {
   return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">📹 فيديوهات لاكيس</h2><span class="tag">${L.length}</span><button type="button" class="btn small" onclick="S.camL=null;render()">🔄</button></div>
    <div class="chips">${days.map(([v, l]) => `<button type="button" class="chip ${d === v ? "on" : ""}" onclick="S.camD='${v}';render()">${l}</button>`).join("")}<input type="date" value="${d}" onchange="S.camD=this.value||'${today()}';render()" style="height:40px;border-radius:12px;border:2px solid var(--line);background:var(--surface);padding:0 8px"></div>
    <p class="muted" style="margin:0">كل مرة كتحل لاكيس ديال الفلوس كيتسجل فيديو. كيبقاو 21 يوم ومن بعد كيتمسحو بوحدهم.</p></section>
-   <section class="card" style="gap:4px">${((_f = S.camL) == null ? void 0 : _f.busy) ? emptyB("⏳", "كيتحمل…") : L.length ? L.map((c) => `<div class="prow"><div><b>⏰ ${hm(c.ts)} · ${esc(LOC[c.pos] || c.pos || "")}</b><div class="muted">${esc(c.reason || "")}${c.ref ? " · 🧾 " + esc(c.ref) : ""} · 👤 ${esc(c.by || "")} · ${Math.round((c.size || 0) / 1024)} KB</div></div><button type="button" class="btn small" onclick="camPlay('${c.id}')">▶️ شوف</button></div>`).join("") : emptyB("📹", "ما كاين حتى فيديو فهاد النهار.")}</section>`;
+   <section class="card" style="gap:4px">${((_f = S.camL) == null ? void 0 : _f.busy) ? emptyB("⏳", "كيتحمل…") : L.length ? L.map((c) => `<div class="prow"><div><b>⏰ ${hm(c.ts)} · ${esc(LOC[c.pos] || c.pos || "")}</b><div class="muted">${esc(c.reason || "")}${c.ref ? " · 🧾 " + esc(c.ref) : ""}${c.sales > 1 ? " · 🛍️ " + c.sales + " بيعات" : ""} · 👤 ${esc(c.by || "")} · ⏱️ ${c.secs || ""}ث · ${c.closedTs ? "✅ تسدات" : '<span class="neg">⚠️ ما تأكدش السد</span>'}</div></div><button type="button" class="btn small" onclick="camPlay('${c.id}')">▶️ شوف</button></div>`).join("") : emptyB("📹", "ما كاين حتى فيديو فهاد النهار.")}</section>`;
 }
 async function camPlay(id) {
   var _a;
@@ -7655,7 +7655,7 @@ function sysPrint(blob) {
   });
 }
 const CAM = { st: null, rec: false };
-const camCfg = () => __spreadValues({ on: false, secs: 10, dev: "" }, HW().cam || {});
+const camCfg = () => __spreadValues({ on: false, secs: 30, dev: "" }, HW().cam || {});
 async function camStart() {
   const c = camCfg();
   if (!c.on) return null;
@@ -7671,6 +7671,7 @@ async function camStart() {
 }
 async function camClip(reason, ref, o = {}) {
   const c = camCfg();
+  const secs = Math.max(8, +c.secs || 30);
   if (!o.remote && reason !== "تجربة") {
     try {
       db.collection("drawerev").add({ pos: S.pos || (me == null ? void 0 : me.loc) || "x", date: today(), ts: Date.now(), reason: reason || "", ref: ref || "", by: meName(), hasCam: !!c.on && !c.forPos });
@@ -7678,11 +7679,22 @@ async function camClip(reason, ref, o = {}) {
     }
   }
   if (c.forPos && !o.remote && reason !== "تجربة") return;
-  if (!c.on || CAM.rec) return;
+  if (!c.on) return;
+  if (CAM.rec) {
+    CAM.until = Math.max(CAM.until, Date.now() + secs * 1e3);
+    CAM.closed = 0;
+    if (ref && !CAM.refs.includes(ref)) CAM.refs.push(ref);
+    CAM.n++;
+    return;
+  }
   const st = await camStart();
   if (!st) return;
   CAM.rec = true;
   const ts = Date.now();
+  CAM.until = ts + secs * 1e3;
+  CAM.closed = 0;
+  CAM.refs = ref ? [ref] : [];
+  CAM.n = 1;
   try {
     const mt = ["video/webm;codecs=vp8", "video/webm", "video/mp4"].find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "";
     const mr = new MediaRecorder(st, __spreadProps(__spreadValues({}, mt ? { mimeType: mt } : {}), { videoBitsPerSecond: 18e4 }));
@@ -7692,19 +7704,32 @@ async function camClip(reason, ref, o = {}) {
     };
     const done = new Promise((r) => mr.onstop = r);
     mr.start(1e3);
-    await new Promise((r) => setTimeout(r, Math.max(4, +c.secs || 10) * 1e3));
+    while (Date.now() < CAM.until && Date.now() - ts < 18e4) await new Promise((r) => setTimeout(r, 250));
     mr.stop();
     await done;
+    const closed = CAM.closed, refs = [...CAM.refs], n = CAM.n;
     CAM.rec = false;
     const blob = new Blob(ch, { type: (mt || "video/webm").split(";")[0] });
     const pos = o.pos || S.pos || (me == null ? void 0 : me.loc) || "x";
     const d = dstr(new Date(ts));
     const path = `${pos}/${d}/${ts}.${blob.type.includes("mp4") ? "mp4" : "webm"}`;
     await window.morangoCam.up(path, blob);
-    await db.collection("camclips").add(__spreadValues({ pos, date: d, ts, path, size: blob.size, secs: +c.secs || 10, reason: reason || "", ref: ref || "", by: o.by || meName(), byId: (me == null ? void 0 : me.id) || "" }, o.remote ? { camBy: meName() } : {}));
+    await db.collection("camclips").add(__spreadValues({ pos, date: d, ts, path, size: blob.size, secs: Math.round((Date.now() - ts) / 1e3), reason: reason || "", ref: refs.join(" · "), sales: n, closedTs: closed || null, by: o.by || meName(), byId: (me == null ? void 0 : me.id) || "" }, o.remote ? { camBy: meName() } : {}));
   } catch (e) {
     CAM.rec = false;
     console.warn("cam", e);
+  }
+}
+function camClosed(remote) {
+  if (CAM.rec) {
+    CAM.closed = Date.now();
+    CAM.until = Date.now() + 3e3;
+  }
+  if (!remote) {
+    try {
+      db.collection("drawerev").add({ pos: S.pos || (me == null ? void 0 : me.loc) || "x", date: today(), ts: Date.now(), kind: "close", by: meName() });
+    } catch (_) {
+    }
   }
 }
 async function hwPrint(sh, t, { drawer, copy } = {}) {
@@ -7854,7 +7879,7 @@ function sheetDevices() {
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" ${camCfg().on ? "checked" : ""} onchange="hwSave({...HW(),cam:{...camCfg(),on:this.checked}});if(this.checked)camStart().then(()=>sheetDevices());else{try{CAM.st&&CAM.st.getTracks().forEach(t=>t.stop())}catch(_){}CAM.st=null;sheetDevices()}" style="width:22px;height:22px"> 📹 شعل الكاميرا فهاد الجهاز</label>
     ${camCfg().on ? `<div class="field"><span class="lbl">📍 شنو كتصور هاد الكاميرا؟</span><select class="big-in" onchange="hwSave({...HW(),cam:{...camCfg(),forPos:this.value}});camRemote();sheetDevices()"><option value="">لاكيس ديال هاد الجهاز نيت</option>${POS.map((x) => `<option value="${x.id}" ${camCfg().forPos === x.id ? "selected" : ""}>📱 جهاز ديال الكاميرا فوق لاكيس ديال ${esc(x.name)} (ما فيهاش كاميرا)</option>`).join("")}</select>${camCfg().forPos ? '<div class="alert acc" style="cursor:default">📱 خلي هاد الجهاز محلول على التطبيق، مشارجي، والكاميرا مقابلة لاكيس. كل مرة لاكيس كتحل، هاد الجهاز كيصور بوحدو.</div>' : ""}</div>
     <div class="field"><span class="lbl">🎥 الكاميرا</span><select id="camdev" class="big-in" onchange="hwSave({...HW(),cam:{...camCfg(),dev:this.value}});try{CAM.st&&CAM.st.getTracks().forEach(t=>t.stop())}catch(_){}CAM.st=null;camStart()"><option value="">الكاميرا الأمامية (عادي)</option></select><div class="muted" style="font-size:.85rem">🔌 إلا الجهاز ما فيهش كاميرا: ركب كاميرا USB (webcam) ومن بعد عاود حل هاد الصفحة، غادي تبان هنا.</div></div>
-    ${choice("camsecs", "⏱️ طول الفيديو", [{ v: "8", l: "8 ثواني", i: "⏱️" }, { v: "15", l: "15 ثانية", i: "⏱️" }, { v: "30", l: "30 ثانية", i: "⏱️" }], String(camCfg().secs || 10), 3)}
+    ${choice("camsecs", "⏱️ أقل طول للفيديو (كيطول إلا جات بيعة أخرى، وكيوقف ملي تسد لاكيس)", [{ v: "15", l: "15 ثانية", i: "⏱️" }, { v: "30", l: "30 ثانية", i: "⏱️" }, { v: "60", l: "1 دقيقة", i: "⏱️" }], String(camCfg().secs || 30), 3)}
     <video id="campv" autoplay muted playsinline style="width:100%;max-height:200px;background:#000;border-radius:12px"></video>
     <div class="btns"><button type="button" class="btn small" onclick="camClip('تجربة');toast('📹 كيتسجل فيديو تجربة…')">🧪 سجل فيديو تجربة</button></div>` : ""}</div>
    <div class="box"><b>🎨 العرض والألوان</b><div class="muted">إلا الألوان ما باناش مزيان فهاد الشاشة.</div><div class="btns" style="margin:0"><button type="button" class="btn small" onclick="sheetDisplay()">🎨 بدل الألوان وحجم الكتابة</button></div></div>
@@ -8097,7 +8122,7 @@ async function receipt2(sh, t) {
 let LASTR = null;
 function sheetReceipt(sh, t) {
   LASTR = { sh, t };
-  openSheet("🧾 الوصل", receiptHtml(sh, t) + '<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ إعادة الطبع</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>');
+  openSheet("🧾 الوصل", `<div class="alert bad" id="drwr" style="cursor:default;flex-direction:column;align-items:stretch;gap:8px;text-align:center"><b style="font-size:1.25rem">🗄️ سدي لاكيس ديال الفلوس دابا!</b><span class="muted">الكاميرا كتصور حتى تسديها وتضغطي هنا.</span><button type="button" class="btn primary block" style="font-size:1.15rem" onclick="camClosed();const d=document.getElementById('drwr');if(d)d.outerHTML='<div class=alert good style=cursor:default>✅ لاكيس تسدات</div>'">✅ سديت لاكيس</button></div>` + receiptHtml(sh, t) + '<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ إعادة الطبع</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>');
 }
 const tkKey = (t) => String(t.no || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 function sheetTickets() {
@@ -13511,7 +13536,8 @@ function camRemote() {
   CAMR = db.collection("drawerev").where("date", "==", today()).onSnapshot((q) => {
     q.docs.map((d) => d.data()).filter((e) => e.pos === c.forPos && e.ts > t0 && !e.hasCam && !CAMSEEN.has(e.ts)).forEach((e) => {
       CAMSEEN.add(e.ts);
-      camClip(e.reason, e.ref, { remote: true, pos: e.pos, by: e.by });
+      if (e.kind === "close") camClosed(true);
+      else camClip(e.reason, e.ref, { remote: true, pos: e.pos, by: e.by });
     });
   }, () => {
   }) || true;
