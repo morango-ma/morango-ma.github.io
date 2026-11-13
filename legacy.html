@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113204858" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113205234" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -5601,11 +5601,12 @@ async function bonPrint(b, sh) {
 const AVR = { good: ["😍", "مزيانة بزاف"], ok: ["😐", "عادية"], bad: ["😞", "ما عجبتنيش"], refused: ["🙅", "الزبون ما بغاش"], none: ["⏳", "ما جاوبش"], closed: ["🚪", "تسدات بلا جواب"] };
 function sheetAvis(b) {
   let done = false;
+  const t0 = Date.now();
   const vn = String(b.by || "").split(" ")[0];
   const save = async (r, why) => {
     if (done) return;
     done = true;
-    const a = { r, ts: Date.now() };
+    const a = { r, ts: Date.now(), dt: Date.now() - t0 };
     if (why) a.why = why;
     b.avis = a;
     try {
@@ -5613,7 +5614,7 @@ function sheetAvis(b) {
     } catch (_) {
     }
   };
-  openSheet("🙂 رأيك يهمنا", `<div style="text-align:center;display:flex;flex-direction:column;gap:14px"><div class="disp" style="font-size:1.5rem;font-weight:800;line-height:1.4">كيفاش كانت الخدمة ديال ${esc(vn)}؟<div class="muted" style="font-size:1rem;font-weight:600">Comment était le service de ${esc(vn)} ?</div></div>
+  openSheet("🙂 رأيك يهمنا", `<div style="text-align:center;display:flex;flex-direction:column;gap:14px"><div class="alert bad" style="cursor:default;justify-content:center;text-align:center;font-weight:700">⛔ للبائعة: دوري التابليت للزبون. ممنوع تجاوبي بلاصتو، كل جواب كيتسجل وكيتراقب.</div><div class="disp" style="font-size:1.5rem;font-weight:800;line-height:1.4">كيفاش كانت الخدمة ديال ${esc(vn)}؟<div class="muted" style="font-size:1rem;font-weight:600">Comment était le service de ${esc(vn)} ?</div></div>
     <div id="avb" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${["bad", "ok", "good"].map((k) => `<button type="button" data-av="${k}" style="border:2px solid var(--line);border-radius:18px;background:var(--surface);color:inherit;padding:14px 4px;font:inherit;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-size:3.2rem;line-height:1">${AVR[k][0]}</span><span>${AVR[k][1]}</span></button>`).join("")}</div>
     <div id="avw" hidden style="display:flex;flex-direction:column;gap:8px"><b>شنو اللي ما عجبكش؟</b>${["بطا", "ما تعاملاتش معايا مزيان", "غلطات فالكوموند", "ما عرفاتش تنصحني"].map((t) => `<button type="button" class="btn block" data-aw="${esc(t)}">${esc(t)}</button>`).join("")}</div>
     <div id="avt" hidden class="disp" style="font-size:1.8rem;font-weight:800">شكرا بزاف! 🙏<div class="muted" style="font-size:1rem">Merci !</div></div>
@@ -5678,10 +5679,11 @@ function sheetAvis(b) {
   });
 }
 function avisStats(L) {
-  const o = { n: L.length, good: 0, ok: 0, bad: 0, refused: 0, none: 0, ask: 0 };
+  const o = { n: L.length, good: 0, ok: 0, bad: 0, refused: 0, none: 0, ask: 0, fast: 0 };
   L.forEach((b) => {
     var _a;
     const r = (_a = b.avis) == null ? void 0 : _a.r;
+    if (["good", "ok", "bad"].includes(r) && b.avis.dt != null && b.avis.dt < 2500) o.fast++;
     if (!r) o.none++;
     else if (r === "closed" || r === "none") o.none++;
     else o[r]++;
@@ -5709,9 +5711,9 @@ function vAvis() {
   }).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 30);
   return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">⭐ آراء الزبناء على الخدمة</h2></div>
    <div class="chips">${[["1", "اليوم"], ["7", "7 أيام"], ["14", "14 يوم"]].map(([v, l]) => `<button type="button" class="chip ${P === v ? "on" : ""}" onclick="S.avP='${v}';render()">${l}</button>`).join("")}</div>
-   <p class="muted" style="margin:0">كل كوموند ديال البائعة خاصها يكون فيها الرأي ديال الزبون. «ما تسولش» = البائعة ما خلاتش الزبون يجاوب.</p></section>
+   <p class="muted" style="margin:0">كل كوموند ديال البائعة خاصها يكون فيها الرأي ديال الزبون. «ما تسولش» = البائعة ما خلاتش الزبون يجاوب. «⚡ سريع بزاف» = الجواب جا فأقل من 2.5 ثانية من بعد الكوموند، يعني غالباً البائعة اللي جاوبات.</p></section>
    ${rows.length ? rows.map(({ n, o }) => `<section class="card" style="gap:6px"><div class="head"><h2 style="margin:0">👤 ${esc(n)}</h2><span class="tag ${o.score == null ? "" : o.score >= 80 ? "good" : o.score >= 60 ? "warn" : "bad"}">${o.score == null ? "—" : o.score + "/100"}</span></div>${bar(o)}
-     <div class="muted" style="display:flex;flex-wrap:wrap;gap:10px;font-size:.9rem"><span>🧾 ${o.n} كوموند</span><span>✅ جاوبو: <b>${o.pct}%</b></span><span>😍 ${o.good}</span><span>😐 ${o.ok}</span><span>😞 ${o.bad}</span><span>🙅 ${o.refused}</span><span class="${o.none ? "neg" : ""}">⏳ ما تسولش: ${o.none}</span></div></section>`).join("") : `<section class="card">${emptyB("⭐", "ما كاين حتى كوموند فهاد المدة.")}</section>`}
+     <div class="muted" style="display:flex;flex-wrap:wrap;gap:10px;font-size:.9rem"><span>🧾 ${o.n} كوموند</span><span>✅ جاوبو: <b>${o.pct}%</b></span><span>😍 ${o.good}</span><span>😐 ${o.ok}</span><span>😞 ${o.bad}</span><span>🙅 ${o.refused}</span><span class="${o.none ? "neg" : ""}">⏳ ما تسولش: ${o.none}</span>${o.fast ? `<span class="neg">⚡ جواب سريع بزاف (أقل من 2.5 ثانية): ${o.fast}</span>` : ""}</div></section>`).join("") : `<section class="card">${emptyB("⭐", "ما كاين حتى كوموند فهاد المدة.")}</section>`}
    ${bads.length ? `<section class="card" style="gap:6px"><h2 style="margin:0">😞 الآراء السلبية</h2>${bads.map((b) => `<div class="prow"><span>${esc(b.by || "")} · ${esc(b.avis.why || "")}</span><span class="muted">${esc(b.date || "")} ${hm(b.ts)} · ${esc(b.no || "")}</span></div>`).join("")}</section>` : ""}`;
 }
 async function bonShow(b) {
