@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113220222" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113220736" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3548,7 +3548,7 @@ function alertsFor() {
 }
 function alertsFor0() {
   const r = me.role, A = [];
-  if (isMgr()) retAll().filter((x) => x.status === "pending").forEach((x) => A.push(`<div class="alert warn" data-act="retopen" data-id="${x.id}"><div class="lead"><span class="em">↩️</span><div><b>ريتور كيتسنى الموافقة ديالك: ${money(x.total)}</b><div class="muted">🧾 ${esc(x.ticketNo)} · ${esc(LOC[x.pos] || "")} · 💁 ${esc(x.by)} ${hm(x.ts)} · ${esc(x.why || "")}</div></div></div><span class="tag warn">شوف</span></div>`));
+  if (isMgr()) retAll().filter((x) => x.status === "pending").forEach((x) => A.push(`<div class="alert warn" data-act="retopen" data-id="${x.id}"><div class="lead"><span class="em">↩️</span><div><b>${x.lateMin > 0 ? "⏰ متأخر · " : ""}ريتور كيتسنى الموافقة ديالك: ${money(x.total)}</b><div class="muted">🧾 ${esc(x.ticketNo)} · ${esc(LOC[x.pos] || "")} · 💁 ${esc(x.by)} ${hm(x.ts)} · ${esc(x.why || "")}</div></div></div><span class="tag warn">شوف</span></div>`));
   if (me.role === "seller" && !vendRole()) retAll().filter((x) => x.status === "approved" && x.byId === me.id).forEach((x) => A.push(`<div class="alert good" data-act="retopen" data-id="${x.id}"><div class="lead"><span class="em">↩️</span><div><b>✅ تقبل الريتور: ${money(x.total)}</b><div class="muted">🧾 ${esc(x.ticketNo)} · كملي مع الزبون</div></div></div><span class="tag good">كمل</span></div>`));
   if (isMgr() || isProd() || canBuy()) {
     const np = Object.values(S.lotm || {}).filter((l) => l.needPrint && !l.printed && l.status === "active");
@@ -5937,7 +5937,7 @@ function sheetBons(p) {
   });
 }
 const RET_WHY = ["الزبون ما بغاهش", "غلطة فالكوموند", "بغا يبدل بمنتوج آخر"];
-const RET_MIN = 10;
+const RET_MIN = 3;
 const RET_MODE = { cash: ["💵", "رجعنا ليه الفلوس"], exchange: ["🔄", "تبديل بمنتوج آخر"], avoir: ["🎟️", "أفوار (كريدي فالوفاء)"] };
 const retAll = () => S.retours || [];
 const retOfTicket = (no) => retAll().filter((r) => r.ticketNo === no && r.status !== "rejected");
@@ -5972,7 +5972,7 @@ function sheetRetNew() {
   const sh = openShift(p);
   if (!sh) return toast("🔓 خاص لاكيس تكون محلولة", true);
   openSheet("↩️ ريتور ديال زبون", `<div class="alert acc" style="cursor:default">📷 سكاني الـ QR ولا الكود-بار اللي فالوصل، ولا كتبي الرقم ديالو. بلا وصل ما كاينش ريتور.</div>
-   <div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>⛔ ممنوع الريتور إلا:</b><span>• فاتو ${RET_MIN} دقايق على البيعة</span><span>• الزبون خرج من المحل وما بقاش كيبان ليك</span><span>• السلعة ما بقاتش سالمة (مقيسة، محلولة، ناقصة)</span></div>
+   <div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>⛔ ممنوع الريتور إلا:</b><span>• فاتو ${RET_MIN} دقايق على البيعة (إلا فاتو، كيتصيفط للمسير وهو اللي كيقرر)</span><span>• الزبون خرج من المحل وما بقاش كيبان ليك</span><span>• السلعة ما بقاتش سالمة (مقيسة، محلولة، ناقصة)</span></div>
    <div class="field"><input id="rtno" class="big-in" placeholder="رقم الوصل (مثلا AR-2611-0042)" autocomplete="off" style="text-transform:uppercase;font-weight:800;font-size:1.3rem;text-align:center"></div><div class="btns"><button type="button" class="btn primary block" id="rtgo">🔎 قلب على الوصل</button></div><div id="rtbody"></div>`, null, (f) => {
     const go = async () => {
       const no = $("#rtno", f).value;
@@ -5986,10 +5986,11 @@ function sheetRetNew() {
       const { sh: tsh, t } = R;
       const tdate = dstr(new Date(t.ts || tsh.openTs || Date.now()));
       const age = Math.floor((Date.now() - (+t.ts || 0)) / 6e4);
-      if (tdate !== today() || age > RET_MIN) {
-        box.innerHTML = `<div class="alert bad" style="cursor:default">⛔ فاتو ${age > 600 ? "بزاف ديال" : age} دقايق على هاد البيعة. الريتور كيتقبل غير فـ ${RET_MIN} دقايق الأولى.</div>`;
+      if (tdate !== today()) {
+        box.innerHTML = `<div class="alert bad" style="cursor:default">⛔ هاد الوصل ديال ${esc(tdate)}. الريتور كيتقبل غير فنفس النهار.</div>`;
         return;
       }
+      const late = age > RET_MIN;
       if (t.void) {
         box.innerHTML = '<div class="alert bad" style="cursor:default">⛔ هاد الوصل ملغي.</div>';
         return;
@@ -6000,7 +6001,7 @@ function sheetRetNew() {
         return;
       }
       const gross = (t.lines || []).reduce((a, l) => a + l.qty * l.price, 0) || 1, rate = (+t.total || gross) / gross;
-      box.innerHTML = `<div class="box" style="gap:4px"><b>🧾 ${esc(t.no)} · ${hm(t.ts)} · ${money(t.total)}</b><div class="muted">🛍️ ${esc(t.vend || t.by || "")}${t.client ? " · ⭐ " + esc(t.client.name) : ""}</div></div>
+      box.innerHTML = `${late ? `<div class="alert bad" style="cursor:default">⏰ فاتو ${age} دقايق على البيعة (الأجل ${RET_MIN} دقايق). الريتور غادي يتصيفط للمسير وهو اللي يقرر واش يتقبل.</div>` : ""}<div class="box" style="gap:4px"><b>🧾 ${esc(t.no)} · ${hm(t.ts)} · ${money(t.total)}</b><div class="muted">🛍️ ${esc(t.vend || t.by || "")}${t.client ? " · ⭐ " + esc(t.client.name) : ""}</div></div>
        <b>شنو رجع الزبون؟</b>${rows.map((l, k) => `<div class="box" style="gap:6px">${prow(l.item, money(l.price) + " · تشرى " + fmt(l.qty) + (l.left < l.qty ? " · ترجع " + fmt(l.qty - l.left) : ""), stepper("data-rq", String(k), "", iunit(l.item)))}
 </div>`).join("")}
        <div class="field"><span class="lbl">❓ علاش رجعو؟ *</span><div class="choice" style="--cols:2" id="rtwhy">${RET_WHY.map((w) => `<button type="button" class="opt" aria-pressed="false" data-w="${esc(w)}"><span>${esc(w)}</span></button>`).join("")}</div></div>
@@ -6054,7 +6055,6 @@ function sheetRetNew() {
         if (!t.client && cp.length < 9) return er("📞 كتبي التيليفون ديال الزبون.");
         if (!$("#rtok1", f).checked) return er("⛔ إلا الزبون خرج من المحل، الريتور ممنوع.");
         if (!$("#rtok2", f).checked) return er("⛔ السلعة خاصها تكون سالمة باش ترجع.");
-        if ((Date.now() - (+t.ts || 0)) / 6e4 > RET_MIN) return er("⛔ فاتو " + RET_MIN + " دقايق على البيعة.");
         if (!(PH.rtph || []).length) return er("📷 صوري السلعة اللي رجعات.");
         const b = $("#rtsend", f);
         b.disabled = true;
@@ -6062,7 +6062,7 @@ function sheetRetNew() {
         try {
           const photos = await saveMedia(PH.rtph, "retour");
           const total = r2(lines.reduce((a, l) => a + l.amt, 0));
-          await db.collection("retours").add({ pos: p, shiftId: sh.id, date: today(), ts: Date.now(), ticketNo: t.no, ticketShift: tsh.id, ticketTs: t.ts, ticketBy: t.vend || t.by || "", lines, total, why, mode, client: { name: cn, phone: cp, id: ((_c = t.client) == null ? void 0 : _c.id) || phoneId(cp) }, intact: true, present: true, photos, status: "pending", by: meName(), byId: me.id });
+          await db.collection("retours").add({ pos: p, shiftId: sh.id, date: today(), ts: Date.now(), ticketNo: t.no, ticketShift: tsh.id, ticketTs: t.ts, ticketBy: t.vend || t.by || "", lines, total, why, mode, client: { name: cn, phone: cp, id: ((_c = t.client) == null ? void 0 : _c.id) || phoneId(cp) }, intact: true, present: true, lateMin: Math.max(0, Math.floor((Date.now() - (+t.ts || 0)) / 6e4) - RET_MIN) || 0, photos, status: "pending", by: meName(), byId: me.id });
           closeSheet();
           toast("📤 الريتور تصيفط للإدارة · تسناي الموافقة قبل ما ترجعي شي حاجة");
         } catch (e) {
@@ -6188,7 +6188,7 @@ async function printBlob(bl, name) {
 }
 function retDetail(r) {
   var _a, _b, _c;
-  return `<div class="box" style="gap:4px"><b>🧾 ${esc(r.ticketNo)} · ${money(r.total)}</b><div class="muted">📍 ${esc(LOC[r.pos] || "")} · 💁 ${esc(r.by)} ${hm(r.ts)} · 🛍️ باعت: ${esc(r.ticketBy || "")}</div>
+  return `${r.lateMin > 0 ? `<div class="alert bad" style="cursor:default">⏰ متأخر: تطلب ${r.lateMin + RET_MIN} دقايق من بعد البيعة (الأجل ${RET_MIN})</div>` : ""}<div class="box" style="gap:4px"><b>🧾 ${esc(r.ticketNo)} · ${money(r.total)}</b><div class="muted">📍 ${esc(LOC[r.pos] || "")} · 💁 ${esc(r.by)} ${hm(r.ts)} · 🛍️ باعت: ${esc(r.ticketBy || "")}</div>
    <div>👤 ${esc(((_a = r.client) == null ? void 0 : _a.name) || "")} · 📞 ${esc(((_b = r.client) == null ? void 0 : _b.phone) || "")}</div><div>❓ ${esc(r.why || "")} · ${((_c = RET_MODE[r.mode]) == null ? void 0 : _c.join(" ")) || ""}</div></div>
    ${(r.lines || []).map((l) => prow(l.item, (l.state === "resell" ? "✅ يتعاود يتباع" : "🗑️ خسارة") + " · " + money(l.price), `<b class="num">${fmt(l.qty)} · ${money(l.amt)}</b>`)).join("")}
    ${(r.photos || []).length ? `<div class="btns">${r.photos.map((id) => `<button type="button" class="btn small" data-act="media" data-id="${id}">📷 الصورة</button>`).join("")}</div>` : ""}`;
@@ -7661,8 +7661,15 @@ async function camStart() {
     return null;
   }
 }
-async function camClip(reason, ref) {
+async function camClip(reason, ref, o = {}) {
   const c = camCfg();
+  if (!o.remote && reason !== "تجربة") {
+    try {
+      db.collection("drawerev").add({ pos: S.pos || (me == null ? void 0 : me.loc) || "x", date: today(), ts: Date.now(), reason: reason || "", ref: ref || "", by: meName(), hasCam: !!c.on && !c.forPos });
+    } catch (_) {
+    }
+  }
+  if (c.forPos && !o.remote && reason !== "تجربة") return;
   if (!c.on || CAM.rec) return;
   const st = await camStart();
   if (!st) return;
@@ -7682,11 +7689,11 @@ async function camClip(reason, ref) {
     await done;
     CAM.rec = false;
     const blob = new Blob(ch, { type: (mt || "video/webm").split(";")[0] });
-    const pos = S.pos || (me == null ? void 0 : me.loc) || "x";
+    const pos = o.pos || S.pos || (me == null ? void 0 : me.loc) || "x";
     const d = dstr(new Date(ts));
     const path = `${pos}/${d}/${ts}.${blob.type.includes("mp4") ? "mp4" : "webm"}`;
     await window.morangoCam.up(path, blob);
-    await db.collection("camclips").add({ pos, date: d, ts, path, size: blob.size, secs: +c.secs || 10, reason: reason || "", ref: ref || "", by: meName(), byId: (me == null ? void 0 : me.id) || "" });
+    await db.collection("camclips").add(__spreadValues({ pos, date: d, ts, path, size: blob.size, secs: +c.secs || 10, reason: reason || "", ref: ref || "", by: o.by || meName(), byId: (me == null ? void 0 : me.id) || "" }, o.remote ? { camBy: meName() } : {}));
   } catch (e) {
     CAM.rec = false;
     console.warn("cam", e);
@@ -7837,7 +7844,8 @@ function sheetDevices() {
     <div class="btns"><button type="button" class="btn small" onclick="hwTest()">🧪 طبع تجربة</button><button type="button" class="btn small" onclick="hwProbe()">🔍 جرب اللغات (1-4)</button></div></div>
    <div class="box"><b>📹 كاميرا لاكيس</b><div class="muted">كل مرة كتحل لاكيس ديال الفلوس، كتسجل فيديو قصير وكيبقى عند الإدارة.</div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" ${camCfg().on ? "checked" : ""} onchange="hwSave({...HW(),cam:{...camCfg(),on:this.checked}});if(this.checked)camStart().then(()=>sheetDevices());else{try{CAM.st&&CAM.st.getTracks().forEach(t=>t.stop())}catch(_){}CAM.st=null;sheetDevices()}" style="width:22px;height:22px"> 📹 شعل الكاميرا فهاد الجهاز</label>
-    ${camCfg().on ? `<div class="field"><span class="lbl">🎥 الكاميرا</span><select id="camdev" class="big-in" onchange="hwSave({...HW(),cam:{...camCfg(),dev:this.value}});try{CAM.st&&CAM.st.getTracks().forEach(t=>t.stop())}catch(_){}CAM.st=null;camStart()"><option value="">الكاميرا الأمامية (عادي)</option></select></div>
+    ${camCfg().on ? `<div class="field"><span class="lbl">📍 شنو كتصور هاد الكاميرا؟</span><select class="big-in" onchange="hwSave({...HW(),cam:{...camCfg(),forPos:this.value}});camRemote();sheetDevices()"><option value="">لاكيس ديال هاد الجهاز نيت</option>${POS.map((x) => `<option value="${x.id}" ${camCfg().forPos === x.id ? "selected" : ""}>📱 جهاز ديال الكاميرا فوق لاكيس ديال ${esc(x.name)} (ما فيهاش كاميرا)</option>`).join("")}</select>${camCfg().forPos ? '<div class="alert acc" style="cursor:default">📱 خلي هاد الجهاز محلول على التطبيق، مشارجي، والكاميرا مقابلة لاكيس. كل مرة لاكيس كتحل، هاد الجهاز كيصور بوحدو.</div>' : ""}</div>
+    <div class="field"><span class="lbl">🎥 الكاميرا</span><select id="camdev" class="big-in" onchange="hwSave({...HW(),cam:{...camCfg(),dev:this.value}});try{CAM.st&&CAM.st.getTracks().forEach(t=>t.stop())}catch(_){}CAM.st=null;camStart()"><option value="">الكاميرا الأمامية (عادي)</option></select><div class="muted" style="font-size:.85rem">🔌 إلا الجهاز ما فيهش كاميرا: ركب كاميرا USB (webcam) ومن بعد عاود حل هاد الصفحة، غادي تبان هنا.</div></div>
     ${choice("camsecs", "⏱️ طول الفيديو", [{ v: "8", l: "8 ثواني", i: "⏱️" }, { v: "15", l: "15 ثانية", i: "⏱️" }, { v: "30", l: "30 ثانية", i: "⏱️" }], String(camCfg().secs || 10), 3)}
     <video id="campv" autoplay muted playsinline style="width:100%;max-height:200px;background:#000;border-radius:12px"></video>
     <div class="btns"><button type="button" class="btn small" onclick="camClip('تجربة');toast('📹 كيتسجل فيديو تجربة…')">🧪 سجل فيديو تجربة</button></div>` : ""}</div>
@@ -7864,6 +7872,7 @@ function sheetDevices() {
       (_b2 = (_a2 = navigator.mediaDevices) == null ? void 0 : _a2.enumerateDevices) == null ? void 0 : _b2.call(_a2).then((L) => {
         const sel = $("#camdev", f);
         if (!sel) return;
+        if (!L.some((d) => d.kind === "videoinput")) sel.insertAdjacentHTML("afterend", '<div class="alert bad" style="cursor:default">❌ ما لقيت حتى كاميرا فهاد الجهاز. ركب كاميرا USB، ولا استعمل تيليفون/تابليت فوق لاكيس (📍 الفوق).</div>');
         L.filter((d) => d.kind === "videoinput").forEach((d, k) => {
           const o = document.createElement("option");
           o.value = d.deviceId;
@@ -13473,9 +13482,38 @@ document.addEventListener("focusout", (e) => {
 setTimeout(() => {
   try {
     if (camCfg().on) camStart();
+    camRemote();
   } catch (_) {
   }
 }, 4e3);
+let CAMR = null, CAMRK = "";
+const CAMSEEN = /* @__PURE__ */ new Set();
+function camRemote() {
+  const c = camCfg();
+  const k = c.on && c.forPos && me ? c.forPos + ":" + today() : "";
+  if (k === CAMRK && CAMR) return;
+  try {
+    typeof CAMR === "function" && CAMR();
+  } catch (_) {
+  }
+  CAMR = null;
+  CAMRK = k;
+  if (!k) return;
+  const t0 = Date.now();
+  CAMR = db.collection("drawerev").where("date", "==", today()).onSnapshot((q) => {
+    q.docs.map((d) => d.data()).filter((e) => e.pos === c.forPos && e.ts > t0 && !e.hasCam && !CAMSEEN.has(e.ts)).forEach((e) => {
+      CAMSEEN.add(e.ts);
+      camClip(e.reason, e.ref, { remote: true, pos: e.pos, by: e.by });
+    });
+  }, () => {
+  }) || true;
+}
+setInterval(() => {
+  try {
+    camRemote();
+  } catch (_) {
+  }
+}, 6e4);
 (() => {
   if (!matchMedia("(pointer:coarse)").matches) return;
   let on = false;
