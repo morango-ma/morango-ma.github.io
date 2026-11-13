@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113230450" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113231647" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -7358,12 +7358,41 @@ const HW = () => {
     return { auto: true, drawer: true, width: "80" };
   }
 };
+const hwKey = () => (me == null ? void 0 : me.id) ? "hw_" + me.id + "_" + String(navigator.platform || "x").replace(/\W/g, "") + "_" + (typeof isDesk === "function" && isDesk() ? "d" : "m") : "";
 const hwSave = (o) => {
   try {
-    localStorage.setItem(HWK, JSON.stringify(__spreadValues(__spreadValues({}, HW()), o)));
+    localStorage.setItem(HWK, JSON.stringify(__spreadProps(__spreadValues(__spreadValues({}, HW()), o), { savedTs: Date.now() })));
   } catch (_) {
   }
+  clearTimeout(window.__hwT);
+  window.__hwT = setTimeout(() => {
+    const k = hwKey();
+    if (k) try {
+      db.doc("devcfg/" + k).set({ hw: HW(), ts: Date.now(), by: meName(), ua: String(navigator.userAgent).slice(0, 160) });
+    } catch (_) {
+    }
+  }, 1500);
 };
+setInterval(async () => {
+  if (!me || window.__hwSynced === me.id) return;
+  window.__hwSynced = me.id;
+  const k = hwKey();
+  if (!k) return;
+  try {
+    const d = (await db.doc("devcfg/" + k).get()).data();
+    const L = HW();
+    if ((d == null ? void 0 : d.hw) && !(L.savedTs > 0)) {
+      localStorage.setItem(HWK, JSON.stringify(__spreadValues({}, d.hw)));
+      toast("🖨️📹 رجعو الإعدادات ديال الطابعة والكاميرا ديال هاد الجهاز");
+      try {
+        if (camCfg().on) camStart();
+        camRemote();
+      } catch (_) {
+      }
+    } else if (L.savedTs > 0 && !d) hwSave({});
+  } catch (_) {
+  }
+}, 3e3);
 const BT_SVC = ["000018f0-0000-1000-8000-00805f9b34fb", "e7810a71-73ae-499d-8c15-faa9aef0c3f2", "49535343-fe7d-4ae5-8fa9-9fafd205e455", "0000ff00-0000-1000-8000-00805f9b34fb", "0000fee7-0000-1000-8000-00805f9b34fb"];
 let PRN = null;
 const NAT = () => window.MorangoNative || null;
