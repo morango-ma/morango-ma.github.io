@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113200711" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113201006" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6455,10 +6455,87 @@ async function rasterPrep(blob, dots) {
     return yy <= bot && xx < W ? bits[yy * W + xx] : 0;
   } };
 }
-const tsplOn = () => {
+const labLang = () => {
   const H = HW();
-  return H.lang === "tspl" || !H.lang && /GG-D|D41|D45|TSC|TSPL|label/i.test(H.name || "");
+  if (!H.langManual && /GG-D|D41|D45/i.test(H.name || "")) return "zpl";
+  if (H.lang === "tspl" || H.lang === "zpl") return H.lang;
+  if (!H.lang && /TSC|TSPL|label/i.test(H.name || "")) return "tspl";
+  return "";
 };
+const tsplOn = () => !!labLang();
+function zplHexRow(row) {
+  let h = "";
+  for (const b of row) h += (b < 16 ? "0" : "") + b.toString(16).toUpperCase();
+  return h;
+}
+function zplRle(h) {
+  const T = "GHIJKLMNOPQRSTUVWXY", U = "ghijklmnopqrstuvwxyz";
+  let out = "";
+  let i = 0;
+  const L0 = h.length;
+  h = h.replace(/0+$/, "");
+  const cut = h.length < L0;
+  while (i < h.length) {
+    const c = h[i];
+    let n = 1;
+    while (i + n < h.length && h[i + n] === c) n++;
+    let m = n;
+    let code = "";
+    while (m > 0) {
+      if (m >= 20) {
+        const k = Math.min(20, Math.floor(m / 20));
+        code += U[k - 1];
+        m -= k * 20;
+      } else {
+        code += T[m - 1];
+        m = 0;
+      }
+    }
+    out += (n > 1 ? code : "") + c;
+    i += n;
+  }
+  return out + (cut ? "," : "");
+}
+async function zplFromBlob(blob, fit) {
+  const H0 = HW();
+  const wmm = +H0.lw || 100, hmm = +H0.lh || 100;
+  const maxW = Math.round(wmm * 8) - 16, maxH = Math.round(hmm * 8) - 16;
+  let dots = maxW;
+  if (fit) {
+    try {
+      const bm = await createImageBitmap(blob);
+      dots = Math.max(64, Math.min(maxW, Math.floor(maxH * bm.width / bm.height)));
+    } catch (_) {
+    }
+  }
+  const Rr = await rasterPrep(blob, dots);
+  const W = Rr.W, bw = Math.ceil(W / 8);
+  const xo = Math.max(8, Math.floor((maxW + 16 - W) / 2));
+  let out = "";
+  for (let y0 = 0; y0 < Rr.H; y0 += maxH) {
+    const h = Math.min(maxH, Rr.H - y0);
+    let data = "", prev = null;
+    for (let y = 0; y < h; y++) {
+      const row = new Uint8Array(bw);
+      for (let bx = 0; bx < bw; bx++) {
+        let b = 0;
+        for (let bit = 0; bit < 8; bit++) {
+          const xx = bx * 8 + bit;
+          if (xx < W && Rr.dark(xx, y0 + y)) b |= 128 >> bit;
+        }
+        row[bx] = b;
+      }
+      const hx = zplHexRow(row);
+      if (hx === prev) data += ":";
+      else data += zplRle(hx);
+      prev = hx;
+    }
+    out += `^XA^PW${Math.round(wmm * 8)}^LL${Math.round(hmm * 8)}^LH0,0^FO${xo},8^GFA,${bw * h},${bw * h},${bw},${data}^FS^PQ1^XZ\r
+`;
+  }
+  return new TextEncoder().encode(out);
+}
+const labelFromBlob = (b, fit) => labLang() === "zpl" ? zplFromBlob(b, fit) : tsplFromBlob(b, fit);
 async function tsplFromBlob(blob, fit) {
   const H0 = HW();
   const wmm = +H0.lw || 100, hmm = +H0.lh || 100, gap = H0.lg != null && H0.lg !== "" ? +H0.lg : 2;
@@ -6504,7 +6581,7 @@ PRINT 1,1\r
   return out;
 }
 async function escposFromBlob(blob, dots) {
-  if (tsplOn()) return tsplFromBlob(blob, false);
+  if (tsplOn()) return labelFromBlob(blob, false);
   if (HW().raster === "esc") return escposEscStar(blob, dots);
   const R = await rasterPrep(blob, dots);
   const W = R.W, H = R.H;
@@ -6752,7 +6829,7 @@ async function hwTest() {
     try {
       const t2 = { n: 0, no: "TEST", ts: Date.now(), lines: [], total: 0 };
       const b = await receiptBlob({ pos: S.pos || POS[0].id, seller: meName() }, t2, "client");
-      await p2.write(await tsplFromBlob(b, true));
+      await p2.write(await labelFromBlob(b, true));
       return toast("🖨️ تطبعات ليتيكيت تجربة");
     } catch (e) {
       PRN = null;
@@ -6791,14 +6868,15 @@ function sheetDevices() {
     <div class="btns">${sp.nat ? '<button type="button" class="btn primary" onclick="hwNatPick()">🖨️ اختار الطابعة (Bluetooth / USB)</button>' : ""}${sp.bt ? `<button type="button" class="btn" onclick="hwConnect('bt').then(()=>sheetDevices())">📶 Bluetooth</button>` : ""}${sp.usb ? `<button type="button" class="btn" onclick="hwConnect('usb').then(()=>sheetDevices())">🔌 USB</button>` : ""}${sp.serial ? `<button type="button" class="btn" onclick="hwConnect('serial').then(()=>sheetDevices())">🔗 Serial</button>` : ""}<button type="button" class="btn ${H.kind === "sys" ? "primary" : ""}" onclick="hwSave({...HW(),kind:'sys',name:'WiFi'});PRN=null;sheetDevices();toast('📡 تختارت طابعة WiFi')">📡 WiFi (نفس الويفي)</button>${H.kind === "sys" ? '<button type="button" class="btn small" onclick="hwSave({...HW(),kind:null,name:null});sheetDevices()">✖️ حيد WiFi</button>' : ""}</div>
     ${H.kind === "sys" ? '<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch">📡 <b>طابعة WiFi:</b> ملي تطبع، كيطلع الطبع ديال الجهاز: اختار الطابعة مرة وحدة (كتبقى مختارة). فـ Android خاص يكون «Mopria Print Service» ولا البلوگين ديال الماركة ديال الطابعة (من Play Store) مفعّل فـ Paramètres › Impression.</div>' : ""}
     ${(() => {
-    if (!H.lang && /GG-D|D41|D45|TSC|TSPL|label/i.test(H.name || "")) {
-      hwSave(__spreadProps(__spreadValues({}, HW()), { lang: "tspl" }));
-      H.lang = "tspl";
+    const l = labLang();
+    if (l && H.lang !== l && !H.langManual) {
+      hwSave(__spreadProps(__spreadValues({}, HW()), { lang: l }));
+      H.lang = l;
     }
     return "";
   })()}
-    <div class="field"><span class="lbl">🏷️ نوع الطابعة</span><div class="choice" style="--cols:2"><button type="button" class="opt" aria-pressed="${H.lang !== "tspl"}" onclick="hwSave({...HW(),lang:'esc'});sheetDevices()"><span class="ico">🧾</span><span>ديال الوصولات (ESC/POS)</span></button><button type="button" class="opt" aria-pressed="${H.lang === "tspl"}" onclick="hwSave({...HW(),lang:'tspl'});sheetDevices()"><span class="ico">🏷️</span><span>ديال الليتيكيت (TSPL · GG-D410…)</span></button></div></div>
-    ${H.lang === "tspl" ? `<div class="field"><span class="lbl">📐 القياس ديال الليتيكيت (مم)</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><label class="muted" style="font-size:.8rem">العرض<input class="big-in" inputmode="decimal" value="${H.lw || 100}" onchange="hwSave({...HW(),lw:num(this.value)||100})"></label><label class="muted" style="font-size:.8rem">الطول<input class="big-in" inputmode="decimal" value="${H.lh || 100}" onchange="hwSave({...HW(),lh:num(this.value)||100})"></label><label class="muted" style="font-size:.8rem">الفراغ بيناتهم<input class="big-in" inputmode="decimal" value="${H.lg != null ? H.lg : 2}" onchange="hwSave({...HW(),lg:num(this.value)})"></label></div></div>` : ""}
+    <div class="field"><span class="lbl">🏷️ نوع الطابعة</span><div class="choice" style="--cols:3"><button type="button" class="opt" aria-pressed="${H.lang !== "tspl" && H.lang !== "zpl"}" onclick="hwSave({...HW(),lang:'esc',langManual:true});sheetDevices()"><span class="ico">🧾</span><span>وصولات (ESC/POS)</span></button><button type="button" class="opt" aria-pressed="${H.lang === "zpl"}" onclick="hwSave({...HW(),lang:'zpl',langManual:true});sheetDevices()"><span class="ico">🏷️</span><span>ليتيكيت ZPL (GG-D410)</span></button><button type="button" class="opt" aria-pressed="${H.lang === "tspl"}" onclick="hwSave({...HW(),lang:'tspl',langManual:true});sheetDevices()"><span class="ico">🏷️</span><span>ليتيكيت TSPL</span></button></div></div>
+    ${H.lang === "tspl" || H.lang === "zpl" ? `<div class="field"><span class="lbl">📐 القياس ديال الليتيكيت (مم)</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><label class="muted" style="font-size:.8rem">العرض<input class="big-in" inputmode="decimal" value="${H.lw || 100}" onchange="hwSave({...HW(),lw:num(this.value)||100})"></label><label class="muted" style="font-size:.8rem">الطول<input class="big-in" inputmode="decimal" value="${H.lh || 100}" onchange="hwSave({...HW(),lh:num(this.value)||100})"></label><label class="muted" style="font-size:.8rem">الفراغ بيناتهم<input class="big-in" inputmode="decimal" value="${H.lg != null ? H.lg : 2}" onchange="hwSave({...HW(),lg:num(this.value)})"></label></div></div>` : ""}
     ${choice("hww", "📏 عرض الورقة", [{ v: "58", l: "58 mm", i: "🧾" }, { v: "80", l: "80 mm", i: "🧾" }], H.width, 2)}
     <div class="field"><span class="lbl">🧩 طريقة الطبع (إلا خرج الوصل خاوي، بدلها)</span><div class="choice" style="--cols:2"><button type="button" class="opt" aria-pressed="${H.raster !== "esc"}" onclick="hwSave({...HW(),raster:'gsv0'});sheetDevices()"><span class="ico">🅰️</span><span>عادية (GS v 0)</span></button><button type="button" class="opt" aria-pressed="${H.raster === "esc"}" onclick="hwSave({...HW(),raster:'esc'});sheetDevices()"><span class="ico">🅱️</span><span>بديلة (ESC *)</span></button></div></div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="hwauto" ${H.auto ? "checked" : ""} style="width:22px;height:22px"> 🖨️ اطبع الوصل بوحدو من بعد كل بيعة</label>
@@ -11927,7 +12005,7 @@ async function printLots(ids) {
       try {
         const b = await lotLabelsBlob(lots);
         if (tsplOn()) {
-          for (const l of lots) await pr.write(await tsplFromBlob(await lotLabelsBlob([l]), true));
+          for (const l of lots) await pr.write(await labelFromBlob(await lotLabelsBlob([l]), true));
         } else if (!(HW().mode === "img" && pr.kind === "nat" && await natImgPrint(b))) await pr.write(await escposFromBlob(b, HW().width === "80" ? 576 : 384));
         await markP();
         return toast("🖨️ التيكيات تطبعو فالطابعة");
