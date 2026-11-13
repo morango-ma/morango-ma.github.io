@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113211218" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113213604" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1263,6 +1263,21 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     setTimeout(() => URL.revokeObjectURL(u), 8e3);
   } };
   window.claude = { use: async (n) => n === "db" ? (await ensure(), db) : n === "downloads" ? downloads : null };
+  window.morangoCam = { up: async (path, blob) => {
+    await ensure();
+    const { error } = await sb.storage.from("cam").upload(path, blob, { contentType: blob.type || "video/webm", upsert: false });
+    if (error) throw error;
+    return path;
+  }, url: async (path) => {
+    await ensure();
+    const { data, error } = await sb.storage.from("cam").createSignedUrl(path, 3600);
+    if (error) throw error;
+    return data.signedUrl;
+  }, rm: async (paths) => {
+    await ensure();
+    const { error } = await sb.storage.from("cam").remove(paths);
+    if (error) throw error;
+  } };
   window.morangoSeq = async (k) => {
     await ensure();
     const { data, error } = await sb.rpc("next_seq", { p_key: k });
@@ -2876,6 +2891,7 @@ function allTiles() {
   if (["admin", "manager", "prod", "ws", "seller", "buyer"].includes(me.role)) vMore(true).forEach(add);
   add({ i: "💬", l: "الملاحظات والاقتراحات (التطبيق والمحل)", a: "go", v: "appfb", c: 6, b: isAdmin() ? afbNew().length : afbMineNew().length });
   if (isAdmin() || me.role === "manager") add({ i: "🕘", l: "سجل الدخول (شكون دخل ومن أي جهاز)", a: "go", v: "logins", c: 4 });
+  if (isMgr()) add({ i: "📹", l: "فيديوهات لاكيس (كل مرة كتحل)", a: "go", v: "cam", c: 4 });
   if (isMgr()) add({ i: "⭐", l: "آراء الزبناء على الخدمة ديال البائعات", a: "go", v: "avis", c: 4 });
   add({ i: "🎨", l: "العرض والألوان (هاد الجهاز)", a: "disp", c: 2 });
   if ((_a = window.MorangoNative) == null ? void 0 : _a.desktop) {
@@ -3029,7 +3045,7 @@ function draw() {
     if (!(S.kf.step === "msg" && $("#ktext") || S.kf.step === "cand" && $("#cname") || S.kf.step === "idle" && $(".attract"))) $("#main").innerHTML = vKiosk();
     return;
   }
-  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, avis: vAvis, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
+  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, avis: vAvis, cam: vCam, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
   const y = window.scrollY;
   $("#main").innerHTML = V();
   window.scrollTo(0, y);
@@ -5694,6 +5710,53 @@ function avisStats(L) {
   o.pct = o.n ? Math.round(o.ans / o.n * 100) : 0;
   return o;
 }
+function vCam() {
+  var _a, _b, _c, _d;
+  if (!isMgr()) return emptyB("🔒", "ما عندكش الحق.");
+  const d = S.camD || today();
+  if (((_a = S.camL) == null ? void 0 : _a.d) !== d && !((_b = S.camL) == null ? void 0 : _b.busy)) {
+    S.camL = { d, busy: true, L: [] };
+    db.collection("camclips").where("date", "==", d).get().then((q) => {
+      S.camL = { d, L: q.docs.map((x) => __spreadValues({ id: x.id }, x.data())).sort((a, b) => (b.ts || 0) - (a.ts || 0)) };
+      render();
+    }).catch(() => {
+      S.camL = { d, L: [] };
+      render();
+    });
+    if (isAdmin() && !S.camGc) {
+      S.camGc = 1;
+      db.collection("camclips").where("date", "<", daysAgo(21)).get().then(async (q) => {
+        const L2 = q.docs.map((x) => __spreadValues({ id: x.id }, x.data()));
+        for (let i = 0; i < L2.length; i += 50) {
+          const B = L2.slice(i, i + 50);
+          try {
+            await window.morangoCam.rm(B.map((c) => c.path));
+            for (const c of B) await db.doc("camclips/" + c.id).delete();
+          } catch (_) {
+          }
+        }
+      }).catch(() => {
+      });
+    }
+  }
+  const L = ((_c = S.camL) == null ? void 0 : _c.L) || [];
+  const days = [[today(), "اليوم"], [daysAgo(1), "البارح"], [daysAgo(2), "قبل البارح"]];
+  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">📹 فيديوهات لاكيس</h2><span class="tag">${L.length}</span></div>
+   <div class="chips">${days.map(([v, l]) => `<button type="button" class="chip ${d === v ? "on" : ""}" onclick="S.camD='${v}';render()">${l}</button>`).join("")}<input type="date" value="${d}" onchange="S.camD=this.value||'${today()}';render()" style="height:40px;border-radius:12px;border:2px solid var(--line);background:var(--surface);padding:0 8px"></div>
+   <p class="muted" style="margin:0">كل مرة كتحل لاكيس ديال الفلوس كيتسجل فيديو. كيبقاو 21 يوم ومن بعد كيتمسحو بوحدهم.</p></section>
+   <section class="card" style="gap:4px">${((_d = S.camL) == null ? void 0 : _d.busy) ? emptyB("⏳", "كيتحمل…") : L.length ? L.map((c) => `<div class="prow"><div><b>⏰ ${hm(c.ts)} · ${esc(LOC[c.pos] || c.pos || "")}</b><div class="muted">${esc(c.reason || "")}${c.ref ? " · 🧾 " + esc(c.ref) : ""} · 👤 ${esc(c.by || "")} · ${Math.round((c.size || 0) / 1024)} KB</div></div><button type="button" class="btn small" onclick="camPlay('${c.id}')">▶️ شوف</button></div>`).join("") : emptyB("📹", "ما كاين حتى فيديو فهاد النهار.")}</section>`;
+}
+async function camPlay(id) {
+  var _a;
+  const c = (((_a = S.camL) == null ? void 0 : _a.L) || []).find((x) => x.id === id);
+  if (!c) return;
+  try {
+    const u = await window.morangoCam.url(c.path);
+    openSheet("📹 " + hm(c.ts) + " · " + (LOC[c.pos] || ""), `<video src="${esc(u)}" controls autoplay playsinline style="width:100%;border-radius:12px;background:#000"></video><div class="muted">${esc(c.reason || "")}${c.ref ? " · 🧾 " + esc(c.ref) : ""} · 👤 ${esc(c.by || "")} · ${dhm(c.ts)}</div>`);
+  } catch (e) {
+    toast("❌ " + (e.message || e), true);
+  }
+}
 function vAvis() {
   if (!isMgr()) return emptyB("🔒", "ما عندكش الحق.");
   const P = S.avP || "7";
@@ -6208,6 +6271,32 @@ async function receiptLogo() {
 }
 const receiptHtml = (sh, t) => `<div class="receipt">${(S.cfg || {}).logo ? `<div style="text-align:center"><img src="${esc(S.cfg.logo)}" alt="" style="max-width:140px;max-height:80px;object-fit:contain"></div>` : ""}<div class="head"><b class="disp">${esc((S.cfg || {}).title || "Morango")} · ${esc(LOC[sh.pos])}</b><span class="muted num">وصل رقم ${esc(rNo(t))}</span></div><div class="muted num">🕒 ${dhms(t.ts)} · ${esc(sh.seller)}</div>
   <div class="tw"><table class="t"><tbody>${t.lines.map((l) => `<tr><td>${ico(l.item)} ${esc(iname(l.item))}</td><td>${rQtyU(l)} × ${money(l.price)}</td><td class="num">${money(l.qty * l.price)}</td></tr>`).join("")}</tbody></table></div>${t.discount ? `<div class="muted num">خصم الوفاء −${money(t.discount)}</div>` : ""}<div class="tot"><span>المجموع</span><span>${money(t.total)}</span></div>${t.client ? `<div class="muted">⭐ ${esc(t.client.name)} · +${fmt(t.client.earned)} نقطة · الرصيد ${fmt(t.client.balance)}</div>` : ""}${t.given != null ? `<div class="prow num" style="border:0;padding:2px 0"><span>💵 عطى الزبون</span><b>${money(t.given)}</b></div><div class="prow num" style="border:0;padding:2px 0"><span>🪙 الصرف اللي رجع ليه</span><b>${money(t.change)}</b></div>` : ""}<div class="muted">💵 كاش · شكراً على الزيارة 💛</div></div>`;
+const C128 = "212222,222122,222221,121223,121322,131222,122213,122312,132212,221213,221312,231212,112232,122132,122231,113222,123122,123221,223211,221132,221231,213212,223112,312131,311222,321122,321221,312212,322112,322211,212123,212321,232121,111323,131123,131321,112313,132113,132311,211313,231113,231311,112133,112331,132131,113123,113321,133121,313121,211331,231131,213113,213311,213131,311123,311321,331121,312113,312311,332111,314111,221411,431111,111224,111422,121124,121421,141122,141221,112214,112412,122114,122411,142112,142211,241211,221114,413111,241112,134111,111242,121142,121241,114212,124112,124211,411212,421112,421211,212141,214121,412121,111143,111341,131141,114113,114311,411113,411311,113141,114131,311141,411131,211412,211214,211232,2331112".split(",");
+function barcodeCanvas(txt, maxW, h) {
+  txt = String(txt).replace(/[^\x20-\x7e]/g, "");
+  const codes = [104];
+  for (const ch of txt) codes.push(ch.charCodeAt(0) - 32);
+  let sum = 104;
+  for (let i = 1; i < codes.length; i++) sum += codes[i] * i;
+  codes.push(sum % 103, 106);
+  const bars = codes.map((c) => C128[c]).join("");
+  const mods = [...bars].reduce((a, d) => a + +d, 0) + 20;
+  const m = Math.max(1, Math.floor(maxW / mods));
+  const cv = document.createElement("canvas");
+  cv.width = mods * m;
+  cv.height = h;
+  const x = cv.getContext("2d");
+  x.fillStyle = "#fff";
+  x.fillRect(0, 0, cv.width, h);
+  x.fillStyle = "#000";
+  let px = 10 * m;
+  [...bars].forEach((d, i) => {
+    const w = +d * m;
+    if (i % 2 === 0) x.fillRect(px, 0, w, h);
+    px += w;
+  });
+  return cv;
+}
 async function receiptBlob(sh, t, copy) {
   var _a, _b, _c;
   const cfg = S.cfg || {};
@@ -6360,6 +6449,16 @@ async function receiptBlob(sh, t, copy) {
     gap(4);
     center(cfg.footer || "شكراً على الزيارة", Math.round(F * 0.9), true);
     gap(P);
+  }
+  {
+    const code = String(t.no || t.num || t.n || "").trim();
+    if (code && /^[\x20-\x7e]+$/.test(code)) {
+      const bc = barcodeCanvas(code, W - 2 * P, W > 400 ? 90 : 70);
+      R.push({ k: "g", h: 8 });
+      R.push({ k: "img", im: bc, w: bc.width, h: bc.height });
+      R.push({ k: "c", t: code, sz: Math.round(F * 0.8), b: true });
+      R.push({ k: "g", h: P });
+    }
   }
   const lh = (r) => r.k === "l" ? 20 : r.k === "g" ? r.h : r.k === "img" ? r.h : Math.round(r.sz * 1.45);
   let H = P;
@@ -6922,6 +7021,52 @@ function sysPrint(blob) {
     document.body.appendChild(fr);
   });
 }
+const CAM = { st: null, rec: false };
+const camCfg = () => __spreadValues({ on: false, secs: 10, dev: "" }, HW().cam || {});
+async function camStart() {
+  const c = camCfg();
+  if (!c.on) return null;
+  if (CAM.st && CAM.st.getVideoTracks().some((t) => t.readyState === "live")) return CAM.st;
+  try {
+    CAM.st = await navigator.mediaDevices.getUserMedia({ audio: false, video: __spreadProps(__spreadValues({}, c.dev ? { deviceId: { exact: c.dev } } : { facingMode: "user" }), { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 12 } }) });
+    return CAM.st;
+  } catch (e) {
+    CAM.st = null;
+    toast("📹 الكاميرا ما خدماتش: " + (e.message || e), true);
+    return null;
+  }
+}
+async function camClip(reason, ref) {
+  const c = camCfg();
+  if (!c.on || CAM.rec) return;
+  const st = await camStart();
+  if (!st) return;
+  CAM.rec = true;
+  const ts = Date.now();
+  try {
+    const mt = ["video/webm;codecs=vp8", "video/webm", "video/mp4"].find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "";
+    const mr = new MediaRecorder(st, __spreadProps(__spreadValues({}, mt ? { mimeType: mt } : {}), { videoBitsPerSecond: 18e4 }));
+    const ch = [];
+    mr.ondataavailable = (e) => {
+      if (e.data && e.data.size) ch.push(e.data);
+    };
+    const done = new Promise((r) => mr.onstop = r);
+    mr.start(1e3);
+    await new Promise((r) => setTimeout(r, Math.max(4, +c.secs || 10) * 1e3));
+    mr.stop();
+    await done;
+    CAM.rec = false;
+    const blob = new Blob(ch, { type: (mt || "video/webm").split(";")[0] });
+    const pos = S.pos || (me == null ? void 0 : me.loc) || "x";
+    const d = dstr(new Date(ts));
+    const path = `${pos}/${d}/${ts}.${blob.type.includes("mp4") ? "mp4" : "webm"}`;
+    await window.morangoCam.up(path, blob);
+    await db.collection("camclips").add({ pos, date: d, ts, path, size: blob.size, secs: +c.secs || 10, reason: reason || "", ref: ref || "", by: meName(), byId: (me == null ? void 0 : me.id) || "" });
+  } catch (e) {
+    CAM.rec = false;
+    console.warn("cam", e);
+  }
+}
 async function hwPrint(sh, t, { drawer, copy } = {}) {
   var _a;
   if (HW().kind === "sys") {
@@ -6939,9 +7084,12 @@ async function hwPrint(sh, t, { drawer, copy } = {}) {
     if (HW().mode === "img" && p.kind === "nat" && await natImgPrint(bl)) return true;
     const bytes = await escposFromBlob(bl, HW().width === "80" ? 576 : 384);
     await p.write(bytes);
-    if (drawer) try {
-      await p.write(DRAWER);
-    } catch (_) {
+    if (drawer) {
+      try {
+        await p.write(DRAWER);
+      } catch (_) {
+      }
+      camClip("بيعة", (t == null ? void 0 : t.no) || (t == null ? void 0 : t.n));
     }
     return true;
   } catch (e) {
@@ -6966,6 +7114,7 @@ async function hwDrawer() {
   if (!p) return toast("ربط الطابعة أولا (لاكيس كتحل من الطابعة)", true);
   try {
     await p.write(DRAWER);
+    camClip("تحلات باليد");
     toast("💵 لاكيس تحلات");
   } catch (e) {
     PRN = null;
@@ -7061,6 +7210,12 @@ function sheetDevices() {
     <div class="field"><span class="lbl">🧩 طريقة الطبع (إلا خرج الوصل خاوي، بدلها)</span><div class="choice" style="--cols:2"><button type="button" class="opt" aria-pressed="${H.raster !== "esc"}" onclick="hwSave({...HW(),raster:'gsv0'});sheetDevices()"><span class="ico">🅰️</span><span>عادية (GS v 0)</span></button><button type="button" class="opt" aria-pressed="${H.raster === "esc"}" onclick="hwSave({...HW(),raster:'esc'});sheetDevices()"><span class="ico">🅱️</span><span>بديلة (ESC *)</span></button></div></div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="hwauto" ${H.auto ? "checked" : ""} style="width:22px;height:22px"> 🖨️ اطبع الوصل بوحدو من بعد كل بيعة</label>
     <div class="btns"><button type="button" class="btn small" onclick="hwTest()">🧪 طبع تجربة</button><button type="button" class="btn small" onclick="hwProbe()">🔍 جرب اللغات (1-4)</button></div></div>
+   <div class="box"><b>📹 كاميرا لاكيس</b><div class="muted">كل مرة كتحل لاكيس ديال الفلوس، كتسجل فيديو قصير وكيبقى عند الإدارة.</div>
+    <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" ${camCfg().on ? "checked" : ""} onchange="hwSave({...HW(),cam:{...camCfg(),on:this.checked}});if(this.checked)camStart().then(()=>sheetDevices());else{try{CAM.st&&CAM.st.getTracks().forEach(t=>t.stop())}catch(_){}CAM.st=null;sheetDevices()}" style="width:22px;height:22px"> 📹 شعل الكاميرا فهاد الجهاز</label>
+    ${camCfg().on ? `<div class="field"><span class="lbl">🎥 الكاميرا</span><select id="camdev" class="big-in" onchange="hwSave({...HW(),cam:{...camCfg(),dev:this.value}});try{CAM.st&&CAM.st.getTracks().forEach(t=>t.stop())}catch(_){}CAM.st=null;camStart()"><option value="">الكاميرا الأمامية (عادي)</option></select></div>
+    ${choice("camsecs", "⏱️ طول الفيديو", [{ v: "8", l: "8 ثواني", i: "⏱️" }, { v: "15", l: "15 ثانية", i: "⏱️" }, { v: "30", l: "30 ثانية", i: "⏱️" }], String(camCfg().secs || 10), 3)}
+    <video id="campv" autoplay muted playsinline style="width:100%;max-height:200px;background:#000;border-radius:12px"></video>
+    <div class="btns"><button type="button" class="btn small" onclick="camClip('تجربة');toast('📹 كيتسجل فيديو تجربة…')">🧪 سجل فيديو تجربة</button></div>` : ""}</div>
    <div class="box"><b>🎨 العرض والألوان</b><div class="muted">إلا الألوان ما باناش مزيان فهاد الشاشة.</div><div class="btns" style="margin:0"><button type="button" class="btn small" onclick="sheetDisplay()">🎨 بدل الألوان وحجم الكتابة</button></div></div>
    <div class="box"><b>⌨️ الكلافيي ديال الشاشة</b><div class="muted">كيطلع بوحدو ملي تضغط على أي خانة باش تكتب (عربية / Français / أرقام). مزيان لـ POS بلا كلافيي.</div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="vkbon" ${vkbOn() ? "checked" : ""} onchange="try{localStorage.setItem('bk-vkb',this.checked?'1':'0')}catch(_){}" style="width:22px;height:22px"> ⌨️ طلع الكلافيي بوحدو فهاد الجهاز</label>
@@ -7071,8 +7226,29 @@ function sheetDevices() {
    <div class="box"><b>💳 TPE ديال الكارط (CMI)</b><div class="muted">ما كيتربطش مباشرة مع التطبيق. البائعة كتخلص فالـ TPE وكتختار «💳 كارط» فلاكيس.</div></div>
    <button class="btn primary block" type="submit">✅ حفظ</button>`, async (f) => {
     hwSave({ width: f.hww.value, auto: $("#hwauto", f).checked, drawer: $("#hwdr", f).checked });
+    if (f.camsecs) hwSave({ cam: __spreadProps(__spreadValues({}, camCfg()), { secs: +f.camsecs.value || 10 }) });
     closeSheet();
     toast("✅ تحفظ");
+  }, (f) => {
+    var _a2, _b2;
+    const v = $("#campv", f);
+    if (v && camCfg().on) {
+      camStart().then((st) => {
+        if (st && v.isConnected) v.srcObject = st;
+      });
+      (_b2 = (_a2 = navigator.mediaDevices) == null ? void 0 : _a2.enumerateDevices) == null ? void 0 : _b2.call(_a2).then((L) => {
+        const sel = $("#camdev", f);
+        if (!sel) return;
+        L.filter((d) => d.kind === "videoinput").forEach((d, k) => {
+          const o = document.createElement("option");
+          o.value = d.deviceId;
+          o.textContent = d.label || "كاميرا " + (k + 1);
+          if (d.deviceId === camCfg().dev) o.selected = true;
+          sel.appendChild(o);
+        });
+      }).catch(() => {
+      });
+    }
   });
 }
 let BCB = "", BCT = 0;
@@ -12669,6 +12845,12 @@ document.addEventListener("focusout", (e) => {
     }
   }, 60);
 });
+setTimeout(() => {
+  try {
+    if (camCfg().on) camStart();
+  } catch (_) {
+  }
+}, 4e3);
 (() => {
   if (!matchMedia("(pointer:coarse)").matches) return;
   let on = false;
