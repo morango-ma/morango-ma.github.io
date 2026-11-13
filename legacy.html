@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113214813" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113215715" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -5824,6 +5824,7 @@ function sheetBonNew() {
       f.bname.focus();
       return ferr("👤 كتبي سمية الزبون.");
     }
+    if (LOY().on && !S.cust[p] && !ED) return ferr("⭐ زيدي الزبون ديال الوفاء (السمية والتيليفون) قبل ما تصيفطي.");
     const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: unitPx(id, c[id]) }));
     const tot = r2(lines.reduce((a, l) => a + l.qty * l.price, 0));
     const pk = packEditOf(p), cu = S.cust[p];
@@ -5914,7 +5915,8 @@ function sheetBons(p) {
     });
   });
 }
-const RET_WHY = ["الزبون ما بغاهش", "غلطة فالكوموند", "المنتوج فيه مشكل", "تبدل ببلاصتو منتوج آخر"];
+const RET_WHY = ["الزبون ما بغاهش", "غلطة فالكوموند", "بغا يبدل بمنتوج آخر"];
+const RET_MIN = 10;
 const RET_MODE = { cash: ["💵", "رجعنا ليه الفلوس"], exchange: ["🔄", "تبديل بمنتوج آخر"], avoir: ["🎟️", "أفوار (كريدي فالوفاء)"] };
 const retAll = () => S.retours || [];
 const retOfTicket = (no) => retAll().filter((r) => r.ticketNo === no && r.status !== "rejected");
@@ -5949,9 +5951,9 @@ function sheetRetNew() {
   const sh = openShift(p);
   if (!sh) return toast("🔓 خاص لاكيس تكون محلولة", true);
   openSheet("↩️ ريتور ديال زبون", `<div class="alert acc" style="cursor:default">📷 سكاني الـ QR ولا الكود-بار اللي فالوصل، ولا كتبي الرقم ديالو. بلا وصل ما كاينش ريتور.</div>
+   <div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>⛔ ممنوع الريتور إلا:</b><span>• فاتو ${RET_MIN} دقايق على البيعة</span><span>• الزبون خرج من المحل وما بقاش كيبان ليك</span><span>• السلعة ما بقاتش سالمة (مقيسة، محلولة، ناقصة)</span></div>
    <div class="field"><input id="rtno" class="big-in" placeholder="رقم الوصل (مثلا AR-2611-0042)" autocomplete="off" style="text-transform:uppercase;font-weight:800;font-size:1.3rem;text-align:center"></div><div class="btns"><button type="button" class="btn primary block" id="rtgo">🔎 قلب على الوصل</button></div><div id="rtbody"></div>`, null, (f) => {
     const go = async () => {
-      var _a;
       const no = $("#rtno", f).value;
       const box = $("#rtbody", f);
       box.innerHTML = '<p class="muted">⏳ كنقلب…</p>';
@@ -5962,8 +5964,9 @@ function sheetRetNew() {
       }
       const { sh: tsh, t } = R;
       const tdate = dstr(new Date(t.ts || tsh.openTs || Date.now()));
-      if (tdate !== today()) {
-        box.innerHTML = `<div class="alert bad" style="cursor:default">⛔ هاد الوصل ديال ${esc(tdate)}. الريتور كيتقبل غير فنفس النهار.</div>`;
+      const age = Math.floor((Date.now() - (+t.ts || 0)) / 6e4);
+      if (tdate !== today() || age > RET_MIN) {
+        box.innerHTML = `<div class="alert bad" style="cursor:default">⛔ فاتو ${age > 600 ? "بزاف ديال" : age} دقايق على هاد البيعة. الريتور كيتقبل غير فـ ${RET_MIN} دقايق الأولى.</div>`;
         return;
       }
       if (t.void) {
@@ -5978,10 +5981,12 @@ function sheetRetNew() {
       const gross = (t.lines || []).reduce((a, l) => a + l.qty * l.price, 0) || 1, rate = (+t.total || gross) / gross;
       box.innerHTML = `<div class="box" style="gap:4px"><b>🧾 ${esc(t.no)} · ${hm(t.ts)} · ${money(t.total)}</b><div class="muted">🛍️ ${esc(t.vend || t.by || "")}${t.client ? " · ⭐ " + esc(t.client.name) : ""}</div></div>
        <b>شنو رجع الزبون؟</b>${rows.map((l, k) => `<div class="box" style="gap:6px">${prow(l.item, money(l.price) + " · تشرى " + fmt(l.qty) + (l.left < l.qty ? " · ترجع " + fmt(l.qty - l.left) : ""), stepper("data-rq", String(k), "", iunit(l.item)))}
-         <div class="choice" style="--cols:2" data-rs="${k}"><button type="button" class="opt" aria-pressed="false" data-st="resell"><span class="ico">✅</span><span>نقي، يتعاود يتباع</span></button><button type="button" class="opt" aria-pressed="true" data-st="loss"><span class="ico">🗑️</span><span>ما يتباعش (خسارة)</span></button></div></div>`).join("")}
+</div>`).join("")}
        <div class="field"><span class="lbl">❓ علاش رجعو؟ *</span><div class="choice" style="--cols:2" id="rtwhy">${RET_WHY.map((w) => `<button type="button" class="opt" aria-pressed="false" data-w="${esc(w)}"><span>${esc(w)}</span></button>`).join("")}</div></div>
        <div class="field"><span class="lbl">💰 كيفاش غادي ياخد حقو؟ *</span><div class="choice" style="--cols:3" id="rtmode">${Object.entries(RET_MODE).map(([k, [i, l]]) => `<button type="button" class="opt" aria-pressed="false" data-m="${k}"><span class="ico">${i}</span><span>${l}</span></button>`).join("")}</div></div>
-       <div class="two"><div class="field"><span class="lbl">👤 سمية الزبون *</span><input id="rtcn" class="big-in" value="${esc(((_a = t.client) == null ? void 0 : _a.name) || "")}" autocomplete="off"></div><div class="field"><span class="lbl">📞 التيليفون *</span><input id="rtcp" class="big-in" inputmode="tel" autocomplete="off"></div></div>
+       ${t.client ? `<div class="box">⭐ الزبون: <b>${esc(t.client.name)}</b> (من الوفاء)</div>` : `<div class="alert warn" style="cursor:default">⚠️ هاد الوصل ما فيهش زبون ديال الوفاء. كتبي السمية والتيليفون.</div><div class="two"><div class="field"><span class="lbl">👤 سمية الزبون *</span><input id="rtcn" class="big-in" autocomplete="off"></div><div class="field"><span class="lbl">📞 التيليفون *</span><input id="rtcp" class="big-in" inputmode="tel" autocomplete="off"></div></div>`}
+       <label class="prow" style="gap:8px;justify-content:flex-start;font-weight:700"><input type="checkbox" id="rtok1" style="width:24px;height:24px"> 👀 الزبون باقي قدامي فالمحل</label>
+       <label class="prow" style="gap:8px;justify-content:flex-start;font-weight:700"><input type="checkbox" id="rtok2" style="width:24px;height:24px"> ✅ السلعة سالمة: ما تقاساتش، ما تحلاتش، كاملة</label>
        ${photoField("rtph", "📷 صورة السلعة اللي رجعات *")}<p id="rttot" class="disp" style="font-size:1.4rem;font-weight:800;text-align:center;margin:0"></p>${errP}<button type="button" class="btn primary block" id="rtsend">📤 صيفط للإدارة باش توافق</button>`;
       const st = {}, cal = () => {
         let s = 0;
@@ -6003,14 +6008,14 @@ function sheetRetNew() {
         if (g.dataset.rs) st[g.dataset.rs] = o.dataset.st;
       });
       $("#rtsend", f).onclick = async () => {
-        var _a2, _b, _c;
+        var _a, _b, _c;
         const lines = [];
         let bad = "";
         $$("input[data-rq]", f).forEach((i) => {
           const k = +i.dataset.rq, l = rows[k];
           const q = num(i.value) || 0;
           if (q > l.left + 1e-9) bad = "⛔ " + iname(l.item) + ": ما يمكنش ترجع كثر من " + fmt(l.left);
-          if (q > 0) lines.push({ item: l.item, qty: q, price: l.price, amt: r2(q * l.price * rate), state: st[k] || "loss" });
+          if (q > 0) lines.push({ item: l.item, qty: q, price: l.price, amt: r2(q * l.price * rate), state: "resell" });
         });
         const er = (m) => {
           const p0 = $(".err", f);
@@ -6021,11 +6026,14 @@ function sheetRetNew() {
         };
         if (bad) return er(bad);
         if (!lines.length) return er("🧺 اختاري شنو رجع وشحال.");
-        const why = (_a2 = $('#rtwhy .opt[aria-pressed="true"]', f)) == null ? void 0 : _a2.dataset.w, mode = (_b = $('#rtmode .opt[aria-pressed="true"]', f)) == null ? void 0 : _b.dataset.m, cn = $("#rtcn", f).value.trim(), cp = $("#rtcp", f).value.replace(/\D/g, "");
+        const why = (_a = $('#rtwhy .opt[aria-pressed="true"]', f)) == null ? void 0 : _a.dataset.w, mode = (_b = $('#rtmode .opt[aria-pressed="true"]', f)) == null ? void 0 : _b.dataset.m, cn = t.client ? t.client.name : $("#rtcn", f).value.trim(), cp = t.client ? "" : $("#rtcp", f).value.replace(/\D/g, "");
         if (!why) return er("❓ اختاري علاش رجعو.");
         if (!mode) return er("💰 اختاري كيفاش ياخد حقو.");
-        if (cn.length < 2) return er("👤 كتبي سمية الزبون.");
-        if (cp.length < 9) return er("📞 كتبي التيليفون ديال الزبون.");
+        if (!t.client && cn.length < 2) return er("👤 كتبي سمية الزبون.");
+        if (!t.client && cp.length < 9) return er("📞 كتبي التيليفون ديال الزبون.");
+        if (!$("#rtok1", f).checked) return er("⛔ إلا الزبون خرج من المحل، الريتور ممنوع.");
+        if (!$("#rtok2", f).checked) return er("⛔ السلعة خاصها تكون سالمة باش ترجع.");
+        if ((Date.now() - (+t.ts || 0)) / 6e4 > RET_MIN) return er("⛔ فاتو " + RET_MIN + " دقايق على البيعة.");
         if (!(PH.rtph || []).length) return er("📷 صوري السلعة اللي رجعات.");
         const b = $("#rtsend", f);
         b.disabled = true;
@@ -6033,7 +6041,7 @@ function sheetRetNew() {
         try {
           const photos = await saveMedia(PH.rtph, "retour");
           const total = r2(lines.reduce((a, l) => a + l.amt, 0));
-          await db.collection("retours").add({ pos: p, shiftId: sh.id, date: today(), ts: Date.now(), ticketNo: t.no, ticketShift: tsh.id, ticketTs: t.ts, ticketBy: t.vend || t.by || "", lines, total, why, mode, client: { name: cn, phone: cp, id: ((_c = t.client) == null ? void 0 : _c.id) || phoneId(cp) }, photos, status: "pending", by: meName(), byId: me.id });
+          await db.collection("retours").add({ pos: p, shiftId: sh.id, date: today(), ts: Date.now(), ticketNo: t.no, ticketShift: tsh.id, ticketTs: t.ts, ticketBy: t.vend || t.by || "", lines, total, why, mode, client: { name: cn, phone: cp, id: ((_c = t.client) == null ? void 0 : _c.id) || phoneId(cp) }, intact: true, present: true, photos, status: "pending", by: meName(), byId: me.id });
           closeSheet();
           toast("📤 الريتور تصيفط للإدارة · تسناي الموافقة قبل ما ترجعي شي حاجة");
         } catch (e) {
@@ -6055,6 +6063,107 @@ function sheetRetNew() {
       return (_a = $("#rtno", f)) == null ? void 0 : _a.focus();
     }, 100);
   });
+}
+async function retReceiptBlob(r, avBal) {
+  var _a;
+  const W = (S.cfg || {}).width === "58" ? 384 : 576, P = 22, F = W > 400 ? 24 : 19, FONT = '"IBM Plex Sans Arabic",Tahoma,sans-serif';
+  try {
+    await document.fonts.load(`700 ${F}px "IBM Plex Sans Arabic"`);
+  } catch (_) {
+  }
+  const rows = [];
+  const T = (t, sz, b, al) => rows.push({ t, sz: sz || F, b, al: al || "c" });
+  const PR = (r0, l0, sz, b) => rows.push({ r: r0, l: l0, sz: sz || F, b, p: 1 });
+  const LN = () => rows.push({ ln: 1 });
+  T("MORANGO", F * 1.5, true);
+  T("↩️ وصل الريتور · BON DE RETOUR", F * 1.05, true);
+  LN();
+  PR("وصل البيعة", r.ticketNo, F * 0.9, true);
+  PR("التاريخ", dstr(new Date(r.doneTs || Date.now())) + " · " + hm(r.doneTs || Date.now()), F * 0.85);
+  PR("الزبون", ((_a = r.client) == null ? void 0 : _a.name) || "", F * 0.9, true);
+  PR("السبب", r.why || "", F * 0.85);
+  LN();
+  (r.lines || []).forEach((l) => {
+    PR(iname(l.item).split(" (")[0], money(l.amt), F * 0.95, true);
+    T(fmt(l.qty) + " × " + money(l.price), F * 0.75, false, "r");
+  });
+  LN();
+  PR("مبلغ الريتور", money(r.total), F * 1.3, true);
+  PR("الطريقة", (RET_MODE[r.mode] || ["", ""])[1], F * 0.9, true);
+  if (r.mode === "avoir" && avBal != null) PR("الرصيد ديال الأفوار", money(avBal), F * 0.95, true);
+  LN();
+  PR("لاكيس", r.doneBy || r.by || "", F * 0.8);
+  PR("وافق", r.apprBy || "", F * 0.8);
+  const code = "R-" + r.ticketNo;
+  let qc = null;
+  try {
+    qc = qrCanvas(code, W > 400 ? 170 : 140);
+  } catch (_) {
+  }
+  const lh = (x2) => x2.ln ? 20 : Math.round(x2.sz * 1.5);
+  let H = P * 2 + rows.reduce((a, x2) => a + lh(x2), 0) + (qc ? qc.height + 40 : 0);
+  const cv = document.createElement("canvas");
+  cv.width = W;
+  cv.height = H;
+  const x = cv.getContext("2d");
+  x.fillStyle = "#fff";
+  x.fillRect(0, 0, W, H);
+  x.fillStyle = "#000";
+  x.textBaseline = "middle";
+  let y = P;
+  for (const q of rows) {
+    const h = lh(q), m = y + h / 2;
+    if (q.ln) {
+      x.setLineDash([8, 6]);
+      x.lineWidth = 2;
+      x.beginPath();
+      x.moveTo(P, m);
+      x.lineTo(W - P, m);
+      x.stroke();
+      x.setLineDash([]);
+    } else {
+      x.font = `${q.b ? 700 : 400} ${Math.round(q.sz)}px ${FONT}`;
+      x.direction = "rtl";
+      if (q.p) {
+        x.textAlign = "right";
+        x.fillText(q.r, W - P, m);
+        x.direction = /[\u0600-\u06FF]/.test(String(q.l)) ? "rtl" : "ltr";
+        x.textAlign = "left";
+        x.fillText(String(q.l), P, m);
+      } else {
+        x.textAlign = q.al === "r" ? "right" : "center";
+        x.fillText(q.t, q.al === "r" ? W - P : W / 2, m);
+      }
+    }
+    y += h;
+  }
+  if (qc) {
+    x.drawImage(qc, (W - qc.width) / 2, y + 6);
+    x.font = `700 ${Math.round(F * 0.8)}px ${FONT}`;
+    x.textAlign = "center";
+    x.direction = "ltr";
+    x.fillText(code, W / 2, y + qc.height + 24);
+  }
+  return await new Promise((res) => cv.toBlob(res, "image/png"));
+}
+async function printBlob(bl, name) {
+  const H = HW();
+  if (H.kind === "sys") return sysPrint(bl);
+  if (H.kind) {
+    const p = await hwReconnect();
+    if (p) {
+      try {
+        await p.write(await escposFromBlob(bl, H.width === "80" ? 576 : 384));
+        return true;
+      } catch (e) {
+        PRN = null;
+        toast("❌ الطابعة: " + (e.message || e), true);
+      }
+    }
+  }
+  const dl = await getDL();
+  await dl.save({ filename: name || "wasl.png", data: bl });
+  return true;
 }
 function retDetail(r) {
   var _a, _b, _c;
@@ -6093,6 +6202,7 @@ function sheetRetOpen(id) {
   if (r.status === "approved" && canRet(r.pos)) return openSheet("✅ كملي الريتور", `${retDetail(r)}<div style="text-align:center;border:3px solid var(--acc,#e02843);border-radius:18px;padding:10px"><div style="font-weight:700">${(_a = RET_MODE[r.mode]) == null ? void 0 : _a.join(" ")}</div><div class="disp num" style="font-size:2.6rem;font-weight:900">${money(r.total)}</div></div>
      <p class="muted" style="margin:0">${r.mode === "avoir" ? "🎟️ المبلغ غادي يتزاد للزبون كأفوار فالوفاء (رقم التيليفون ديالو)، يستعملو فالشرية الجاية." : r.mode === "exchange" ? "🔄 رجعي ليه المبلغ من لاكيس ومن بعد دوزي ليه الشرية الجديدة عادي فلاكيس." : "💵 عطيه المبلغ من لاكيس. غادي ينقص من الفلوس اللي خاصها تكون فلاكيس."}</p><button type="button" class="btn primary block" id="rtdone">✅ ${r.mode === "avoir" ? "زيد الأفوار" : "عطيتو الفلوس"}</button>`, null, (f) => {
     $("#rtdone", f).onclick = async () => {
+      var _a2;
       const b = $("#rtdone", f);
       b.disabled = true;
       try {
@@ -6114,6 +6224,35 @@ function sheetRetOpen(id) {
           await bumpStock(r.pos, d);
         } catch (_) {
         }
+        let avBal = null;
+        if (r.mode === "avoir") {
+          try {
+            const cd = (await db.doc("clients/" + r.client.id).get()).data() || {};
+            avBal = r2((cd.vouchers || []).filter((v) => v.kind === "avoir" && v.status === "active").reduce((a, v) => a + (+v.amount || 0), 0));
+          } catch (_) {
+          }
+        }
+        try {
+          await printBlob(await retReceiptBlob(__spreadProps(__spreadValues({}, r), { doneBy: meName(), doneTs: Date.now() }), avBal), "retour-" + r.ticketNo + ".png");
+        } catch (_) {
+        }
+        if (r.mode === "exchange") {
+          S.exch = S.exch || {};
+          S.exch[r.pos] = { amt: r.total, no: r.ticketNo, ret: r.id };
+          try {
+            if ((_a2 = r.client) == null ? void 0 : _a2.id) {
+              const cs = await db.doc("clients/" + r.client.id).get();
+              if (cs.exists) S.cust[r.pos] = __spreadValues({ id: r.client.id }, cs.data());
+            }
+          } catch (_) {
+          }
+          S.pos = r.pos;
+          S.view = "pos";
+          closeSheet();
+          render();
+          toast("🔄 زيدي المنتوج الجديد فالسلة، الفرق غادي يبان فالخلاص");
+          return;
+        }
         closeSheet();
         toast("✅ الريتور تكمل");
       } catch (e) {
@@ -6122,7 +6261,7 @@ function sheetRetOpen(id) {
       }
     };
   });
-  openSheet("↩️ ريتور", `${retDetail(r)}<div class="alert ${r.status === "rejected" ? "bad" : r.status === "done" ? "good" : "warn"}" style="cursor:default">${r.status === "rejected" ? "❌ ترفض: " + esc(r.rejWhy || "") : r.status === "done" ? "✅ تكمل " + hm(r.doneTs) + " · " + esc(r.doneBy || "") : r.status === "approved" ? "✅ تقبل · كيتسنى لاكيس" : "⏳ كيتسنى الموافقة"}${r.apprBy ? " · " + esc(r.apprBy) : ""}</div>`);
+  openSheet("↩️ ريتور", `${retDetail(r)}${r.status === "done" ? `<button type="button" class="btn block" onclick="(async()=>{const r=retAll().find(x=>x.id==='${r.id}');if(r)await printBlob(await retReceiptBlob(r,null),'retour-'+r.ticketNo+'.png')})()">🖨️ عاود طبع وصل الريتور</button>` : ""}<div class="alert ${r.status === "rejected" ? "bad" : r.status === "done" ? "good" : "warn"}" style="cursor:default">${r.status === "rejected" ? "❌ ترفض: " + esc(r.rejWhy || "") : r.status === "done" ? "✅ تكمل " + hm(r.doneTs) + " · " + esc(r.doneBy || "") : r.status === "approved" ? "✅ تقبل · كيتسنى لاكيس" : "⏳ كيتسنى الموافقة"}${r.apprBy ? " · " + esc(r.apprBy) : ""}</div>`);
 }
 function vRetours() {
   if (!isMgr()) return emptyB("🔒", "ما عندكش الحق.");
@@ -6282,14 +6421,20 @@ function sheetCart() {
     }).join("") : '<p class="muted" style="margin:0">هاد المنتوجات ما عندهمش تغليف محدد.</p>'}
       <select data-pkadd="1" aria-label="زيد تغليف" style="height:42px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:0 8px;font-weight:600"><option value="">➕ زيد تغليف (كيس، علبة...)</option>${pk.filter((i) => !ids2.includes(i.id)).map((i) => `<option value="${i.id}">${i.icon || "📦"} ${esc(i.name)}</option>`).join("")}</select></div>`;
   })()}
-   ${custChip(p)}${redeemBox}
+   ${custChip(p)}${redeemBox}${(() => {
+    const X = (S.exch || {})[p];
+    if (!X) return "";
+    const d = r2(total - X.amt);
+    return `<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>🔄 تبديل (ريتور ${esc(X.no)}): الزبون عندو ${money(X.amt)}</b><span style="font-size:1.15rem;font-weight:800">${d > 9e-3 ? "💵 خاصو يزيد: " + money(d) : d < -9e-3 ? "↩️ رجعي ليه: " + money(-d) : "✅ نفس الثمن، ما كاين فرق"}</span><span class="muted" style="font-size:.85rem">${money(X.amt)} ترجعو ليه فلاكيس. دوزي الشرية الجديدة عادي.</span><button type="button" class="btn small" onclick="delete S.exch['${p}'];sheetCart()">✖️ ما بقاش التبديل</button></div>`;
+  })()}
    <div class="receipt"><div class="tot"><span>المجموع</span><span>${money(total)}</span></div>${useVal ? `<div class="muted num">قبل الخصم ${money(gross)} · خصم الوفاء −${money(useVal)}</div>` : ""}</div>
    <div class="field"><span class="lbl">💵 شحال عطاك الزبون؟ (اختياري)</span><div class="quick"><button type="button" data-act="given" data-v="${total}">بالضبط</button>${notes.map((v) => `<button type="button" data-act="given" data-v="${v}">${v}</button>`).join("")}</div>
    <input id="cgiven" name="cgiven" class="big-in" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px" type="text" inputmode="decimal" placeholder="0.00" aria-label="المبلغ اللي عطى الزبون"></div><div id="chg"></div>${errP}
    <div class="btns"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button><button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div>`, async (f) => {
-    var _a;
+    var _a, _b, _c;
     const sh = openShift(p);
     if (!sh) return ferr("ما كاينة حتى نوبة مفتوحة.");
+    if (LOY().on && !S.cust[p] && !((_a = S.bonPay) == null ? void 0 : _a[p])) return ferr("⭐ خاص الزبون ديال الوفاء قبل الخلاص (السمية والتيليفون).");
     const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: unitPx(id, c[id]), unitCost: costOf(id, 0, p) }));
     const grossT = r2(lines.reduce((s, l) => s + l.qty * l.price, 0));
     const tot = r2(grossT - useVal);
@@ -6300,7 +6445,7 @@ function sheetCart() {
       const fresh = await db.doc("shifts/" + sh.id).get();
       const tk = [...fresh.data().tickets || []];
       const t = { n: tk.length + 1, ts: Date.now(), lines, total: tot, pay: "cash", by: meName(), byId: me.id };
-      const bonId = (_a = S.bonPay) == null ? void 0 : _a[p];
+      const bonId = (_b = S.bonPay) == null ? void 0 : _b[p];
       const bon = bonId && (S.bons || []).find((x) => x.id === bonId && x.status === "open");
       if (bon) {
         t.bon = bon.no;
@@ -6336,7 +6481,7 @@ function sheetCart() {
           t.voucher = fv.id;
         }
         const upd = { points: bal, total: r2((+cd.total || 0) + tot), visits: (+cd.visits || 0) + 1, lastTs: Date.now() };
-        if (fv) upd.vouchers = (cd.vouchers || []).map((v) => v.id === fv.id ? __spreadProps(__spreadValues({}, v), { status: "used", usedTs: Date.now(), usedBy: meName(), pos: p, ticket: t.n }) : v);
+        if (fv) upd.vouchers = (cd.vouchers || []).map((v) => v.id !== fv.id ? v : v.kind === "avoir" && (+v.amount || 0) - useVal > 9e-3 ? __spreadProps(__spreadValues({}, v), { amount: r2((+v.amount || 0) - useVal), uses: [...v.uses || [], { amt: useVal, ts: Date.now(), by: meName(), pos: p, ticket: t.no || t.n }] }) : __spreadProps(__spreadValues({}, v), { status: "used", usedTs: Date.now(), usedBy: meName(), pos: p, ticket: t.n }));
         await cref.update(upd);
         delete S.cust[p];
       }
@@ -6374,6 +6519,10 @@ function sheetCart() {
       const sres = await bumpStock(p, d);
       S.cart[p] = {};
       S.packEdit[p] = {};
+      if ((_c = S.exch) == null ? void 0 : _c[p]) {
+        t.exch = S.exch[p].no;
+        delete S.exch[p];
+      }
       sheetReceipt(sh, t);
       render();
       {
