@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113201747" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113202156" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -10348,7 +10348,7 @@ function sheetPurchase(req) {
     if (!l) return "";
     return Math.max(0, r2(l.qty - ((req.delivered || {})[id] || 0))) || "";
   };
-  openSheet(req ? "🚚 تسليم للورشة · " + LOC[req.ws] : "🛒 شراء جديد", `${req ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📥</span><div><b>طلب من ${esc(req.by)}</b><div class="muted">الكميات معمرة بالباقي ديال الطلب. دخل شنو وصل بالضبط: إلا كان أقل، التسليم غادي يكون جزئي.</div></div></div></div>` : ""}${choice("pws", "لفين؟", [...WS, ...POS].map((x) => ({ v: x.id, l: x.name, i: x.i })), ws0, 3)}${fld("pbuy", "🛒 شكون شرا؟", `<input id="pbuy" name="pbuy" list="pbuyL" class="big-in" value="${esc((req == null ? void 0 : req.buyer) || meName())}" autocomplete="off"><datalist id="pbuyL">${[...new Set(usersArr().filter((u) => u.active !== false && u.role !== "kiosk").map((u) => u.name))].map((n) => `<option value="${esc(n)}">`).join("")}</datalist>`)}
+  openSheet(req ? "🚚 تسليم للورشة · " + LOC[req.ws] : "🛒 شراء جديد", `${req ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📥</span><div><b>طلب من ${esc(req.by)}</b><div class="muted">الكميات معمرة بالباقي ديال الطلب. دخل شنو وصل بالضبط: إلا كان أقل، التسليم غادي يكون جزئي.</div></div></div></div>` : ""}${choice("pws", "لفين؟", [...WS, ...POS].map((x) => ({ v: x.id, l: x.name, i: x.i })), ws0, 3)}${fld("pbuy", '🛒 شكون شرا؟ <b class="neg">*</b>', `<input id="pbuy" name="pbuy" list="pbuyL" class="big-in" value="${esc((req == null ? void 0 : req.buyer) || "")}" placeholder="اختار ولا كتب السمية ديال اللي شرا" autocomplete="off" required><datalist id="pbuyL">${[...new Set(usersArr().filter((u) => u.active !== false && u.role !== "kiosk").map((u) => u.name))].map((n) => `<option value="${esc(n)}">`).join("")}</datalist>`)}
    ${(() => {
     const row = (i) => {
       var _a2, _b, _c;
@@ -10369,7 +10369,7 @@ function sheetPurchase(req) {
    <div class="box"><h3>💸 مصاريف إضافية (اختيارية)</h3><div class="two">${fld("pfc", "🤝 الكوميسيون (د.م)", '<input id="pfc" name="pfc" class="big-in" inputmode="decimal" placeholder="0">')}${fld("pft", "🪙 البوربوار (د.م)", '<input id="pft" name="pft" class="big-in" inputmode="decimal" placeholder="0">')}</div>${fld("pfh", "💪 الحمالة / Manutention (د.م)", '<input id="pfh" name="pfh" class="big-in" inputmode="decimal" placeholder="0">')}<p class="muted" style="margin:0">كيتزادو على التكلفة ديال المواد (بالنسبة لثمن كل مادة) باش يكون الثمن المتوسط حقيقي.</p></div>
    <div class="receipt"><div class="prow" style="padding:0"><span class="muted">🛒 المواد</span><span id="psub">0.00 د.م</span></div><div class="prow" style="padding:0"><span class="muted">💸 المصاريف الإضافية</span><span id="pfee">0.00 د.م</span></div><div class="tot"><span>المجموع</span><span id="ptot">0.00 د.م</span></div><div class="muted">الثمن المتوسط (CMUP) ديال الورشة غادي يتحسب أوتوماتيكياً.</div></div>
    <div class="box"><h3>🧾 الفواتير والوصولات *</h3>${photoField("inv", "📷 صور فاتورة · عاود ضغط باش تزيد فاتورة أخرى (قد ما بغيتي) *")}</div><p class="muted" style="margin:0">✍️ المسؤول ديال ${req ? esc(LOC[req.ws || req.pos] || "") : "الورشة"} غادي يتوصل بتنبيه باش يأكد الاستلام ويوقع.</p>${errP}<button class="btn primary block" type="submit">${req ? "✅ أكد التسليم" : "✅ سجل الشراء"}</button>`, async (f) => {
-    var _a2, _b, _c, _d, _e, _f;
+    var _a2, _b, _c, _d, _e, _f, _g;
     const lines = $$("input[data-pq]", f).map((i) => {
       var _a3, _b2, _c2, _d2;
       return { item: i.dataset.pq, qty: num(i.value), price: num($(`input[data-pp="${i.dataset.pq}"]`, f).value), dlc: ((_a3 = $(`input[data-pd="${i.dataset.pq}"]`, f)) == null ? void 0 : _a3.value) || "", lotSup: (((_b2 = $(`input[data-pl2="${i.dataset.pq}"]`, f)) == null ? void 0 : _b2.value) || "").trim(), brand: (((_c2 = $(`input[data-pbr="${i.dataset.pq}"]`, f)) == null ? void 0 : _c2.value) || "").trim(), sup: supFix((_d2 = $(`input[data-psp="${i.dataset.pq}"]`, f)) == null ? void 0 : _d2.value) };
@@ -10396,9 +10396,13 @@ function sheetPurchase(req) {
       }
     });
     const ws = f.pws.value;
-    const buyer = (((_b = f.pbuy) == null ? void 0 : _b.value) || "").trim() || meName();
+    const buyer = (((_b = f.pbuy) == null ? void 0 : _b.value) || "").trim();
+    if (!buyer) {
+      (_c = f.pbuy) == null ? void 0 : _c.focus();
+      return ferr("🛒 خاص تقول شكون شرا هاد السلعة.");
+    }
     const sub = r2(lines.reduce((s, l) => s + l.qty * l.price, 0));
-    const fees = { commission: num((_c = f.pfc) == null ? void 0 : _c.value) || 0, tip: num((_d = f.pft) == null ? void 0 : _d.value) || 0, handling: num((_e = f.pfh) == null ? void 0 : _e.value) || 0 };
+    const fees = { commission: num((_d = f.pfc) == null ? void 0 : _d.value) || 0, tip: num((_e = f.pft) == null ? void 0 : _e.value) || 0, handling: num((_f = f.pfh) == null ? void 0 : _f.value) || 0 };
     const feesTotal = r2(fees.commission + fees.tip + fees.handling);
     const total = r2(sub + feesTotal);
     const fk2 = sub > 0 ? 1 + feesTotal / sub : 1;
@@ -10421,7 +10425,7 @@ function sheetPurchase(req) {
           u.lastPrice = l.price;
           u.cost = l.price;
         }
-        if (l.sup && l.sup !== ((_f = S.items[l.item]) == null ? void 0 : _f.lastSup)) u.lastSup = l.sup;
+        if (l.sup && l.sup !== ((_g = S.items[l.item]) == null ? void 0 : _g.lastSup)) u.lastSup = l.sup;
         if (Object.keys(u).length) await db.doc("items/" + l.item).update(u);
       }
       const sups = [...new Set(lines.map((l) => l.sup))];
