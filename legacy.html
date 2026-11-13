@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113001445" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113191925" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3476,6 +3476,15 @@ function alertsFor() {
 }
 function alertsFor0() {
   const r = me.role, A = [];
+  if (isMgr() || isProd() || canBuy()) {
+    const np = Object.values(S.lotm || {}).filter((l) => l.needPrint && !l.printed && l.status === "active");
+    const byP = {};
+    np.forEach((l) => {
+      const k = l.purchaseId || l.id;
+      (byP[k] = byP[k] || []).push(l);
+    });
+    Object.values(byP).forEach((L) => A.push(`<div class="alert bad" data-act="lotprint" data-id="${L.map((l) => l.id).join(",")}"><div class="lead"><span class="em">🏷️</span><div><b>طبع ${L.length} تيكي ديال الشراء ولصقهم على السلعة</b><div class="muted">${esc(L[0].supplier || "")} · ${esc(LOC[L[0].loc] || "")} · ${esc(L[0].by || "")} ${hm(L[0].ts)}</div></div></div><span class="tag bad">🖨️ طبع</span></div>`));
+  }
   if (isMgr()) itemsArr().filter((i) => i.active !== false && blendOf(i.id) && +i.blendTarget > 0).forEach((i) => {
     const c = blendCostAt(i.id, blendOf(i.id));
     if (c > +i.blendTarget + 5e-3) A.push(`<div class="alert warn" data-act="blendfix" data-id="${i.id}"><div class="lead"><span class="em">🥣</span><div><b>${esc(i.name)} طلع لـ ${money(c)} (الهدف ${money(i.blendTarget)})</b><div class="muted">الأثمنة ديال المواد تبدلو · شوف الاقتراح ديال الوصفة</div></div></div><span class="tag warn">💡</span></div>`);
@@ -6212,11 +6221,10 @@ async function receiptBlob(sh, t, copy) {
   return await new Promise((res) => cv.toBlob(res, "image/png"));
 }
 async function printReceipt(sh, t) {
-  var _a;
   if (HW().kind && await hwPrint(sh, t, {})) return toast("🖨️ تطبع");
   let dl = null;
   try {
-    dl = ((_a = window.claude) == null ? void 0 : _a.use) ? await window.claude.use("downloads") : null;
+    dl = await getDL();
   } catch (_) {
   }
   if (!dl) return toast("الطبع ما متاحش فهاد الجهاز", true);
@@ -6799,12 +6807,11 @@ async function allReceiptsBlob(sh) {
   return await new Promise((res) => cv.toBlob(res, "image/png"));
 }
 async function saveAllReceipts(shId) {
-  var _a;
   const sh = S.shifts.find((x) => x.id === shId);
   if (!sh || !(sh.tickets || []).length) return toast("ما كاين حتى وصل", true);
   let dl = null;
   try {
-    dl = ((_a = window.claude) == null ? void 0 : _a.use) ? await window.claude.use("downloads") : null;
+    dl = await getDL();
   } catch (_) {
   }
   toast("⏳ كنوجدو الفيشي…");
@@ -10197,7 +10204,7 @@ function sheetPurchase(req) {
         if ((it == null ? void 0 : it.kind) !== "raw" && !l.dlc) continue;
         const ref = db.collection("lots").doc();
         const n = lotNo("L");
-        const doc = { n, type: "purchase", item: l.item, loc: ws, qty0: l.qty, qty: l.qty, unit: (it == null ? void 0 : it.unit) || "", recv: today(), date: today(), dlc: l.dlc || "", supplier: l.sup || "", lotSup: l.lotSup || "", brand: l.brand || "", photos: l.photos || [], price: l.price, purchaseId: pid, status: "active", by: meName(), byId: me.id, ts: Date.now(), events: [{ ts: Date.now(), by: meName(), act: "create", qty: l.qty }] };
+        const doc = { n, type: "purchase", item: l.item, loc: ws, qty0: l.qty, qty: l.qty, unit: (it == null ? void 0 : it.unit) || "", recv: today(), date: today(), dlc: l.dlc || "", supplier: l.sup || "", lotSup: l.lotSup || "", brand: l.brand || "", photos: l.photos || [], price: l.price, purchaseId: pid, needPrint: true, status: "active", by: meName(), byId: me.id, ts: Date.now(), events: [{ ts: Date.now(), by: meName(), act: "create", qty: l.qty }] };
         await ref.set(doc);
         S.lotm = __spreadProps(__spreadValues({}, S.lotm || {}), { [ref.id]: __spreadValues({ id: ref.id }, doc) });
         lotIds.push(ref.id);
@@ -11073,10 +11080,9 @@ const FICHE_CSS = `.fp{width:794px;padding:36px 40px;background:#fff;color:#1d10
 .fp .meta{color:#6d4c55;font-size:12px;margin-bottom:6px}.fp table{width:100%;border-collapse:collapse;margin:4px 0 6px}.fp th{background:#3B1520;color:#fff;font-weight:700;text-align:right;padding:6px 8px;font-size:12px}.fp td{border-bottom:1px solid #f0d5db;padding:5px 8px}.fp td.n{text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap}.fp tr.t td{font-weight:800;background:#fff3f5}
 .fp .blk{break-inside:avoid;page-break-inside:avoid}.fp .alg{margin-top:14px;padding:8px 10px;border:1px solid #f2be4c;background:#fff8e6;border-radius:8px;font-weight:600}.fp .sg{display:flex;justify-content:space-between;margin-top:28px;color:#6d4c55}`;
 async function pagesPdf(htmls, fname, msg) {
-  var _a;
   let dl = null;
   try {
-    dl = ((_a = window.claude) == null ? void 0 : _a.use) ? await window.claude.use("downloads") : null;
+    dl = await getDL();
   } catch (_) {
   }
   toast(msg || "⏳ كنوجدو الـPDF...");
@@ -11697,23 +11703,69 @@ async function lotLabelsBlob(lots) {
   });
   return await new Promise((res) => cv.toBlob(res, "image/png"));
 }
-async function printLots(ids) {
+async function getDL() {
   var _a;
+  try {
+    if ((_a = window.claude) == null ? void 0 : _a.use) {
+      const d = await window.claude.use("downloads");
+      if (d) return d;
+    }
+  } catch (_) {
+  }
+  return { save: async ({ filename, data }) => {
+    const fl = new File([data], filename, { type: data.type || "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [fl] })) {
+      try {
+        await navigator.share({ files: [fl], title: filename });
+        return;
+      } catch (e) {
+        if ((e == null ? void 0 : e.name) === "AbortError") {
+          const x = new Error("declined");
+          x.code = "declined";
+          throw x;
+        }
+      }
+    }
+    const u = URL.createObjectURL(data);
+    const a = document.createElement("a");
+    a.href = u;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 4e3);
+  } };
+}
+async function printLots(ids) {
   const lots = ids.map((id) => {
-    var _a2;
-    return (_a2 = S.lotm) == null ? void 0 : _a2[id];
+    var _a;
+    return (_a = S.lotm) == null ? void 0 : _a[id];
   }).filter(Boolean);
   if (!lots.length) return;
   let dl = null;
   try {
-    dl = ((_a = window.claude) == null ? void 0 : _a.use) ? await window.claude.use("downloads") : null;
+    dl = await getDL();
   } catch (_) {
   }
   if (!dl) return toast("الطبع ما متاحش فهاد الجهاز", true);
   try {
     const b = await lotLabelsBlob(lots);
     await dl.save({ filename: `tickets-${lots[0].n}${lots.length > 1 ? "-x" + lots.length : ""}.png`, data: b });
+    const pt = Date.now();
+    for (const l of lots) {
+      if (l.needPrint && !l.printed) {
+        try {
+          await db.doc("lots/" + l.id).update({ printed: pt, printedBy: meName() });
+        } catch (_) {
+        }
+        l.printed = pt;
+      }
+    }
     toast("🏷️ التيكيات واجدين، حلهم بتطبيق الطابعة");
+    try {
+      render();
+    } catch (_) {
+    }
   } catch (e) {
     if ((e == null ? void 0 : e.code) === "declined") return;
     toast("ما قدرناش نوجدو التيكيات", true);
@@ -11724,7 +11776,13 @@ function sheetLotsDone(ids, title) {
     var _a;
     const l = ((_a = S.lotm) == null ? void 0 : _a[id]) || {};
     return prow(l.item, l.n + " · DLC " + (l.dlc || "—"), `<b class="num">${fmt(l.qty0)} ${esc(l.unit || "")}</b>`);
-  }).join("")}</div><div class="btns"><button type="button" class="btn primary" data-act="lotprint" data-id="${ids.join(",")}">🖨️ طبع التيكيات</button><button type="button" class="btn" data-act="close">من بعد</button></div>`);
+  }).join("")}</div><div class="btns"><button type="button" class="btn primary" data-act="lotprint" data-id="${ids.join(",")}">🖨️ طبع التيكيات</button>${ids.some((id) => {
+    var _a, _b;
+    return (_b = (_a = S.lotm) == null ? void 0 : _a[id]) == null ? void 0 : _b.needPrint;
+  }) ? "" : '<button type="button" class="btn" data-act="close">من بعد</button>'}</div>${ids.some((id) => {
+    var _a, _b;
+    return (_b = (_a = S.lotm) == null ? void 0 : _a[id]) == null ? void 0 : _b.needPrint;
+  }) ? '<p class="alert warn" style="cursor:default;margin:0">⚠️ الطبع ضروري: غادي يبقى التنبيه حتى تطبع التيكيات وتلصقهم على السلعة.</p>' : ""}`);
 }
 function vLots() {
   const r = me.role;
@@ -14981,12 +15039,11 @@ function sheetOrdDeliver(id) {
   });
 }
 async function printOrderSlip(o, copy) {
-  var _a;
   const sh = { pos: o.pos };
   if (HW().kind && await hwPrint(sh, o, { copy })) return toast("🖨️ تطبع");
   let dl = null;
   try {
-    dl = ((_a = window.claude) == null ? void 0 : _a.use) ? await window.claude.use("downloads") : null;
+    dl = await getDL();
   } catch (_) {
   }
   if (!dl) return toast("الطبع ما متاحش فهاد الجهاز", true);
