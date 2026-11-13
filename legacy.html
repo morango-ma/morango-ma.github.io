@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113222520" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113223038" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -5985,6 +5985,86 @@ function retCard(p) {
   }).join("")}
    <button type="button" class="btn block" data-act="retnew">↩️ ريتور ديال زبون (بالوصل)</button></div>`;
 }
+let JSQR = null;
+const jsqrLoad = () => JSQR || (JSQR = new Promise((res, rej) => {
+  if (window.jsQR) return res(window.jsQR);
+  const sc = document.createElement("script");
+  sc.src = "jsqr.js";
+  sc.onload = () => res(window.jsQR);
+  sc.onerror = (e) => {
+    JSQR = null;
+    rej(e);
+  };
+  document.head.appendChild(sc);
+}));
+async function scanCode(onCode) {
+  let st = null, stop = false;
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483002;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px";
+  ov.innerHTML = '<div style="position:relative;width:min(92vw,520px)"><video playsinline muted style="width:100%;border-radius:16px;background:#111"></video><div style="position:absolute;inset:18%;border:4px solid #e02843;border-radius:18px;box-shadow:0 0 0 2000px rgba(0,0,0,.35)"></div></div><div style="color:#fff;font-weight:700;text-align:center">📷 قربي الكود ديال الوصل (QR) من الكاميرا</div><button type="button" style="background:#fff;color:#000;border:0;border-radius:999px;padding:12px 26px;font:inherit;font-weight:800">✖️ سد</button>';
+  document.body.appendChild(ov);
+  const v = ov.querySelector("video");
+  const end = (c) => {
+    stop = true;
+    try {
+      st && st.getTracks().forEach((t) => t.stop());
+    } catch (_) {
+    }
+    ov.remove();
+    if (c) onCode(c);
+  };
+  ov.querySelector("button").onclick = () => end(null);
+  try {
+    st = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+  } catch (e) {
+    end(null);
+    return toast("📷 الكاميرا ما خدماتش: " + (e.message || e), true);
+  }
+  v.srcObject = st;
+  await v.play().catch(() => {
+  });
+  let det = null;
+  try {
+    if ("BarcodeDetector" in window) {
+      const F = await BarcodeDetector.getSupportedFormats();
+      if (F.includes("qr_code")) det = new BarcodeDetector({ formats: F.filter((f) => ["qr_code", "code_128"].includes(f)) });
+    }
+  } catch (_) {
+    det = null;
+  }
+  let jq = null;
+  if (!det) {
+    try {
+      jq = await jsqrLoad();
+    } catch (_) {
+      end(null);
+      return toast("ما قدرناش نحلو القارئ ديال الكود", true);
+    }
+  }
+  const cv = document.createElement("canvas"), cx = cv.getContext("2d", { willReadFrequently: true });
+  const tick = async () => {
+    var _a;
+    if (stop) return;
+    try {
+      if (v.readyState >= 2) {
+        if (det) {
+          const r = await det.detect(v);
+          if (r && ((_a = r[0]) == null ? void 0 : _a.rawValue)) return end(r[0].rawValue);
+        } else {
+          const w = Math.min(800, v.videoWidth), h = Math.round(v.videoHeight * w / v.videoWidth);
+          cv.width = w;
+          cv.height = h;
+          cx.drawImage(v, 0, 0, w, h);
+          const r = jq(cx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: "dontInvert" });
+          if (r && r.data) return end(r.data);
+        }
+      }
+    } catch (_) {
+    }
+    setTimeout(tick, 180);
+  };
+  tick();
+}
 function sheetRetNew() {
   const p = S.pos;
   if (!canRet(p)) return;
@@ -5992,7 +6072,7 @@ function sheetRetNew() {
   if (!sh) return toast("🔓 خاص لاكيس تكون محلولة", true);
   openSheet("↩️ ريتور ديال زبون", `<div class="alert acc" style="cursor:default">📷 سكاني الـ QR ولا الكود-بار اللي فالوصل، ولا كتبي الرقم ديالو. بلا وصل ما كاينش ريتور.</div>
    <div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>⛔ ممنوع الريتور إلا:</b><span>• فاتو ${RET_MIN} دقايق على البيعة (إلا فاتو، كيتصيفط للمسير وهو اللي كيقرر)</span><span>• الزبون خرج من المحل وما بقاش كيبان ليك</span><span>• السلعة ما بقاتش سالمة (مقيسة، محلولة، ناقصة)</span></div>
-   <div class="field"><input id="rtno" class="big-in" placeholder="رقم الوصل (مثلا AR-2611-0042)" autocomplete="off" style="text-transform:uppercase;font-weight:800;font-size:1.3rem;text-align:center"></div><div class="btns"><button type="button" class="btn primary block" id="rtgo">🔎 قلب على الوصل</button></div><div id="rtbody"></div>`, null, (f) => {
+   <div class="field"><input id="rtno" class="big-in" placeholder="رقم الوصل (مثلا AR-2611-0042)" autocomplete="off" style="text-transform:uppercase;font-weight:800;font-size:1.3rem;text-align:center"></div><div class="btns"><button type="button" class="btn primary" id="rtcam" style="flex:1">📷 سكاني بالكاميرا</button><button type="button" class="btn" id="rtgo" style="flex:1">🔎 قلب على الوصل</button></div><div id="rtbody"></div>`, null, (f) => {
     const go = async () => {
       const no = $("#rtno", f).value;
       const box = $("#rtbody", f);
@@ -6092,6 +6172,12 @@ function sheetRetNew() {
       };
     };
     $("#rtgo", f).onclick = go;
+    $("#rtcam", f).onclick = () => scanCode((c) => {
+      const x = $("#rtno", f);
+      if (!x) return;
+      x.value = String(c).replace(/^R-/, "").trim();
+      go();
+    });
     $("#rtno", f).addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
