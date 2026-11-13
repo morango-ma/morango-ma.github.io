@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113192635" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113192900" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2960,7 +2960,7 @@ function draw() {
     const db0 = $("#devbtn");
     if (db0) {
       db0.hidden = !me || me.role === "kiosk";
-      db0.style.outline = PRN ? "2px solid var(--good,#16a34a)" : "";
+      db0.style.outline = PRN || HW().kind === "sys" ? "2px solid var(--good,#16a34a)" : "";
     }
   }
   {
@@ -6589,8 +6589,42 @@ async function natImgPrint(bl) {
   if (r !== "ok") throw new Error(r);
   return true;
 }
+function sysPrint(blob) {
+  return new Promise((res) => {
+    const u = URL.createObjectURL(blob);
+    const w = HW().width === "58" ? "58mm" : "80mm";
+    const fr = document.createElement("iframe");
+    fr.style.cssText = "position:fixed;width:0;height:0;border:0;right:0;bottom:0";
+    fr.srcdoc = `<!doctype html><html><head><style>@page{size:${w} auto;margin:0}html,body{margin:0;padding:0}img{width:${w};display:block}</style></head><body><img id="i" src="${u}"></body></html>`;
+    fr.onload = () => {
+      const im = fr.contentDocument.getElementById("i");
+      const go = () => {
+        try {
+          fr.contentWindow.focus();
+          fr.contentWindow.print();
+          res(true);
+        } catch (e) {
+          res(false);
+        }
+        setTimeout(() => {
+          fr.remove();
+          URL.revokeObjectURL(u);
+        }, 6e4);
+      };
+      im.complete ? go() : im.onload = go;
+    };
+    document.body.appendChild(fr);
+  });
+}
 async function hwPrint(sh, t, { drawer, copy } = {}) {
   var _a;
+  if (HW().kind === "sys") {
+    try {
+      return await sysPrint(await receiptBlob(sh, t, copy || "client"));
+    } catch (_) {
+      return false;
+    }
+  }
   const p = await hwReconnect();
   if (!p) return false;
   let bl = null;
@@ -6633,6 +6667,10 @@ async function hwDrawer() {
   }
 }
 async function hwTest() {
+  if (HW().kind === "sys") {
+    const t2 = { n: 0, no: "TEST", ts: Date.now(), lines: [], total: 0 };
+    return await hwPrint({ pos: S.pos || POS[0].id, seller: meName() }, t2, {});
+  }
   const p = await hwReconnect();
   if (!p) return toast("ربط الطابعة أولا", true);
   try {
@@ -6647,9 +6685,10 @@ function sheetDevices() {
   var _a, _b, _c;
   const H = HW(), sp = hwSupport();
   const ios = /iPhone|iPad|Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
-  openSheet("🖨️ الأجهزة والطابعة ديال هاد الجهاز", `<div class="box"><div class="prow" style="border:0;padding:0"><b>🖨️ الطابعة (الوصولات والتيكيات)</b><span class="tag ${PRN ? "good" : ""}">${PRN ? "✅ مربوطة: " + esc(PRN.name) : H.kind ? "⏸️ " + esc(H.name || "") : "ما مربوطاش"}</span></div>
+  openSheet("🖨️ الأجهزة والطابعة ديال هاد الجهاز", `<div class="box"><div class="prow" style="border:0;padding:0"><b>🖨️ الطابعة (الوصولات والتيكيات)</b><span class="tag ${PRN || H.kind === "sys" ? "good" : ""}">${H.kind === "sys" ? "✅ 📡 WiFi (الطبع ديال النظام)" : PRN ? "✅ مربوطة: " + esc(PRN.name) : H.kind ? "⏸️ " + esc(H.name || "") : "ما مربوطاش"}</span></div>
     ${ios && !sp.bt && !sp.nat ? '<div class="alert warn" style="cursor:default">⚠️ الآيفون والآيپاد ما كيخليوش المتصفح يتربط بالطابعة. استعمل تابليت Android (Chrome) ولا PC للاكيس، ولا بقا على «الوصل كتصويرة».</div>' : ""}
-    <div class="btns">${sp.nat ? '<button type="button" class="btn primary" onclick="hwNatPick()">🖨️ اختار الطابعة (Bluetooth / USB)</button>' : ""}${sp.bt ? `<button type="button" class="btn" onclick="hwConnect('bt').then(()=>sheetDevices())">📶 Bluetooth</button>` : ""}${sp.usb ? `<button type="button" class="btn" onclick="hwConnect('usb').then(()=>sheetDevices())">🔌 USB</button>` : ""}${sp.serial ? `<button type="button" class="btn" onclick="hwConnect('serial').then(()=>sheetDevices())">🔗 Serial</button>` : ""}</div>
+    <div class="btns">${sp.nat ? '<button type="button" class="btn primary" onclick="hwNatPick()">🖨️ اختار الطابعة (Bluetooth / USB)</button>' : ""}${sp.bt ? `<button type="button" class="btn" onclick="hwConnect('bt').then(()=>sheetDevices())">📶 Bluetooth</button>` : ""}${sp.usb ? `<button type="button" class="btn" onclick="hwConnect('usb').then(()=>sheetDevices())">🔌 USB</button>` : ""}${sp.serial ? `<button type="button" class="btn" onclick="hwConnect('serial').then(()=>sheetDevices())">🔗 Serial</button>` : ""}<button type="button" class="btn ${H.kind === "sys" ? "primary" : ""}" onclick="hwSave({...HW(),kind:'sys',name:'WiFi'});PRN=null;sheetDevices();toast('📡 تختارت طابعة WiFi')">📡 WiFi (نفس الويفي)</button>${H.kind === "sys" ? '<button type="button" class="btn small" onclick="hwSave({...HW(),kind:null,name:null});sheetDevices()">✖️ حيد WiFi</button>' : ""}</div>
+    ${H.kind === "sys" ? '<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch">📡 <b>طابعة WiFi:</b> ملي تطبع، كيطلع الطبع ديال الجهاز: اختار الطابعة مرة وحدة (كتبقى مختارة). فـ Android خاص يكون «Mopria Print Service» ولا البلوگين ديال الماركة ديال الطابعة (من Play Store) مفعّل فـ Paramètres › Impression.</div>' : ""}
     ${choice("hww", "📏 عرض الورقة", [{ v: "58", l: "58 mm", i: "🧾" }, { v: "80", l: "80 mm", i: "🧾" }], H.width, 2)}
     <div class="field"><span class="lbl">🧩 طريقة الطبع (إلا خرج الوصل خاوي، بدلها)</span><div class="choice" style="--cols:2"><button type="button" class="opt" aria-pressed="${H.raster !== "esc"}" onclick="hwSave({...HW(),raster:'gsv0'});sheetDevices()"><span class="ico">🅰️</span><span>عادية (GS v 0)</span></button><button type="button" class="opt" aria-pressed="${H.raster === "esc"}" onclick="hwSave({...HW(),raster:'esc'});sheetDevices()"><span class="ico">🅱️</span><span>بديلة (ESC *)</span></button></div></div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="hwauto" ${H.auto ? "checked" : ""} style="width:22px;height:22px"> 🖨️ اطبع الوصل بوحدو من بعد كل بيعة</label>
@@ -11765,7 +11804,14 @@ async function printLots(ids) {
     } catch (_) {
     }
   };
-  if (HW().kind) {
+  if (HW().kind === "sys") {
+    const b = await lotLabelsBlob(lots);
+    if (await sysPrint(b)) {
+      await markP();
+      return;
+    }
+  }
+  if (HW().kind && HW().kind !== "sys") {
     const pr = await hwReconnect();
     if (pr) {
       try {
