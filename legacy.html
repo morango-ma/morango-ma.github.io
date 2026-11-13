@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113215715" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113220222" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1390,12 +1390,33 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
           }
         };
         if (idle()) go();
-        else window.__morangoUpd = v;
+        else {
+          window.__morangoUpd = v;
+          if (!document.getElementById("updbar")) {
+            const b = document.createElement("button");
+            b.id = "updbar";
+            b.type = "button";
+            b.textContent = "🔄 كاينة نسخة جديدة · ضغط هنا باش تحدث";
+            b.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--vkbh,0px) + 12px);z-index:2147483001;background:#e02843;color:#fff;border:0;border-radius:999px;padding:12px 20px;font:inherit;font-weight:800;box-shadow:0 6px 20px rgba(0,0,0,.25)";
+            b.onclick = () => {
+              try {
+                const u = new URL(location.href);
+                u.searchParams.set("v", v + "-" + Date.now());
+                location.replace(u.toString());
+              } catch (_) {
+                location.reload();
+              }
+            };
+            document.body.appendChild(b);
+          }
+        }
       }
     } catch (_) {
     }
   }
-  setInterval(chk, 12e4);
+  setInterval(chk, 6e4);
+  window.addEventListener("focus", chk);
+  setTimeout(chk, 8e3);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) chk();
   });
