@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113200106" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113200341" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6715,6 +6715,36 @@ async function hwDrawer() {
     toast("❌ " + e.message, true);
   }
 }
+async function hwProbe() {
+  const p = await hwReconnect();
+  if (!p) return toast("ربط الطابعة أولا", true);
+  const H = HW();
+  const w = +H.lw || 100, h = +H.lh || 150, g = H.lg != null && H.lg !== "" ? +H.lg : 2;
+  const E = new TextEncoder();
+  const steps = [
+    ["TSPL", E.encode(`SIZE ${w} mm,${h} mm\r
+GAP ${g} mm,0 mm\r
+DIRECTION 1\r
+CLS\r
+TEXT 30,30,"3",0,1,1,"1 - TSPL OK"\r
+PRINT 1,1\r
+`)],
+    ["ESC/POS", new Uint8Array([27, 64, ...E.encode("2 - ESC/POS OK\n\n\n\n"), 29, 86, 66, 0])],
+    ["ZPL", E.encode("^XA^FO30,30^A0N,40,40^FD3 - ZPL OK^FS^XZ\r\n")],
+    ["CPCL", E.encode("! 0 200 200 240 1\r\nTEXT 4 0 30 30 4 - CPCL OK\r\nFORM\r\nPRINT\r\n")]
+  ];
+  for (const [n, b] of steps) {
+    try {
+      await p.write(b);
+      toast("📤 تصيفط: " + n);
+    } catch (e) {
+      PRN = null;
+      return toast("❌ " + n + ": " + (e.message || e), true);
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  toast("شوف شنو خرج من الطابعة (1، 2، 3 ولا 4) وقولها");
+}
 async function hwTest() {
   if (tsplOn()) {
     const p2 = await hwReconnect();
@@ -6772,7 +6802,7 @@ function sheetDevices() {
     ${choice("hww", "📏 عرض الورقة", [{ v: "58", l: "58 mm", i: "🧾" }, { v: "80", l: "80 mm", i: "🧾" }], H.width, 2)}
     <div class="field"><span class="lbl">🧩 طريقة الطبع (إلا خرج الوصل خاوي، بدلها)</span><div class="choice" style="--cols:2"><button type="button" class="opt" aria-pressed="${H.raster !== "esc"}" onclick="hwSave({...HW(),raster:'gsv0'});sheetDevices()"><span class="ico">🅰️</span><span>عادية (GS v 0)</span></button><button type="button" class="opt" aria-pressed="${H.raster === "esc"}" onclick="hwSave({...HW(),raster:'esc'});sheetDevices()"><span class="ico">🅱️</span><span>بديلة (ESC *)</span></button></div></div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="hwauto" ${H.auto ? "checked" : ""} style="width:22px;height:22px"> 🖨️ اطبع الوصل بوحدو من بعد كل بيعة</label>
-    <div class="btns"><button type="button" class="btn small" onclick="hwTest()">🧪 طبع تجربة</button></div></div>
+    <div class="btns"><button type="button" class="btn small" onclick="hwTest()">🧪 طبع تجربة</button><button type="button" class="btn small" onclick="hwProbe()">🔍 جرب اللغات (1-4)</button></div></div>
    <div class="box"><b>🎨 العرض والألوان</b><div class="muted">إلا الألوان ما باناش مزيان فهاد الشاشة.</div><div class="btns" style="margin:0"><button type="button" class="btn small" onclick="sheetDisplay()">🎨 بدل الألوان وحجم الكتابة</button></div></div>
    <div class="box"><b>⌨️ الكلافيي ديال الشاشة</b><div class="muted">كيطلع بوحدو ملي تضغط على أي خانة باش تكتب (عربية / Français / أرقام). مزيان لـ POS بلا كلافيي.</div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="vkbon" ${vkbOn() ? "checked" : ""} onchange="try{localStorage.setItem('bk-vkb',this.checked?'1':'0')}catch(_){}" style="width:22px;height:22px"> ⌨️ طلع الكلافيي بوحدو فهاد الجهاز</label>
