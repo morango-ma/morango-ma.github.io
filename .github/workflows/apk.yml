@@ -23,6 +23,6 @@ jobs:
         run: |
           cp twa/app/build/outputs/apk/release/app-release-unsigned.apk morango-unsigned.apk
           BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
-          mkdir tools && cp $BT/lib/apksigner.jar $BT/zipalign tools/ && (cp $BT/lib64/libc++.so tools/ 2>/dev/null || true) && tar czf signtools.tgz -C tools .
+          mkdir -p stools && cp $BT/lib/apksigner.jar $BT/zipalign stools/ && (cp $BT/lib64/libc++.so stools/ 2>/dev/null || true) && tar czf signtools.tgz -C stools .
           TAG="apk-build-${GITHUB_RUN_NUMBER}"
           gh release create "$TAG" morango-unsigned.apk signtools.tgz --title "APK build ${GITHUB_RUN_NUMBER}" --notes "Unsigned build" --prerelease
