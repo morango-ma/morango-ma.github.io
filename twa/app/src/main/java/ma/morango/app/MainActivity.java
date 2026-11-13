@@ -126,6 +126,7 @@ public class MainActivity extends Activity {
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.CAMERA);
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.RECORD_AUDIO);
         if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission("android.permission.BLUETOOTH_CONNECT") != PackageManager.PERMISSION_GRANTED) need.add("android.permission.BLUETOOTH_CONNECT");
+        if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission("android.permission.BLUETOOTH_SCAN") != PackageManager.PERMISSION_GRANTED) need.add("android.permission.BLUETOOTH_SCAN");
         if (Build.VERSION.SDK_INT < 29 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (!need.isEmpty()) requestPermissions(need.toArray(new String[0]), REQ_PERM);
         if (b != null) wv.restoreState(b); else wv.loadUrl(HOME);
@@ -248,7 +249,7 @@ public class MainActivity extends Activity {
                     if (ad == null) return "ما كاينش Bluetooth فهاد الجهاز";
                     if (!ad.isEnabled()) return "شعل Bluetooth";
                     BluetoothDevice d = ad.getRemoteDevice(id.substring(3));
-                    ad.cancelDiscovery();
+                    try { ad.cancelDiscovery(); } catch (Throwable ignore) { }
                     try {
                         bt = d.createRfcommSocketToServiceRecord(SPP);
                         bt.connect();
