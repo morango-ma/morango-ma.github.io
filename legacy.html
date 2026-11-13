@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113220736" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113221545" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6452,7 +6452,7 @@ function sheetCart() {
    <div class="field"><span class="lbl">💵 شحال عطاك الزبون؟ (اختياري)</span><div class="quick"><button type="button" data-act="given" data-v="${total}">بالضبط</button>${notes.map((v) => `<button type="button" data-act="given" data-v="${v}">${v}</button>`).join("")}</div>
    <input id="cgiven" name="cgiven" class="big-in" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px" type="text" inputmode="decimal" placeholder="0.00" aria-label="المبلغ اللي عطى الزبون"></div><div id="chg"></div>${errP}
    <div class="btns"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button><button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div>`, async (f) => {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     const sh = openShift(p);
     if (!sh) return ferr("ما كاينة حتى نوبة مفتوحة.");
     if (LOY().on && !S.cust[p] && !((_a = S.bonPay) == null ? void 0 : _a[p])) return ferr("⭐ خاص الزبون ديال الوفاء قبل الخلاص (السمية والتيليفون).");
@@ -6463,10 +6463,17 @@ function sheetCart() {
     if (f.cgiven.value.trim() && !(given >= tot)) return ferr("المبلغ اللي عطى الزبون ناقص على المجموع.");
     busy(f, true);
     try {
+      camClip("خلاص", ((_b = (S.bons || []).find((x) => {
+        var _a2;
+        return x.id === ((_a2 = S.bonPay) == null ? void 0 : _a2[p]);
+      })) == null ? void 0 : _b.no) || "");
+    } catch (_) {
+    }
+    try {
       const fresh = await db.doc("shifts/" + sh.id).get();
       const tk = [...fresh.data().tickets || []];
       const t = { n: tk.length + 1, ts: Date.now(), lines, total: tot, pay: "cash", by: meName(), byId: me.id };
-      const bonId = (_b = S.bonPay) == null ? void 0 : _b[p];
+      const bonId = (_c = S.bonPay) == null ? void 0 : _c[p];
       const bon = bonId && (S.bons || []).find((x) => x.id === bonId && x.status === "open");
       if (bon) {
         t.bon = bon.no;
@@ -6540,7 +6547,7 @@ function sheetCart() {
       const sres = await bumpStock(p, d);
       S.cart[p] = {};
       S.packEdit[p] = {};
-      if ((_c = S.exch) == null ? void 0 : _c[p]) {
+      if ((_d = S.exch) == null ? void 0 : _d[p]) {
         t.exch = S.exch[p].no;
         delete S.exch[p];
       }
