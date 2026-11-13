@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261112235841"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113001445"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -2642,7 +2642,7 @@ function sheetXferHome(){const L=me.role==='ws'?myLocs().filter(l=>WS.some(w=>w.
   openSheet('🔄 تحويل المواد بين الورشات',`<button type="button" class="btn primary block" data-act="xfnew">➕ تحويل جديد</button>
    ${X.length?X.map(o=>`<div class="prow clk" data-act="xfopen" data-id="${o.id}"><div class="lead"><span class="em">${o.status==='received'?'✅':'⏳'}</span><div><b>${LOCI[o.ws]} ${esc(LOC[o.ws])} ← ${LOCI[o.to]} ${esc(LOC[o.to])}</b><span class="muted">${dhm(o.ts)} · ${o.lines.length} مادة · 👤 ${esc(o.by||'')}${o.status==='received'?' · ✅ '+esc(o.rcvBy||''):' · كيتسنى الاستلام'}${o.hasDiff?' · <span class="neg">⚠️ فرق</span>':''}</span></div></div><span class="tag ${o.status==='received'?'good':'warn'}">${o.status==='received'?'توصل':'فالطريق'}</span></div>`).join(''):emptyB('🔄','ما كاين حتى تحويل.')}`)}
 function sheetXfer(){const mine=me.role==='ws'?myLocs().filter(l=>WS.some(w=>w.id===l)):WS.map(w=>w.id);if(!mine.length)return;const src0=mine[0];
-  openSheet('🔄 تحويل مواد لورشة أخرى',`${choice('xfs','من الورشة',WS.filter(w=>mine.includes(w.id)).map(x=>({v:x.id,l:x.name,i:x.i})),src0,3)}${choice('xft','لـ الورشة',WS.map(x=>({v:x.id,l:x.name,i:x.i})),WS.find(w=>w.id!==src0)?.id,3)}
+  openSheet('🔄 تحويل لورشة أخرى (مواد ولا منتوجات)',`${choice('xfs','من الورشة',WS.filter(w=>mine.includes(w.id)).map(x=>({v:x.id,l:x.name,i:x.i})),src0,3)}${choice('xft','لـ الورشة',WS.map(x=>({v:x.id,l:x.name,i:x.i})),WS.find(w=>w.id!==src0)?.id,3)}
    <input id="xfq" class="big-in" type="search" placeholder="🔍 قلب على مادة..." autocomplete="off"><div id="xfl"></div>
    ${fld('xfn','📝 ملاحظة (اختيارية)','<input id="xfn" name="xfn" class="big-in" placeholder="مثلاً: سلف حتى يوصل الشرا">')}${errP}<button class="btn primary block" type="submit">🔄 صيفط التحويل</button>`,async f=>{
     const src=f.xfs.value,dst=f.xft.value;if(src===dst)return ferr('اختار ورشة أخرى للاستلام.');
@@ -2651,7 +2651,7 @@ function sheetXfer(){const mine=me.role==='ws'?myLocs().filter(l=>WS.some(w=>w.i
     busy(f,true);try{lines.forEach(l=>l.unitCost=costOf(l.item,0,src));const d={};lines.forEach(l=>d[l.item]=-l.qty);await moveStock(src,d);let used=[];try{used=await consumeLots(src,lines,'تحويل لـ'+LOC[dst])}catch(_){}
       lines.forEach(l=>{const u=used.filter(x=>x.item===l.item);l.lots=u.map(x=>({lot:x.lot,n:x.n,qty:x.qty,dlc:S.lotm?.[x.lot]?.dlc||''}))});
       await newOp({type:'wsxfer',ws:src,to:dst,lines,note:f.xfn.value.trim(),status:'sent'});closeSheet();toast('🔄 التحويل تصيفط · '+LOC[dst]+' خاصها تأكد الاستلام')}catch(e){fail(f,e)}},
-   f=>{let src=null;const draw=()=>{const s2=f.xfs.value;if(s2===src)return;src=s2;const L=itemsArr().filter(i=>isBought(i.kind)&&stockOf(s2,i.id)>0);
+   f=>{let src=null;const draw=()=>{const s2=f.xfs.value;if(s2===src)return;src=s2;const L=itemsArr().filter(i=>!i.bundle&&!i.blend&&stockOf(s2,i.id)>0).sort((a,b)=>(isBought(a.kind)?1:0)-(isBought(b.kind)?1:0));
       $('#xfl',f).innerHTML=L.length?L.map(i=>prow(i.id,'فـ'+esc(LOC[s2])+': '+qtyTxt(stockOf(s2,i.id),i.unit),stepper('data-xq',i.id,'',i.unit))).join(''):emptyB('📦','ما كاين حتى مادة فالمخزون ديال هاد الورشة.')};
      f.addEventListener('click',e=>{if(e.target.closest('[data-name="xfs"]'))setTimeout(()=>{src=null;draw()},0)});$('#xfq',f).addEventListener('input',()=>{const q=nrm($('#xfq',f).value);$$('#xfl .prow',f).forEach(r=>r.style.display=!q||nrm(r.textContent).includes(q)?'':'none')});draw()})}
 function sheetXferOpen(id){const o=S.ops.find(x=>x.id===id);if(!o)return;const can=o.status!=='received'&&xfMine(o);
