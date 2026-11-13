@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113201006" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113201747" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -10348,7 +10348,7 @@ function sheetPurchase(req) {
     if (!l) return "";
     return Math.max(0, r2(l.qty - ((req.delivered || {})[id] || 0))) || "";
   };
-  openSheet(req ? "🚚 تسليم للورشة · " + LOC[req.ws] : "🛒 شراء جديد", `${req ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📥</span><div><b>طلب من ${esc(req.by)}</b><div class="muted">الكميات معمرة بالباقي ديال الطلب. دخل شنو وصل بالضبط: إلا كان أقل، التسليم غادي يكون جزئي.</div></div></div></div>` : ""}${choice("pws", "لفين؟", [...WS, ...POS].map((x) => ({ v: x.id, l: x.name, i: x.i })), ws0, 3)}
+  openSheet(req ? "🚚 تسليم للورشة · " + LOC[req.ws] : "🛒 شراء جديد", `${req ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📥</span><div><b>طلب من ${esc(req.by)}</b><div class="muted">الكميات معمرة بالباقي ديال الطلب. دخل شنو وصل بالضبط: إلا كان أقل، التسليم غادي يكون جزئي.</div></div></div></div>` : ""}${choice("pws", "لفين؟", [...WS, ...POS].map((x) => ({ v: x.id, l: x.name, i: x.i })), ws0, 3)}${fld("pbuy", "🛒 شكون شرا؟", `<input id="pbuy" name="pbuy" list="pbuyL" class="big-in" value="${esc((req == null ? void 0 : req.buyer) || meName())}" autocomplete="off"><datalist id="pbuyL">${[...new Set(usersArr().filter((u) => u.active !== false && u.role !== "kiosk").map((u) => u.name))].map((n) => `<option value="${esc(n)}">`).join("")}</datalist>`)}
    ${(() => {
     const row = (i) => {
       var _a2, _b, _c;
@@ -10369,7 +10369,7 @@ function sheetPurchase(req) {
    <div class="box"><h3>💸 مصاريف إضافية (اختيارية)</h3><div class="two">${fld("pfc", "🤝 الكوميسيون (د.م)", '<input id="pfc" name="pfc" class="big-in" inputmode="decimal" placeholder="0">')}${fld("pft", "🪙 البوربوار (د.م)", '<input id="pft" name="pft" class="big-in" inputmode="decimal" placeholder="0">')}</div>${fld("pfh", "💪 الحمالة / Manutention (د.م)", '<input id="pfh" name="pfh" class="big-in" inputmode="decimal" placeholder="0">')}<p class="muted" style="margin:0">كيتزادو على التكلفة ديال المواد (بالنسبة لثمن كل مادة) باش يكون الثمن المتوسط حقيقي.</p></div>
    <div class="receipt"><div class="prow" style="padding:0"><span class="muted">🛒 المواد</span><span id="psub">0.00 د.م</span></div><div class="prow" style="padding:0"><span class="muted">💸 المصاريف الإضافية</span><span id="pfee">0.00 د.م</span></div><div class="tot"><span>المجموع</span><span id="ptot">0.00 د.م</span></div><div class="muted">الثمن المتوسط (CMUP) ديال الورشة غادي يتحسب أوتوماتيكياً.</div></div>
    <div class="box"><h3>🧾 الفواتير والوصولات *</h3>${photoField("inv", "📷 صور فاتورة · عاود ضغط باش تزيد فاتورة أخرى (قد ما بغيتي) *")}</div><p class="muted" style="margin:0">✍️ المسؤول ديال ${req ? esc(LOC[req.ws || req.pos] || "") : "الورشة"} غادي يتوصل بتنبيه باش يأكد الاستلام ويوقع.</p>${errP}<button class="btn primary block" type="submit">${req ? "✅ أكد التسليم" : "✅ سجل الشراء"}</button>`, async (f) => {
-    var _a2, _b, _c, _d, _e;
+    var _a2, _b, _c, _d, _e, _f;
     const lines = $$("input[data-pq]", f).map((i) => {
       var _a3, _b2, _c2, _d2;
       return { item: i.dataset.pq, qty: num(i.value), price: num($(`input[data-pp="${i.dataset.pq}"]`, f).value), dlc: ((_a3 = $(`input[data-pd="${i.dataset.pq}"]`, f)) == null ? void 0 : _a3.value) || "", lotSup: (((_b2 = $(`input[data-pl2="${i.dataset.pq}"]`, f)) == null ? void 0 : _b2.value) || "").trim(), brand: (((_c2 = $(`input[data-pbr="${i.dataset.pq}"]`, f)) == null ? void 0 : _c2.value) || "").trim(), sup: supFix((_d2 = $(`input[data-psp="${i.dataset.pq}"]`, f)) == null ? void 0 : _d2.value) };
@@ -10396,8 +10396,9 @@ function sheetPurchase(req) {
       }
     });
     const ws = f.pws.value;
+    const buyer = (((_b = f.pbuy) == null ? void 0 : _b.value) || "").trim() || meName();
     const sub = r2(lines.reduce((s, l) => s + l.qty * l.price, 0));
-    const fees = { commission: num((_b = f.pfc) == null ? void 0 : _b.value) || 0, tip: num((_c = f.pft) == null ? void 0 : _c.value) || 0, handling: num((_d = f.pfh) == null ? void 0 : _d.value) || 0 };
+    const fees = { commission: num((_c = f.pfc) == null ? void 0 : _c.value) || 0, tip: num((_d = f.pft) == null ? void 0 : _d.value) || 0, handling: num((_e = f.pfh) == null ? void 0 : _e.value) || 0 };
     const feesTotal = r2(fees.commission + fees.tip + fees.handling);
     const total = r2(sub + feesTotal);
     const fk2 = sub > 0 ? 1 + feesTotal / sub : 1;
@@ -10420,7 +10421,7 @@ function sheetPurchase(req) {
           u.lastPrice = l.price;
           u.cost = l.price;
         }
-        if (l.sup && l.sup !== ((_e = S.items[l.item]) == null ? void 0 : _e.lastSup)) u.lastSup = l.sup;
+        if (l.sup && l.sup !== ((_f = S.items[l.item]) == null ? void 0 : _f.lastSup)) u.lastSup = l.sup;
         if (Object.keys(u).length) await db.doc("items/" + l.item).update(u);
       }
       const sups = [...new Set(lines.map((l) => l.sup))];
@@ -10431,20 +10432,33 @@ function sheetPurchase(req) {
         } catch (_) {
         }
       }
-      const pid = await newOp({ type: "purchase", ws, supplier: sups.length === 1 ? sups[0] : sups.join(" · "), suppliers: sups, lines, sub, fees, feesTotal, total, photos, invoice, sig, req: (req == null ? void 0 : req.id) || null, rcv: "pending" });
+      const pid = await newOp({ type: "purchase", ws, buyer, supplier: sups.length === 1 ? sups[0] : sups.join(" · "), suppliers: sups, lines, sub, fees, feesTotal, total, photos, invoice, sig, req: (req == null ? void 0 : req.id) || null, rcv: "pending" });
       const lotIds = [];
       for (const l of lines) {
         const it = S.items[l.item];
         if ((it == null ? void 0 : it.kind) !== "raw" && !l.dlc) continue;
         const ref = db.collection("lots").doc();
         const n = lotNo("L");
-        const doc = { n, type: "purchase", item: l.item, loc: ws, qty0: l.qty, qty: l.qty, unit: (it == null ? void 0 : it.unit) || "", recv: today(), date: today(), dlc: l.dlc || "", supplier: l.sup || "", lotSup: l.lotSup || "", brand: l.brand || "", photos: l.photos || [], price: l.price, purchaseId: pid, needPrint: true, status: "active", by: meName(), byId: me.id, ts: Date.now(), events: [{ ts: Date.now(), by: meName(), act: "create", qty: l.qty }] };
+        const doc = { n, type: "purchase", item: l.item, loc: ws, qty0: l.qty, qty: l.qty, unit: (it == null ? void 0 : it.unit) || "", recv: today(), date: today(), dlc: l.dlc || "", supplier: l.sup || "", lotSup: l.lotSup || "", brand: l.brand || "", photos: l.photos || [], price: l.price, purchaseId: pid, buyer, needPrint: true, status: "active", by: meName(), byId: me.id, ts: Date.now(), events: [{ ts: Date.now(), by: meName(), act: "create", qty: l.qty }] };
         await ref.set(doc);
         S.lotm = __spreadProps(__spreadValues({}, S.lotm || {}), { [ref.id]: __spreadValues({ id: ref.id }, doc) });
         lotIds.push(ref.id);
       }
       const afterLots = () => {
-        if (lotIds.length) setTimeout(() => sheetLotsDone(lotIds, "🏷️ التيكيات ديال الشراء"), 350);
+        if (!lotIds.length) return;
+        setTimeout(async () => {
+          if (HW().kind) {
+            try {
+              await printLots(lotIds);
+            } catch (_) {
+            }
+            if (lotIds.every((id) => {
+              var _a3, _b2;
+              return (_b2 = (_a3 = S.lotm) == null ? void 0 : _a3[id]) == null ? void 0 : _b2.printed;
+            })) return;
+          }
+          sheetLotsDone(lotIds, "🏷️ التيكيات ديال الشراء");
+        }, 350);
       };
       if (req) {
         const fr = (await db.doc("preqs/" + req.id).get()).data() || req;
@@ -11861,7 +11875,36 @@ async function lotLabelsBlob(lots) {
   const cv = document.createElement("canvas");
   const x = cv.getContext("2d");
   const font = (sz, b) => `${b ? 700 : 400} ${sz}px ${FONT}`;
-  const H1 = lots.some((l) => l.type === "freeze") ? 560 : 470;
+  const H1 = lots.some((l) => l.type === "freeze" || l.type === "purchase") ? 560 : 470;
+  const ldImg = (src) => new Promise((res) => {
+    if (!src) return res(null);
+    const im = new Image();
+    im.crossOrigin = "anonymous";
+    const t = setTimeout(() => res(null), 4e3);
+    im.onload = () => {
+      clearTimeout(t);
+      try {
+        const c = document.createElement("canvas");
+        c.width = c.height = 2;
+        const g = c.getContext("2d");
+        g.drawImage(im, 0, 0, 2, 2);
+        g.getImageData(0, 0, 1, 1);
+        res(im);
+      } catch (_) {
+        res(null);
+      }
+    };
+    im.onerror = () => {
+      clearTimeout(t);
+      res(null);
+    };
+    im.src = src;
+  });
+  const IM = await Promise.all(lots.map((l) => {
+    if (l.type !== "purchase") return null;
+    const ph = (l.photos || [])[0];
+    return ldImg(ph && (ph.url || ph.src || (typeof ph === "string" ? ph : "")) || imgOf(l.item));
+  }));
   cv.width = W;
   cv.height = H1 * lots.length;
   x.fillStyle = "#fff";
@@ -11879,24 +11922,47 @@ async function lotLabelsBlob(lots) {
     x.fillRect(P / 2, y0 + P / 2, W - P, 56);
     x.fillStyle = "#fff";
     x.font = font(28, true);
-    x.fillText(fz ? "❄️ تجميد · CONGELATION" : "📦 استلام · RECEPTION", W - P - 8, y0 + P / 2 + 28);
+    const pu = l.type === "purchase";
+    if (pu) {
+      x.font = font(24, true);
+      x.fillText("🧾 بون الاستلام ديال الشرا · BON DE RÉCEPTION DES ACHATS", W - P - 8, y0 + P / 2 + 28, W - 2 * P);
+    } else x.fillText(fz ? "❄️ تجميد · CONGELATION" : "📦 استلام · RECEPTION", W - P - 8, y0 + P / 2 + 28);
     x.fillStyle = "#000";
+    const im = IM[k];
+    const tw = W - 2 * P - 16 - (im ? 136 : 0);
+    if (im) {
+      const s0 = 120, r = Math.min(s0 / im.width, s0 / im.height), iw = im.width * r, ih = im.height * r;
+      x.drawImage(im, P + 8 + (s0 - iw) / 2, y0 + P / 2 + 70 + (s0 - ih) / 2, iw, ih);
+      x.lineWidth = 2;
+      x.strokeRect(P + 8, y0 + P / 2 + 70, s0, s0);
+    }
     let y = y0 + 110;
     x.font = font(34, true);
-    x.fillText(String(iname(l.item)).slice(0, 28), W - P - 8, y);
+    x.fillText(String(iname(l.item)), W - P - 8, y, tw);
     y += 50;
     x.font = font(24, false);
-    x.fillText("الكمية: " + fmt(l.qty0) + " " + (l.unit || ""), W - P - 8, y);
+    x.fillText("الكمية: " + fmt(l.qty0) + " " + (l.unit || ""), W - P - 8, y, tw);
     x.textAlign = "left";
     x.direction = "ltr";
     x.font = font(26, true);
-    x.fillText(l.n, P + 8, y);
+    if (!im) x.fillText(l.n, P + 8, y);
     x.direction = "rtl";
     x.textAlign = "right";
     y += 42;
     x.font = font(22, false);
-    x.fillText((fz ? "❄️ دخل للكونجيلاتور: " : "وصل: ") + (fz ? l.ts ? dtF(dstr(new Date(l.ts)) + "T" + hm(l.ts)) : l.frozenAt : l.recv) + " · " + (LOC[l.loc] || ""), W - P - 8, y);
-    y += 36;
+    if (pu) {
+      x.fillText("🔖 " + l.n, W - P - 8, y, tw);
+      y += 36;
+      x.font = font(24, true);
+      x.fillText("🏭 الورشة: " + (LOC[l.loc] || ""), W - P - 8, y);
+      y += 38;
+      x.font = font(22, false);
+      x.fillText("📅 وصل: " + (l.recv || "") + (l.ts ? " · " + hm(l.ts) : ""), W - P - 8, y);
+      y += 36;
+    } else {
+      x.fillText((fz ? "❄️ دخل للكونجيلاتور: " : "وصل: ") + (fz ? l.ts ? dtF(dstr(new Date(l.ts)) + "T" + hm(l.ts)) : l.frozenAt : l.recv) + " · " + (LOC[l.loc] || ""), W - P - 8, y);
+      y += 36;
+    }
     if (l.supplier) {
       x.fillText("المورد: " + String(l.supplier).slice(0, 30) + (l.lotSup ? " · lot " + l.lotSup : ""), W - P - 8, y);
       y += 36;
@@ -11915,7 +11981,14 @@ async function lotLabelsBlob(lots) {
       x.fillText("👨‍🍳 المحضر: " + l.prep, W - P - 8, y);
       y += 36;
     }
-    x.fillText((fz ? "✍️ دار التيكي: " : "سجل: ") + (l.by || "") + (fz && l.ts ? " · " + dtF(dstr(new Date(l.ts)) + "T" + hm(l.ts)) : ""), W - P - 8, y);
+    if (pu) {
+      x.font = font(24, true);
+      x.fillText("🛒 شراه: " + (l.buyer || "—"), W - P - 8, y);
+      y += 38;
+      x.font = font(22, false);
+      x.fillText("✍️ سجلو: " + (l.by || ""), W - P - 8, y);
+      y += 30;
+    } else x.fillText((fz ? "✍️ دار التيكي: " : "سجل: ") + (l.by || "") + (fz && l.ts ? " · " + dtF(dstr(new Date(l.ts)) + "T" + hm(l.ts)) : ""), W - P - 8, y);
     y += 30;
     x.lineWidth = 3;
     x.strokeRect(P + 8, y0 + H1 - 150, W - 2 * P - 16, 110);
@@ -14874,6 +14947,10 @@ function sheetOpDetail(id) {
     var _a, _b;
     return `<div class="box" style="gap:4px"><b>${dhm(e.ts)} · ${esc(e.by)}</b><div class="muted">💬 ${esc(e.reason || "")}</div>${(e.changes || []).map((c) => `<div style="font-size:.88rem">• ${esc(c)}</div>`).join("")}<div class="muted" style="font-size:.85rem">المجموع: ${money((_a = e.before) == null ? void 0 : _a.total)} ← ${money((_b = e.after) == null ? void 0 : _b.total)}</div></div>`;
   }).join("")}</details>` : ""}<button type="button" class="btn block" data-act="purchedit" data-id="${o.id}">✏️ تصحيح الشراء (غير المسير والمشرف)</button>`;
+  if (o.type === "purchase") {
+    const ids = Object.values(S.lotm || {}).filter((l) => l.purchaseId === o.id).map((l) => l.id);
+    if (ids.length) b += `<button type="button" class="btn block" data-act="lotprint" data-id="${ids.join(",")}">🖨️ عاود طبع التيكيات (${ids.length})</button>`;
+  }
   openSheet({ purchase: "🛒 شراء", production: "👨‍🍳 إنتاج", return: "↩️ مرتجع", count: "🔍 فرق الجرد", adjust: "✏️ تصحيح المخزون", tasting: "🍰 التذوق" }[o.type] || "عملية", b);
 }
 function sheetPurchEdit(id) {
