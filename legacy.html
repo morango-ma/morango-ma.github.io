@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113200341" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113200711" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6461,7 +6461,7 @@ const tsplOn = () => {
 };
 async function tsplFromBlob(blob, fit) {
   const H0 = HW();
-  const wmm = +H0.lw || 100, hmm = +H0.lh || 150, gap = H0.lg != null && H0.lg !== "" ? +H0.lg : 2;
+  const wmm = +H0.lw || 100, hmm = +H0.lh || 100, gap = H0.lg != null && H0.lg !== "" ? +H0.lg : 2;
   const maxW = Math.round(wmm * 8) - 16, maxH = Math.round(hmm * 8) - 16;
   let dots = maxW;
   if (fit) {
@@ -6719,7 +6719,7 @@ async function hwProbe() {
   const p = await hwReconnect();
   if (!p) return toast("ربط الطابعة أولا", true);
   const H = HW();
-  const w = +H.lw || 100, h = +H.lh || 150, g = H.lg != null && H.lg !== "" ? +H.lg : 2;
+  const w = +H.lw || 100, h = +H.lh || 100, g = H.lg != null && H.lg !== "" ? +H.lg : 2;
   const E = new TextEncoder();
   const steps = [
     ["TSPL", E.encode(`SIZE ${w} mm,${h} mm\r
@@ -6798,7 +6798,7 @@ function sheetDevices() {
     return "";
   })()}
     <div class="field"><span class="lbl">🏷️ نوع الطابعة</span><div class="choice" style="--cols:2"><button type="button" class="opt" aria-pressed="${H.lang !== "tspl"}" onclick="hwSave({...HW(),lang:'esc'});sheetDevices()"><span class="ico">🧾</span><span>ديال الوصولات (ESC/POS)</span></button><button type="button" class="opt" aria-pressed="${H.lang === "tspl"}" onclick="hwSave({...HW(),lang:'tspl'});sheetDevices()"><span class="ico">🏷️</span><span>ديال الليتيكيت (TSPL · GG-D410…)</span></button></div></div>
-    ${H.lang === "tspl" ? `<div class="field"><span class="lbl">📐 القياس ديال الليتيكيت (مم)</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><label class="muted" style="font-size:.8rem">العرض<input class="big-in" inputmode="decimal" value="${H.lw || 100}" onchange="hwSave({...HW(),lw:num(this.value)||100})"></label><label class="muted" style="font-size:.8rem">الطول<input class="big-in" inputmode="decimal" value="${H.lh || 150}" onchange="hwSave({...HW(),lh:num(this.value)||150})"></label><label class="muted" style="font-size:.8rem">الفراغ بيناتهم<input class="big-in" inputmode="decimal" value="${H.lg != null ? H.lg : 2}" onchange="hwSave({...HW(),lg:num(this.value)})"></label></div></div>` : ""}
+    ${H.lang === "tspl" ? `<div class="field"><span class="lbl">📐 القياس ديال الليتيكيت (مم)</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><label class="muted" style="font-size:.8rem">العرض<input class="big-in" inputmode="decimal" value="${H.lw || 100}" onchange="hwSave({...HW(),lw:num(this.value)||100})"></label><label class="muted" style="font-size:.8rem">الطول<input class="big-in" inputmode="decimal" value="${H.lh || 100}" onchange="hwSave({...HW(),lh:num(this.value)||100})"></label><label class="muted" style="font-size:.8rem">الفراغ بيناتهم<input class="big-in" inputmode="decimal" value="${H.lg != null ? H.lg : 2}" onchange="hwSave({...HW(),lg:num(this.value)})"></label></div></div>` : ""}
     ${choice("hww", "📏 عرض الورقة", [{ v: "58", l: "58 mm", i: "🧾" }, { v: "80", l: "80 mm", i: "🧾" }], H.width, 2)}
     <div class="field"><span class="lbl">🧩 طريقة الطبع (إلا خرج الوصل خاوي، بدلها)</span><div class="choice" style="--cols:2"><button type="button" class="opt" aria-pressed="${H.raster !== "esc"}" onclick="hwSave({...HW(),raster:'gsv0'});sheetDevices()"><span class="ico">🅰️</span><span>عادية (GS v 0)</span></button><button type="button" class="opt" aria-pressed="${H.raster === "esc"}" onclick="hwSave({...HW(),raster:'esc'});sheetDevices()"><span class="ico">🅱️</span><span>بديلة (ESC *)</span></button></div></div>
     <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="hwauto" ${H.auto ? "checked" : ""} style="width:22px;height:22px"> 🖨️ اطبع الوصل بوحدو من بعد كل بيعة</label>
