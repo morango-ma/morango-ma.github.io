@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113225300" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113225752" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4731,9 +4731,14 @@ function phThumbs(k) {
   if (!el) return;
   el.innerHTML = PH[k].map((d, i) => `<span style="position:relative;display:inline-block"><img alt="" src="${d}"><button type="button" data-act="phrm" data-k="${k}" data-v="${i}" aria-label="حيد الصورة" style="position:absolute;top:-6px;inset-inline-end:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--bad);color:#fff;font-weight:800;cursor:pointer">×</button></span>`).join("") + (PH[k].length ? `<span class="tag" style="align-self:center">📷 ${PH[k].length}</span>` : "");
 }
+const isDesk = () => {
+  var _a;
+  return !!((_a = window.MorangoNative) == null ? void 0 : _a.desktop) || !/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent) && !(navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+};
 const photoField = (key, label = "صور (دليل)", cap = "environment") => {
   PH[key] = [];
-  return `<div class="field"><label class="photo-btn"><span class="em">📷</span><span>${label}</span><input type="file" accept="image/*" capture="${cap}" ${cap === "user" ? "" : "multiple"} data-photos="${key}"></label><button type="button" class="btn small" data-camph="${key}" style="margin-top:6px">🎥 صور بالكاميرا (حتى USB)</button><div class="thumbs" id="th-${key}"></div></div>`;
+  if (isDesk()) return `<div class="field"><button type="button" class="photo-btn" data-camph="${key}" data-many="${cap === "user" ? "" : "1"}" style="width:100%;border:0;font:inherit;cursor:pointer"><span class="em">📷</span><span>${label}</span></button><div class="thumbs" id="th-${key}"></div></div>`;
+  return `<div class="field"><label class="photo-btn"><span class="em">📷</span><span>${label}</span><input type="file" accept="image/*" capture="${cap}" ${cap === "user" ? "" : "multiple"} data-photos="${key}"></label><button type="button" class="btn small" data-camph="${key}" data-many="${cap === "user" ? "" : "1"}" style="margin-top:6px">🎥 صور بالكاميرا (حتى USB)</button><div class="thumbs" id="th-${key}"></div></div>`;
 };
 async function camSnap(key, many) {
   var _a, _b, _c, _d;
@@ -4764,6 +4769,13 @@ async function camSnap(key, many) {
     }
     ov.remove();
   };
+  if (!devs.length && isDesk()) {
+    ov.innerHTML = '<div style="background:#fff;color:#000;border-radius:16px;padding:18px;max-width:440px;text-align:center;display:flex;flex-direction:column;gap:10px"><b style="font-size:1.2rem">📷 هاد الجهاز ما فيه حتى كاميرا</b><span>ركب كاميرا USB (webcam) فالكمبيوتر، ومن بعد عاود ضغط 📷. الصور خاصها تكون بالكاميرا، ماشي من الملفات.</span><button type="button" data-k="x" style="background:#e02843;color:#fff;border:0;border-radius:999px;padding:12px;font:inherit;font-weight:800">مفهوم</button></div>';
+    ov.onclick = (e) => {
+      if (e.target.closest('[data-k="x"]')) ov.remove();
+    };
+    return;
+  }
   await open();
   (_d = ov.querySelector("select")) == null ? void 0 : _d.addEventListener("change", (e) => {
     cur = e.target.value;
@@ -4797,8 +4809,7 @@ document.addEventListener("click", (e) => {
   if (!b) return;
   e.preventDefault();
   e.stopPropagation();
-  const inp2 = document.querySelector(`input[data-photos="${b.dataset.camph}"]`);
-  camSnap(b.dataset.camph, !!(inp2 == null ? void 0 : inp2.multiple));
+  camSnap(b.dataset.camph, b.dataset.many === "1");
 }, true);
 const sigField = (id, label) => `<div class="field"><span class="lbl">✍️ ${label}</span><canvas class="sig" id="${id}" width="600" height="220"></canvas><button type="button" class="link" data-act="sigclear" data-id="${id}">مسح التوقيع</button></div>`;
 const errP = '<p class="err" id="ferr" hidden></p>';
