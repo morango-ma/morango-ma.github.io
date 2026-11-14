@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114055546" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114060043" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2222,7 +2222,7 @@ async function newOp(o) {
   o.by = o.by || meName();
   o.byId = (me == null ? void 0 : me.id) || "";
   const vw = VTYPES[o.type] ? o.ws || (String(o.loc || "")[0] === "w" ? o.loc : "") : "";
-  if ((me == null ? void 0 : me.role) === "prod" && VTYPES[o.type]) o.vld = { chef: { ws: vw, st: vw ? "wait" : "na" }, mgr: { st: "wait" } };
+  if ((me == null ? void 0 : me.role) === "prod" && VTYPES[o.type] && !o.auto) o.vld = { chef: { ws: vw, st: vw ? "wait" : "na" }, mgr: { st: "wait" } };
   const ref = db.collection("ops").doc();
   await ref.set(o);
   if (o.vld && vw) {
@@ -5201,6 +5201,52 @@ function sheetUser(id) {
     upd();
   });
 }
+const AUTO_SEMI_WS = ["w6"];
+const autoSemiOf = (ws, id) => {
+  var _a, _b;
+  const x = S.items[id];
+  return AUTO_SEMI_WS.includes(ws) && (x == null ? void 0 : x.kind) === "semi" && x.ws === ws && !x.frz && x.store !== "frigo" && !!((_b = (_a = x.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length);
+};
+function semiPlan(ws, id, qty, acc) {
+  var _a, _b;
+  const it = S.items[id];
+  if (!((_b = (_a = it == null ? void 0 : it.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length)) return;
+  const k = qty / yld(it);
+  it.recipe.lines.forEach((l) => {
+    if (noSt(l.item)) return;
+    const need = cq(l, r2(lineQty(l) * k));
+    if (autoSemiOf(ws, l.item)) {
+      const have = Math.max(0, stockOf(ws, l.item) - (acc.use[l.item] || 0));
+      acc.use[l.item] = (acc.use[l.item] || 0) + need;
+      const sh = r2(need - have);
+      if (sh > 0) {
+        semiPlan(ws, l.item, sh, acc);
+        acc.semis.push({ id: l.item, qty: sh });
+      }
+    } else acc.use[l.item] = (acc.use[l.item] || 0) + need;
+  });
+}
+async function autoMake(ws, id, qty, forName) {
+  const it = S.items[id];
+  const k = qty / yld(it);
+  const cons = it.recipe.lines.map((l) => {
+    const qq = cq(l, r2(lineQty(l) * k));
+    const uc = costOf(l.item, 0, ws);
+    return { item: l.item, qty: qq, unitCost: uc, cost: Math.round(qq * uc * 100) / 100 };
+  });
+  const d = {};
+  cons.forEach((c) => d[c.item] = (d[c.item] || 0) - c.qty);
+  d[id] = (d[id] || 0) + qty;
+  const cost = Math.round(cons.reduce((a, c) => a + c.cost, 0) * 100) / 100;
+  const unitCost2 = Math.round(cost / qty * 1e4) / 1e4;
+  await moveStock(ws, d, { [id]: unitCost2 });
+  let lotsUsed = [];
+  try {
+    lotsUsed = await consumeLots(ws, cons.filter((c) => !noSt(c.item) && c.qty > 0), "إنتاج " + it.name);
+  } catch (_) {
+  }
+  await newOp({ type: "production", ws, item: id, qty, consumed: cons, lotsUsed, cost, matCost: cost, labor: 0, laborUnit: 0, unitCost: unitCost2, workers: [], auto: true, autoFor: forName || "" });
+}
 const xHome = (ws, id) => {
   const x = S.items[id];
   return x && x.ws && x.ws !== ws && !isBought(x.kind) && !x.anyWs ? x.ws : null;
@@ -5268,8 +5314,17 @@ function sheetProduce(kind, pre) {
       const x = S.items[id];
       return x && x.ws && x.ws !== ws && !isBought(x.kind) && !x.anyWs ? x.ws : null;
     };
+    const AS = it.kind === "final" && AUTO_SEMI_WS.includes(ws) ? (() => {
+      const a = { semis: [], use: {} };
+      semiPlan(ws, it.id, q, a);
+      return a;
+    })() : null;
+    if (AS) {
+      const rs = Object.entries(AS.use).filter(([i, u]) => !autoSemiOf(ws, i) && haveX(ws, i) + 1e-9 < u);
+      if (rs.length) return ferr("⛔ ما يمكنش تسجل: ناقص فالمخزون ← " + rs.map(([i, u]) => iname(i) + " (خاص " + fmt(r2(u)) + "، كاين " + fmt(haveX(ws, i)) + " " + iunit(i) + ")").join(" · "));
+    }
     {
-      const sh = it.recipe.lines.filter((l) => !noSt(l.item)).map((l) => {
+      const sh = it.recipe.lines.filter((l) => !noSt(l.item) && !(AS && autoSemiOf(ws, l.item))).map((l) => {
         const h = homeOf(l.item);
         return { l, h, need: cq(l, r2(lineQty(l) * k * rfOf(l))), have: Math.max(0, stockOf(ws, l.item)) + (h ? Math.max(0, stockOf(h, l.item)) : 0) };
       }).filter((x) => x.have + 1e-9 < x.need);
@@ -5301,6 +5356,7 @@ function sheetProduce(kind, pre) {
     }
     busy(f, true);
     try {
+      if (AS) for (const x of AS.semis) await autoMake(ws, x.id, x.qty, it.name);
       let mc = { [it.id]: unitCost2 };
       if (it.split) {
         const E = EGG();
@@ -5432,7 +5488,7 @@ function sheetProduce(kind, pre) {
         var _a2;
         return cq(l, r2(lineQty(l) * k * (((_a2 = S.items[l.item]) == null ? void 0 : _a2.kind) === "semi" ? rf2 : 1)));
       };
-      const short = q > 0 && r.lines.some((l) => !noSt(l.item) && haveX(ws, l.item) + 1e-9 < nd(l));
+      const short = q > 0 && r.lines.some((l) => !noSt(l.item) && !(it.kind === "final" && autoSemiOf(ws, l.item)) && haveX(ws, l.item) + 1e-9 < nd(l));
       {
         const sb = $("button[type=submit]", f);
         if (sb) sb.disabled = short;
@@ -5440,7 +5496,7 @@ function sheetProduce(kind, pre) {
       $("#pprev", f).innerHTML = q > 0 ? `<div class="box"><h3>🥄 غادي يتنقص من المخزون</h3>${r.lines.map((l) => {
         const need = cq(l, r2(lineQty(l) * k)), have = haveX(ws, l.item), ns = noSt(l.item), hh = xHome(ws, l.item);
         return prow(l.item, ns ? "ما كيتحسبش فالمخزون" : "كاين " + fmt(have) + " " + esc(iunit(l.item)) + (hh ? " (هنا " + fmt(Math.max(0, stockOf(ws, l.item))) + " + فـ" + esc(LOC[hh] || hh) + " " + fmt(Math.max(0, stockOf(hh, l.item))) + ")" : ""), `<b class="num ${!ns && have < need ? "neg" : ""}">${fmt(need)} ${esc(iunit(l.item))}</b>`);
-      }).join("")}${short ? `<p class="err">⛔ ما يمكنش تسجل هاد الإنتاج: ${r.lines.filter((l) => !noSt(l.item) && haveX(ws, l.item) + 1e-9 < nd(l)).map((l) => {
+      }).join("")}${it.kind === "final" && q > 0 && r.lines.some((l) => autoSemiOf(ws, l.item) && haveX(ws, l.item) + 1e-9 < nd(l)) ? `<p class="muted">🥣 العجينة (${r.lines.filter((l) => autoSemiOf(ws, l.item)).map((l) => esc(iname(l.item).split(" (")[0])).join("، ")}) كتسجل أوتوماتيك مع الخبز.</p>` : ""}${short ? `<p class="err">⛔ ما يمكنش تسجل هاد الإنتاج: ${r.lines.filter((l) => !noSt(l.item) && !(it.kind === "final" && autoSemiOf(ws, l.item)) && haveX(ws, l.item) + 1e-9 < nd(l)).map((l) => {
         var _a2;
         return xHome(ws, l.item) ? "🥣 " + esc(iname(l.item)) + " (ما كافيش حتى فـ" + esc(LOC[xHome(ws, l.item)]) + ": زيدو فبرنامج الإنتاج ديالهم)" : ((_a2 = S.items[l.item]) == null ? void 0 : _a2.kind) === "semi" ? "🥣 " + esc(iname(l.item)) + " (نصف مصنع ماكاينش كافي، صاوبو الأول)" : "🌾 " + esc(iname(l.item)) + " (ريبتير)";
       }).join("، ")}. إلا المخزون غالط، خلي المسير يصححو.</p>` : ""}</div>${it.kind === "final" && q > 0 ? (() => {
@@ -12635,7 +12691,8 @@ function prodOrders(ws) {
   Object.values(cl).forEach((c) => {
     if (!all.some((o) => o.id === c.item) && S.items[c.item]) all.push({ id: c.item, lvl: lv(S.items[c.item]), q: 0, dn: dn[c.item] || 0, day: t, cl: c });
   });
-  return { today: all, tomorrow: sl(tm), hasPlan: !!planOf(ws, t) };
+  const na = (o) => !(o.lvl !== "final" && autoSemiOf(ws, o.id) && !o.cl);
+  return { today: all.filter(na), tomorrow: sl(tm).filter(na), hasPlan: !!planOf(ws, t) };
 }
 function ordLock(list) {
   const open = new Set(list.filter((o) => o.q > 1e-9 && !o.cl).map((o) => o.id));
