@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114050014" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114052049" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3204,10 +3204,170 @@ function vDispatch() {
      ${p.note ? `<p class="muted" style="margin:0">📝 ${esc(p.note)}</p>` : ""}<div class="muted" style="font-size:.85rem">✍️ ${esc(p.by || "")}</div>
      <div class="btns" style="margin:0">${canDpSend() ? Object.entries(byWs).map(([w, ls]) => `<button type="button" class="btn primary" data-act="dpsend" data-id="${p.id}" data-w="${w}">🚚 صيفط من ${esc(LOC[w] || w)} (${ls.length})</button>`).join("") : ""}${canDp() ? `<button type="button" class="btn" data-act="dpedit" data-id="${p.id}">✏️ بدل</button><button type="button" class="btn danger" data-act="dpdel" data-id="${p.id}">🗑️</button>` : ""}</div></section>`;
   };
-  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">🗓️ برنامج الإرسال</h2>${canDp() ? '<button type="button" class="btn primary" data-act="dpedit">➕ زيد</button>' : ""}</div>
+  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">🗓️ برنامج الإرسال</h2>${canDp() ? '<div class="btns" style="margin:0"><button type="button" class="btn primary" data-act="dpgrid">📅 جدول بالأوقات</button><button type="button" class="btn" data-act="dpedit">➕ زيد</button></div>' : ""}</div>
    <div class="chips">${days.map(([v, l]) => `<button type="button" class="chip ${d === v ? "on" : ""}" onclick="S.dpd='${v}';render()">${l}</button>`).join("")}<input type="date" value="${d}" onchange="S.dpd=this.value||'${today()}';render()" style="height:40px;border-radius:12px;border:2px solid var(--line);background:var(--surface);padding:0 8px"></div>
    ${canDp() && !L.length && (S.dplans || []).some((p) => p.date === daysAgo(1) && d >= today()) ? `<button type="button" class="btn block" data-act="dpcopy">📋 نسخ البرنامج ديال البارح لهاد النهار</button>` : ""}</section>
    ${L.length ? L.map(card).join("") : `<section class="card">${emptyB("🗓️", "ما كاين حتى إرسال مبرمج فهاد النهار.")}</section>`}`;
+}
+function sheetDpGrid() {
+  if (!canDp()) return;
+  const pos = POS[0].id;
+  let ws = S.dgw || "w6";
+  let d = S.dpd || today();
+  const fin = () => itemsArr().filter((i) => i.kind === "final" && i.active !== false && i.ws === ws).sort((a, b) => a.name.localeCompare(b.name));
+  const plansOf = () => (S.dplans || []).filter((p) => p.date === d && p.pos === pos);
+  let times = [...new Set(plansOf().filter((p) => (p.lines || []).some((l) => {
+    var _a;
+    return ((_a = S.items[l.item]) == null ? void 0 : _a.ws) === ws;
+  })).map((p) => p.time))].sort();
+  if (!times.length) times = ["06:30", "09:00", "12:00", "16:00", "19:00"];
+  const qOf = (t, id) => {
+    const p = plansOf().find((x) => x.time === t);
+    const l = ((p == null ? void 0 : p.lines) || []).find((x) => x.item === id);
+    return l ? +l.qty : "";
+  };
+  const cell = "width:62px;height:38px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:inherit;text-align:center;font:inherit;font-weight:700";
+  const draw2 = (f) => {
+    const F = fin();
+    const g = $("#dpg", f);
+    g.innerHTML = `<table style="border-collapse:separate;border-spacing:4px"><thead><tr><th style="position:sticky;inset-inline-start:0;background:var(--bg);text-align:start;min-width:120px">المنتوج</th>${times.map((t, k) => `<th><input type="time" data-tk="${k}" value="${t}" style="${cell};width:86px;font-size:.85rem"><button type="button" class="link neg" data-tx="${k}" style="display:block;margin:2px auto 0">✖️</button></th>`).join("")}<th>المجموع</th></tr></thead>
+    <tbody>${F.map((i) => `<tr><td style="position:sticky;inset-inline-start:0;background:var(--bg);font-size:.85rem;max-width:150px">${ico(i.id)} ${esc(i.name.split(" (")[0])}</td>${times.map((t, k) => `<td><input data-gi="${i.id}" data-gk="${k}" inputmode="decimal" value="${fmt(qOf(t, i.id))}" style="${cell}"></td>`).join("")}<td class="num" data-gt="${i.id}" style="text-align:center;font-weight:800"></td></tr>`).join("")}</tbody></table>`;
+    tot(f);
+  };
+  const tot = (f) => {
+    fin().forEach((i) => {
+      const s0 = $$(`[data-gi="${i.id}"]`, f).reduce((a, x) => a + (num(x.value) || 0), 0);
+      const c = f.querySelector(`[data-gt="${i.id}"]`);
+      if (c) c.textContent = s0 ? fmt(s0) : "";
+    });
+  };
+  const read = (f) => {
+    const T = $$("[data-tk]", f).map((x) => x.value);
+    const M = {};
+    $$("[data-gi]", f).forEach((x) => {
+      const q = num(x.value) || 0;
+      if (q > 0) {
+        const t = T[+x.dataset.gk];
+        if (t) (M[t] = M[t] || []).push({ item: x.dataset.gi, qty: q });
+      }
+    });
+    return { T, M };
+  };
+  openSheet("📅 جدول الإرسال بالأوقات", `<p class="muted" style="margin:0">كتب شحال غادي يمشي من كل منتوج فكل وقت لـ ${esc(LOC[pos])}. كل عمود = إرسال فديك الساعة.</p>
+   <div class="chips">${WS.map((w) => `<button type="button" class="chip ${w.id === ws ? "on" : ""}" data-gw="${w.id}">${w.i} ${esc(w.name.split(" (")[0])}</button>`).join("")}</div>
+   <div class="two">${inp("dgd", "📅 النهار", d, "date")}<div class="field"><span class="lbl">⏰ زيد وقت</span><button type="button" class="btn block" id="dgadd">➕ عمود جديد</button></div></div>
+   <div id="dpg" style="overflow:auto;max-width:100%;max-height:58vh;border:1px solid var(--line);border-radius:12px;padding:4px"></div>
+   <label class="prow" style="gap:8px;justify-content:flex-start"><input type="checkbox" id="dgrep" style="width:22px;height:22px"> 🔁 عاود نفس الجدول للأيام الجاية: <select id="dgn" style="height:36px;border-radius:8px"><option>6</option><option>13</option><option>29</option></select> يوم</label>
+   ${errP}<button class="btn primary block" type="submit">✅ حفظ الجدول</button>`, async (f) => {
+    const { T, M } = read(f);
+    if (new Set(T.filter(Boolean)).size !== T.filter(Boolean).length) return ferr("⏰ كاين جوج أعمدة بنفس الساعة.");
+    busy(f, true);
+    const save = async (day) => {
+      const P = (S.dplans || []).filter((p) => p.date === day && p.pos === pos);
+      for (const p of P) {
+        const keep = (p.lines || []).filter((l) => {
+          var _a;
+          return ((_a = S.items[l.item]) == null ? void 0 : _a.ws) !== ws;
+        });
+        const mine = M[p.time] || [];
+        if (!mine.length && !(p.lines || []).some((l) => {
+          var _a;
+          return ((_a = S.items[l.item]) == null ? void 0 : _a.ws) === ws;
+        })) continue;
+        const lines = [...keep, ...mine];
+        if (!lines.length && !Object.keys(p.sent || {}).length) {
+          await db.doc("dplans/" + p.id).delete();
+          continue;
+        }
+        await db.doc("dplans/" + p.id).update({ lines, by: meName(), ts: Date.now() });
+      }
+      for (const [t, mine] of Object.entries(M)) {
+        if (P.some((p) => p.time === t)) continue;
+        await db.collection("dplans").add({ pos, date: day, time: t, lines: mine, note: "", by: meName(), byId: me.id, ts: Date.now(), sent: {}, transfers: [] });
+      }
+    };
+    try {
+      await save(d);
+      if ($("#dgrep", f).checked) {
+        const n = +$("#dgn", f).value || 6;
+        for (let k = 1; k <= n; k++) await save(shiftDay(d, k));
+      }
+      S.dpd = d;
+      S.dgw = ws;
+      closeSheet();
+      toast("📅 الجدول تسجل");
+      render();
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    draw2(f);
+    f.addEventListener("input", (e) => {
+      if (e.target.dataset.gi) tot(f);
+    });
+    f.addEventListener("change", (e) => {
+      if (e.target.name === "dgd" || e.target.id === "dgd") {
+        const { T } = read(f);
+        d = e.target.value || today();
+        S.dpd = d;
+        times = [...new Set(plansOf().filter((p) => (p.lines || []).some((l) => {
+          var _a;
+          return ((_a = S.items[l.item]) == null ? void 0 : _a.ws) === ws;
+        })).map((p) => p.time))].sort();
+        if (!times.length) times = T;
+        draw2(f);
+      }
+      if (e.target.dataset.tk != null) {
+        times[+e.target.dataset.tk] = e.target.value;
+      }
+    });
+    f.addEventListener("click", (e) => {
+      const w = e.target.closest("[data-gw]"), x = e.target.closest("[data-tx]");
+      if (w) {
+        e.preventDefault();
+        ws = w.dataset.gw;
+        S.dgw = ws;
+        $$("[data-gw]", f).forEach((c) => c.classList.toggle("on", c === w));
+        draw2(f);
+      }
+      if (x) {
+        e.preventDefault();
+        const { T } = read(f);
+        const k = +x.dataset.tx;
+        const keepQ = {};
+        $$("[data-gi]", f).forEach((i) => {
+          const kk = +i.dataset.gk;
+          if (kk !== k) (keepQ[T[kk]] = keepQ[T[kk]] || {})[i.dataset.gi] = i.value;
+        });
+        times = T.filter((_, j) => j !== k);
+        draw2(f);
+        $$("[data-gi]", f).forEach((i) => {
+          var _a;
+          const v = (_a = keepQ[times[+i.dataset.gk]]) == null ? void 0 : _a[i.dataset.gi];
+          if (v != null) i.value = v;
+        });
+        tot(f);
+      }
+      if (e.target.closest("#dgadd")) {
+        e.preventDefault();
+        const { T } = read(f);
+        const vals = {};
+        $$("[data-gi]", f).forEach((i) => {
+          (vals[T[+i.dataset.gk]] = vals[T[+i.dataset.gk]] || {})[i.dataset.gi] = i.value;
+        });
+        times = [...T, ""];
+        draw2(f);
+        $$("[data-gi]", f).forEach((i) => {
+          var _a;
+          const v = (_a = vals[times[+i.dataset.gk]]) == null ? void 0 : _a[i.dataset.gi];
+          if (v != null) i.value = v;
+        });
+        tot(f);
+        const last = $$("[data-tk]", f).pop();
+        last == null ? void 0 : last.focus();
+      }
+    });
+  });
 }
 function sheetDpEdit(id) {
   if (!canDp()) return;
@@ -18176,6 +18336,7 @@ const ACT = {
     openSheet("📦 السلعة اللي جاية لـ" + LOC[p], L.length ? L.map((o) => `<div class="alert acc" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${o.status === "with_driver" ? "🚚" : "📦"}</span><div><b>${esc(LOC[o.ws] || "")} · ${(o.lines || []).length} منتوج</b><div class="muted">${hm(o.ts)} · ${esc(o.by || "")}</div></div></div><span class="tag acc">استلم</span></div>`).join("") : emptyB("📦", "ما كاينة حتى سلعة جاية دابا."));
   },
   dpedit: (el) => sheetDpEdit(el.dataset.id),
+  dpgrid: () => sheetDpGrid(),
   dpsend: (el) => dpSendSheet(el.dataset.id, el.dataset.w),
   dpfin: (el) => {
     S.ws = el.dataset.w;
