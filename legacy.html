@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114063030" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114063355" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -12764,7 +12764,7 @@ function ordRow(ws, o) {
   const L = { inter: "🥣 ميز أون بلاس", pre: "🧊 ممفينيش", final: "🧁 مفيني" }[o.lvl];
   const left = Math.round(o.q * 100) / 100;
   return `<div class="prow"><div class="lead">${pic(o.id)}<div><b>${esc(iname(o.id))}</b><span class="muted">${o.lvl === "final" && distTxt(ws, o.id, o.day || today()) ? "<b>" + distTxt(ws, o.id, o.day || today()) + "</b><br>" : ""}${L}${stepTag(it)}${!o.cl && o.q > 0 && ((_b = (_a = it == null ? void 0 : it.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) && o.lvl !== "final" && Math.abs(yld(it) - 1) > 1e-9 ? " · 📖 " + fmt(Math.round(o.q / yld(it) * 100) / 100) + " وصفة" : ""} · ${o.cl ? "📋 الأمر " + fmt(o.cl.ordered) + " " + esc((it == null ? void 0 : it.unit) || "") + " · ✅ تصاوب " + fmt(o.cl.done) : `📋 ${left > 0 ? "باقي " + fmt(left) : "سالا"} ${esc((it == null ? void 0 : it.unit) || "")}${o.dn ? " · ✅ تأكد " + fmt(o.dn) : ""}`}${o.cl ? " · " + ORD_RL(o.cl.reason) + (o.cl.note ? " (" + esc(o.cl.note) + ")" : "") : ""}${fsTxt}${o.sl ? "<br>🚚 ☀️ الصباح: <b>" + fmt(o.sl.m) + "</b> · 🌙 العشية: <b>" + fmt(o.sl.e) + "</b>" : ""}${o.wait ? " · 🔒 تسنى حتى يسالا: " + o.wait.slice(0, 3).map((v) => esc(vName(v))).join("، ") : ""}${((_c = o.via) == null ? void 0 : _c.length) ? " · ل: " + (o.vq && o.via.length > 1 ? o.via.map((v) => esc(vName(v)) + " (" + fmt(Math.round((o.vq[v] || 0) * 100) / 100) + ")").join(" + ") + (Math.abs(o.q - Object.values(o.vq).reduce((a, b) => a + b, 0)) > 1e-6 ? " → مقرّب لـ" + fmt(o.q) : "") : o.via.slice(0, 2).map((v) => esc(vName(v))).join("، ")) : ""}</span></div></div>
-   ${toSend > 0 ? `<button type="button" class="btn small primary" data-act="ordsend" data-id="${ws}" data-k="${o.id}" data-v="${toSend}">🚚 صيفط ${fmt(toSend)}</button>` : ""}${o.wait ? `<span class="tag" title="تسنى">🔒 تسنى</span>` : o.cl ? `<span class="tag ${o.cl.status === "none" ? "bad" : "warn"}" title="${esc(ORD_RL(o.cl.reason))}">${o.cl.status === "none" ? "❌ ما تصاوبش" : o.cl.status === "more" ? "➕ كثر" : "⚠️ جزئي"}</span>` : left > 0 ? `<button type="button" class="btn small primary" data-act="pord" data-id="${ws}" data-k="${o.id}" data-v="${left}">✅ أكد</button>` : '<span class="tag ok">✅</span>'}</div>`;
+   ${toSend > 0 ? `<button type="button" class="btn small primary" data-act="ordsend" data-id="${ws}" data-k="${o.id}" data-v="${toSend}">🚚 صيفط ${fmt(toSend)}</button>` : ""}${o.wait && !(isMgr() || isProd()) ? `<span class="tag" title="تسنى">🔒 تسنى</span>` : o.cl ? `<span class="tag ${o.cl.status === "none" ? "bad" : "warn"}" title="${esc(ORD_RL(o.cl.reason))}">${o.cl.status === "none" ? "❌ ما تصاوبش" : o.cl.status === "more" ? "➕ كثر" : "⚠️ جزئي"}</span>` : left > 0 ? `<button type="button" class="btn small primary" data-act="pord" data-id="${ws}" data-k="${o.id}" data-v="${left}">✅ أكد</button>` : '<span class="tag ok">✅</span>'}</div>`;
 }
 function dpTimesCard(ws) {
   var _a;
@@ -17770,7 +17770,7 @@ const ACT = {
     {
       const O = prodOrders(el.dataset.id);
       const x = [...ordLock(O.today), ...ordLock(O.tomorrow)].find((o) => o.id === it.id && o.q > 0);
-      if (x == null ? void 0 : x.wait) return toast("🔒 خاص يسالا الأول: " + x.wait.map(iname).join("، "), true);
+      if ((x == null ? void 0 : x.wait) && !(isMgr() || isProd())) return toast("🔒 خاص يسالا الأول: " + x.wait.map(iname).join("، "), true);
     }
     S.ws = el.dataset.id;
     closeSheet();
