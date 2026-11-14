@@ -392,7 +392,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114155452" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114155712" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4082,12 +4082,12 @@ function vPos() {
   const cw = S.pcat === "all" ? WS.map((w) => w.id) : [S.pcat];
   const cl2 = [];
   cw.forEach((w) => catsOf(w).forEach((c2) => {
-    if (!cl2.some((x) => x.id === c2) && itemsArr().some((i) => i.ws === w && i.cat === c2 && i.kind === "final" && +i.price > 0)) cl2.push({ id: c2, name: c2, i: catIcon(w, c2) });
+    if (!cl2.some((x) => x.id === c2) && itemsArr().some((i) => i.ws === w && i.cat === c2 && i.kind === "final" && +i.price > 0 && !i.noPos)) cl2.push({ id: c2, name: c2, i: catIcon(w, c2) });
   }));
   const pc2 = S.pcat !== "all" && cl2.length ? [{ id: "", name: "الكل", i: "🧁" }, ...cl2] : [];
   const P2 = pc2.some((x) => x.id === S.pcat2) ? S.pcat2 : "";
   const SM = soldMap(p, daysAgo(13));
-  const prods = itemsArr().filter((i) => i.kind === "final" && +i.price > 0 && (S.pcat === "all" || i.ws === S.pcat) && (!P2 || i.cat === P2) && (!q || (i.name + " " + (i.fr || "")).toLowerCase().includes(q.toLowerCase()))).sort((a, b) => (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
+  const prods = itemsArr().filter((i) => i.kind === "final" && +i.price > 0 && !i.noPos && (S.pcat === "all" || i.ws === S.pcat) && (!P2 || i.cat === P2) && (!q || (i.name + " " + (i.fr || "")).toLowerCase().includes(q.toLowerCase()))).sort((a, b) => (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
   const TOP = new Set(prods.filter((i) => SM[i.id] > 0).slice(0, 5).map((i) => i.id));
   const VO = me.role === "seller" && posMode(p) === "v";
   const HC = helperPending(me.id);
