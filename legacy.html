@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261113233252" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114025448" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -5023,6 +5023,11 @@ function sheetUser(id) {
     upd();
   });
 }
+const xHome = (ws, id) => {
+  const x = S.items[id];
+  return x && x.ws && x.ws !== ws && !isBought(x.kind) && !x.anyWs ? x.ws : null;
+};
+const haveX = (ws, id) => Math.max(0, stockOf(ws, id)) + (xHome(ws, id) ? Math.max(0, stockOf(xHome(ws, id), id)) : 0);
 function sheetProduce(kind, pre) {
   if (invGuard()) return;
   if (ordOnly() && !pre) return sheetOrders();
@@ -5080,9 +5085,16 @@ function sheetProduce(kind, pre) {
       var _a2;
       return ((_a2 = S.items[l.item]) == null ? void 0 : _a2.kind) === "semi" ? rf : 1;
     };
+    const homeOf = (id) => {
+      const x = S.items[id];
+      return x && x.ws && x.ws !== ws && !isBought(x.kind) && !x.anyWs ? x.ws : null;
+    };
     {
-      const sh = it.recipe.lines.filter((l) => !noSt(l.item)).map((l) => ({ l, need: cq(l, r2(lineQty(l) * k * rfOf(l))), have: stockOf(ws, l.item) })).filter((x) => x.have + 1e-9 < x.need);
-      if (sh.length) return ferr("⛔ ما يمكنش تسجل: ناقص فالمخزون ← " + sh.map((x) => iname(x.l.item) + " (خاص " + fmt(x.need) + "، كاين " + fmt(Math.max(0, x.have)) + " " + iunit(x.l.item) + ")").join(" · "));
+      const sh = it.recipe.lines.filter((l) => !noSt(l.item)).map((l) => {
+        const h = homeOf(l.item);
+        return { l, h, need: cq(l, r2(lineQty(l) * k * rfOf(l))), have: Math.max(0, stockOf(ws, l.item)) + (h ? Math.max(0, stockOf(h, l.item)) : 0) };
+      }).filter((x) => x.have + 1e-9 < x.need);
+      if (sh.length) return ferr("⛔ ما يمكنش تسجل: ناقص فالمخزون ← " + sh.map((x) => iname(x.l.item) + " (خاص " + fmt(x.need) + "، كاين " + fmt(Math.max(0, x.have)) + " " + iunit(x.l.item) + (x.h ? " هنا وفـ" + (LOC[x.h] || x.h) + ". خاص " + (LOC[x.h] || x.h) + " تصاوبو: زيدو فالبرنامج ديال اليوم" : "") + ")").join(" · "));
     }
     const cons = it.recipe.lines.map((l) => {
       let qq = cq(l, r2(lineQty(l) * k));
@@ -5123,10 +5135,31 @@ function sheetProduce(kind, pre) {
         }
       }
       const stB = Math.max(0, stockOf(ws, it.id));
+      const far = {};
+      cons.forEach((c) => {
+        const h = homeOf(c.item);
+        if (!h) return;
+        const loc = Math.max(0, stockOf(ws, c.item)), fromH = r2(Math.max(0, c.qty - loc));
+        if (fromH > 0) {
+          (far[h] = far[h] || []).push(__spreadProps(__spreadValues({}, c), { qty: fromH, cost: Math.round(fromH * c.unitCost * 100) / 100 }));
+          c.from = h;
+          c.fromQty = fromH;
+          d[c.item] = (d[c.item] || 0) + fromH;
+        }
+      });
       await moveStock(ws, d, mc);
+      for (const [h, L] of Object.entries(far)) {
+        const dd = {};
+        L.forEach((c) => dd[c.item] = (dd[c.item] || 0) - c.qty);
+        await moveStock(h, dd);
+        try {
+          await consumeLots(h, L, "إنتاج " + it.name + " (" + (LOC[ws] || ws) + ")");
+        } catch (_) {
+        }
+      }
       let lotsUsed = [];
       try {
-        lotsUsed = await consumeLots(ws, cons, "إنتاج " + it.name);
+        lotsUsed = await consumeLots(ws, cons.map((c) => c.fromQty ? __spreadProps(__spreadValues({}, c), { qty: r2(c.qty - c.fromQty) }) : c).filter((c) => c.qty > 0), "إنتاج " + it.name);
       } catch (_) {
       }
       const opId = await newOp(__spreadProps(__spreadValues({ type: "production", ws, item: it.id, qty: q }, pre ? { ord: { qty: pre.qty, status: pst, reason: prsn || null, note: prnote || null } } : {}), { consumed: cons, lotsUsed, cost, matCost: cost, labor, laborUnit: Math.round(lu * 1e4) / 1e4, unitCost: unitCost2, workers, frozen: fzq || 0 }));
@@ -5220,17 +5253,17 @@ function sheetProduce(kind, pre) {
         var _a2;
         return cq(l, r2(lineQty(l) * k * (((_a2 = S.items[l.item]) == null ? void 0 : _a2.kind) === "semi" ? rf2 : 1)));
       };
-      const short = q > 0 && r.lines.some((l) => !noSt(l.item) && stockOf(ws, l.item) + 1e-9 < nd(l));
+      const short = q > 0 && r.lines.some((l) => !noSt(l.item) && haveX(ws, l.item) + 1e-9 < nd(l));
       {
         const sb = $("button[type=submit]", f);
         if (sb) sb.disabled = short;
       }
       $("#pprev", f).innerHTML = q > 0 ? `<div class="box"><h3>🥄 غادي يتنقص من المخزون</h3>${r.lines.map((l) => {
-        const need = cq(l, r2(lineQty(l) * k)), have = stockOf(ws, l.item), ns = noSt(l.item);
-        return prow(l.item, ns ? "ما كيتحسبش فالمخزون" : "كاين " + fmt(have) + " " + esc(iunit(l.item)), `<b class="num ${!ns && have < need ? "neg" : ""}">${fmt(need)} ${esc(iunit(l.item))}</b>`);
-      }).join("")}${short ? `<p class="err">⛔ ما يمكنش تسجل هاد الإنتاج: ${r.lines.filter((l) => !noSt(l.item) && stockOf(ws, l.item) + 1e-9 < nd(l)).map((l) => {
+        const need = cq(l, r2(lineQty(l) * k)), have = haveX(ws, l.item), ns = noSt(l.item), hh = xHome(ws, l.item);
+        return prow(l.item, ns ? "ما كيتحسبش فالمخزون" : "كاين " + fmt(have) + " " + esc(iunit(l.item)) + (hh ? " (هنا " + fmt(Math.max(0, stockOf(ws, l.item))) + " + فـ" + esc(LOC[hh] || hh) + " " + fmt(Math.max(0, stockOf(hh, l.item))) + ")" : ""), `<b class="num ${!ns && have < need ? "neg" : ""}">${fmt(need)} ${esc(iunit(l.item))}</b>`);
+      }).join("")}${short ? `<p class="err">⛔ ما يمكنش تسجل هاد الإنتاج: ${r.lines.filter((l) => !noSt(l.item) && haveX(ws, l.item) + 1e-9 < nd(l)).map((l) => {
         var _a2;
-        return ((_a2 = S.items[l.item]) == null ? void 0 : _a2.kind) === "semi" ? "🥣 " + esc(iname(l.item)) + " (نصف مصنع ماكاينش كافي، صاوبو الأول)" : "🌾 " + esc(iname(l.item)) + " (ريبتير)";
+        return xHome(ws, l.item) ? "🥣 " + esc(iname(l.item)) + " (ما كافيش حتى فـ" + esc(LOC[xHome(ws, l.item)]) + ": زيدو فبرنامج الإنتاج ديالهم)" : ((_a2 = S.items[l.item]) == null ? void 0 : _a2.kind) === "semi" ? "🥣 " + esc(iname(l.item)) + " (نصف مصنع ماكاينش كافي، صاوبو الأول)" : "🌾 " + esc(iname(l.item)) + " (ريبتير)";
       }).join("، ")}. إلا المخزون غالط، خلي المسير يصححو.</p>` : ""}</div>${it.kind === "final" && q > 0 ? (() => {
         const lu = modOf(it);
         return `<div class="box"><h3>👥 اليد العاملة</h3>${lu ? `<div class="prow"><span>${money(lu)} لكل ${esc(it.unit)} × ${fmt(q)}</span><b class="num">${money(lu * q)}</b></div><p class="muted" style="margin:0">كتزاد على تكلفة المواد فالقيمة ديال المخزون، سواء مشا للبيع ولا بقى فالمخزون.</p>` : '<p class="muted" style="margin:0">ما كاينش taux ديال اليد العاملة (دخل البرنامج اليومي والأجور). غادي يتسجل بتكلفة المواد بوحدها.</p>'}</div>`;
@@ -12010,6 +12043,12 @@ function stagePlan(ws) {
   const out = {};
   const sm = stockMap(ws);
   for (const k in sm) R[k] = Math.max(0, +sm[k] || 0);
+  itemsArr().forEach((i) => {
+    if (i.ws && i.ws !== ws && !isBought(i.kind) && !i.anyWs) {
+      const h = Math.max(0, +stockMap(i.ws)[i.id] || 0);
+      if (h > 0) R[i.id] = (R[i.id] || 0) + h;
+    }
+  });
   const SMIN = itemsArr().filter((i) => i.ws === ws && sminOf(i));
   SMIN.forEach((i) => R[i.id] = (R[i.id] || 0) - sminOf(i));
   const T0 = today();
