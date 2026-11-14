@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114053654"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114054048"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -735,10 +735,10 @@ function loyRedeemUnused(points,total){const L=LOY();if(!L.on||!(+L.redeemPts>0)
 async function newOp(o){o.ts=Date.now();o.date=o.date||today();o.by=o.by||meName();o.byId=me?.id||'';
   /* everything the data-entry agent records waits for the workshop chef (signs on her screen, or from his own account) and then the management */
   const vw=VTYPES[o.type]?(o.ws||(String(o.loc||'')[0]==='w'?o.loc:'')):'';if(me?.role==='prod'&&VTYPES[o.type])o.vld={chef:{ws:vw,st:vw?'wait':'na'},mgr:{st:'wait'}};
-  const ref=db.collection('ops').doc();await ref.set(o);if(o.vld&&vw&&!chefAcc(vw)){const id=ref.id;const t0=Date.now();const iv=setInterval(()=>{if($('#sheet').hidden||Date.now()-t0>20000){clearInterval(iv);if($('#sheet').hidden)sheetVld(id,o)}},400)}return ref.id}
+  const ref=db.collection('ops').doc();await ref.set(o);if(o.vld&&vw){const id=ref.id;const t0=Date.now();const iv=setInterval(()=>{if($('#sheet').hidden||Date.now()-t0>20000){clearInterval(iv);if($('#sheet').hidden)sheetVld(id,o)}},400)}return ref.id}
 const VTYPES={production:['إنتاج','👨‍🍳'],purchase:['شراء','🛒'],adjust:['تصحيح المخزون','✏️'],consuse:['استعمال اللوازم','🧴'],wsxfer:['تحويل بين الورشات','🔁'],tools:['شراء أدوات','🛠️'],transfer:['إرسال للمحل','🚚'],return:['مرتجعات','↩️']};
 const chefAcc=w=>usersArr().find(u=>u.role==='ws'&&u.active!==false&&(u.loc===w||(u.locs||[]).includes(w)));
-const vldTodo=o=>{const v=o.vld;if(!v||!me)return '';if(v.chef.st==='wait'){if(me.role==='ws'&&(me.loc===v.chef.ws||(me.locs||[]).includes(v.chef.ws)))return 'chef';if(me.role==='prod'&&!chefAcc(v.chef.ws))return 'sign';return ''}
+const vldTodo=o=>{const v=o.vld;if(!v||!me)return '';if(v.chef.st==='wait'){if(me.role==='ws'&&(me.loc===v.chef.ws||(me.locs||[]).includes(v.chef.ws)))return 'chef';if(me.role==='prod')return 'sign';return ''}
   if(v.mgr.st==='wait'&&v.chef.st!=='no'&&isMgr())return 'mgr';if(me.role==='prod'&&o.byId===me.id&&(v.mgr.st==='no'||v.chef.st==='no')&&!v.seen)return 'fix';return ''};
 const vldOps=()=>allOps().filter(o=>o.vld&&o.ts>Date.now()-30*864e5&&vldTodo(o));
 const vldTag=o=>{const v=o.vld;if(!v)return '';if(v.chef.st==='no'||v.mgr.st==='no')return '<span class="tag bad">⛔ ترفضات</span>';if(v.mgr.st==='ok')return '<span class="tag good">✅ تقبلات</span>';return '<span class="tag warn">⏳ كتسنى</span>'};
