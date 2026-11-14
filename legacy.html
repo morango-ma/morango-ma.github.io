@@ -392,7 +392,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114155308" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114155452" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4076,7 +4076,7 @@ function vPos() {
   const ppb = pp.map((x) => `<button class="alert warn" style="border:0;width:100%;text-align:start" data-act="recvpass" data-id="${x.id}"><div class="lead"><span class="em">🤝</span><div><b>أكدي الاستلام من ${esc(x.seller)}</b><div class="muted">سدات النوبة ${hm(x.close.ts)} · شوفي السلعة وأكدي من الحساب ديالك</div></div></div></button>`).join("");
   const vf = S.shifts.filter((x) => x.pos === p && x.status === "verif");
   const vfb = ppb + vf.map((x) => `<button class="alert bad" style="border:0;width:100%;text-align:start" ${isMgr() ? `data-act="verif" data-id="${x.id}"` : ""}><div class="lead"><span class="em">🔎</span><div><b>النوبة ديال ${esc(x.seller)} فالتحقق</b><div class="muted">كاين فرق فالتسليم · ${isMgr() ? "ضغط باش تحقق وتسد" : "المسؤول غادي يحسب معاها"}</div></div></div></button>`).join("");
-  if (!sh) return `${head}${vfb}${posTeamCard(p)}<button class="act c5" data-act="openshift" style="min-height:120px"><span class="big">🔓</span><b>فتح النوبة باش تبدا البيع</b></button>${tempStatus(p)}${recv}${stockCard}${lastClosed(p)}`;
+  if (!sh) return `${head}${vfb}${posTeamCard(p)}<button class="act c5" data-act="openshift" style="min-height:120px"><span class="big">🔓</span><b>فتح النوبة باش تبدا البيع</b></button>${recv}${lastClosed(p)}`;
   const c = cartOf(p), q = S.q.trim();
   const cats = [{ id: "all", name: "كلشي", i: "⭐" }, ...WS.filter((w) => itemsArr().some((i) => i.kind === "final" && i.ws === w.id && +i.price > 0))];
   const cw = S.pcat === "all" ? WS.map((w) => w.id) : [S.pcat];
