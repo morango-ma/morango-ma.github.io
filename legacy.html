@@ -164,6 +164,7 @@ canvas.sig{width:100%;height:140px;background:var(--paper);border:2px dashed var
 .photo-btn .em{font-size:1.6rem}
 .photo-btn input{position:absolute;width:1px;height:1px;opacity:0}
 .media{display:flex;gap:6px;flex-wrap:wrap}
+.frn{font-size:.78em;font-weight:500;opacity:.72;unicode-bidi:isolate}.prod .frn{display:block;margin-top:1px}.prod .frd{display:none}
 .inbox .alert{padding:7px 10px!important;min-height:0!important;font-size:.86rem;border-radius:12px}.inbox .alert .em{font-size:1.15rem!important}.inbox .alert .muted{font-size:.74rem}.inbox .alert .tag{font-size:.7rem;padding:2px 8px}
 .toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);inset-inline:16px;margin:auto;max-width:420px;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:14px;z-index:40;font-weight:600;text-align:center}
 .toast.bad{background:var(--bad);color:var(--paper)}
@@ -391,7 +392,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114154040" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114155308" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1647,7 +1648,7 @@ const cntRange = (it, n) => {
 const theoBox = (id, q, title) => {
   const it = S.items[id], o = outsOf(id);
   if (!it || !(q > 0)) return "";
-  return `<div class="box"><h3>🎯 ${title}</h3>${o.length ? `<p class="muted" style="margin:0">تيوريكمون، ${fmt(q)} ${esc(it.unit)} ديال ${esc(it.name)} كتعطي <b>واحد من هادو</b> (على حساب وزن القطعة):</p>${o.map((x) => prow(x.it.id, "وزن القطعة: " + perTxt(x.per, it.unit) + (!isW(it.unit) && uwG(it) > 0 ? " (≈ " + fmt(Math.round(x.per * uwG(it))) + " غ)" : ""), `<b class="num">${cntRange(x.it, Math.floor(q / x.per + 1e-3))} ${esc(x.it.unit)}</b>`)).join("")}${o.length > 1 ? '<p class="muted" style="margin:0">💡 إلا قسمتيها على بزاف ديال المنتوجات، كل كيلو مشا لواحد كينقص من الآخرين.</p>' : ""}` : '<p class="muted" style="margin:0">ما كاين حتى منتوج مفيني كيستعمل هاد العجينة. زيدها فالفيش تكنيك ديال المنتوج المفيني (بوزن القطعة).</p>'}</div>`;
+  return `<div class="box"><h3>🎯 ${title}</h3>${o.length ? `<p class="muted" style="margin:0">تيوريكمون، ${fmt(q)} ${esc(it.unit)} ديال ${esc(it.name)}${frT(it)} كتعطي <b>واحد من هادو</b> (على حساب وزن القطعة):</p>${o.map((x) => prow(x.it.id, "وزن القطعة: " + perTxt(x.per, it.unit) + (!isW(it.unit) && uwG(it) > 0 ? " (≈ " + fmt(Math.round(x.per * uwG(it))) + " غ)" : ""), `<b class="num">${cntRange(x.it, Math.floor(q / x.per + 1e-3))} ${esc(x.it.unit)}</b>`)).join("")}${o.length > 1 ? '<p class="muted" style="margin:0">💡 إلا قسمتيها على بزاف ديال المنتوجات، كل كيلو مشا لواحد كينقص من الآخرين.</p>' : ""}` : '<p class="muted" style="margin:0">ما كاين حتى منتوج مفيني كيستعمل هاد العجينة. زيدها فالفيش تكنيك ديال المنتوج المفيني (بوزن القطعة).</p>'}</div>`;
 };
 const OST = [["new", "مسجلة", "استلم الطلبية", "📝"], ["production", "فالإنتاج", "بدا الصنع", "👨‍🍳"], ["ready", "جاهزة", "صنعها", "✅"], ["transit", "فالطريق", "وصلها", "🚚"], ["delivered", "مسلمة", "سلمها للزبون", "🎉"]];
 const OSTL = Object.fromEntries(OST.map((s) => [s[0], s[1]])), OSTI = Object.fromEntries(OST.map((s) => [s[0], s[3]]));
@@ -1710,9 +1711,11 @@ let db = null, me = null, SUBMIT = null, ISYNC = null;
 const PH = {}, PINCB = {};
 const itemsArr = () => Object.values(S.items).filter((i) => i.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name), "ar"));
 const iname = (id) => {
-  var _a;
-  return ((_a = S.items[id]) == null ? void 0 : _a.name) || "منتوج محذوف";
+  const i = S.items[id];
+  if (!i) return "منتوج محذوف";
+  return i.fr && !String(i.name).includes(i.fr) ? i.name + " · " + i.fr : i.name;
 };
+const frT = (i) => i && i.fr && !String(i.name || "").includes(i.fr) ? `<small class="frn"> <span class="frd">· </span><bdi>${esc(i.fr)}</bdi></small>` : "";
 const iunit = (id) => {
   var _a;
   return ((_a = S.items[id]) == null ? void 0 : _a.unit) || "";
@@ -3788,7 +3791,7 @@ function alertsFor0() {
   }
   if (isMgr()) itemsArr().filter((i) => i.active !== false && blendOf(i.id) && +i.blendTarget > 0).forEach((i) => {
     const c = blendCostAt(i.id, blendOf(i.id));
-    if (c > +i.blendTarget + 5e-3) A.push(`<div class="alert warn" data-act="blendfix" data-id="${i.id}"><div class="lead"><span class="em">🥣</span><div><b>${esc(i.name)} طلع لـ ${money(c)} (الهدف ${money(i.blendTarget)})</b><div class="muted">الأثمنة ديال المواد تبدلو · شوف الاقتراح ديال الوصفة</div></div></div><span class="tag warn">💡</span></div>`);
+    if (c > +i.blendTarget + 5e-3) A.push(`<div class="alert warn" data-act="blendfix" data-id="${i.id}"><div class="lead"><span class="em">🥣</span><div><b>${esc(i.name)}${frT(i)} طلع لـ ${money(c)} (الهدف ${money(i.blendTarget)})</b><div class="muted">الأثمنة ديال المواد تبدلو · شوف الاقتراح ديال الوصفة</div></div></div><span class="tag warn">💡</span></div>`);
   });
   if (canDpSend()) (S.dplans || []).filter((p) => p.date <= today() && p.date >= daysAgo(1) && (dpLate(p) || dpSoon(p))).forEach((p) => A.push(`<div class="alert ${dpLate(p) ? "bad" : "acc"}" data-act="go" data-v="dispatch" data-id="${p.id}${dpLate(p) ? "L" : "S"}"><div class="lead"><span class="em">🚚</span><div><b>${dpLate(p) ? "⏰ متأخر: " : "🔜 قريب: "}الإرسال ديال ${esc(p.time || "")} لـ${esc(LOC[p.pos] || "")}</b><div class="muted">${(p.lines || []).length} منتوج · ${dpState(p) === "part" ? "تصيفط شي" : "ما تصيفط والو"}</div></div></div><span class="tag ${dpLate(p) ? "bad" : "acc"}">صيفط</span></div>`));
   vldOps().forEach((o) => {
@@ -4003,7 +4006,7 @@ function vProd() {
     return `<h3>${KICON[k]} ${KIND[k]}</h3><div>${rows.map((i) => {
       const q = m[i.id] || 0;
       const low = isRC(k) && +i.min > 0 && q < +i.min;
-      return `<div class="prow ${isMgr() ? "clk" : ""}" ${isMgr() ? `data-act="adjust" data-loc="${ws}" data-id="${i.id}"` : ""}><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}</b>${low ? '<span class="tag warn">ناقص</span>' : ""}</div></div><b class="num ${q < 0 ? "neg" : ""}">${fmt(q)} <span class="muted">${esc(i.unit)}</span>${isMgr() ? " ✏️" : ""}</b></div>`;
+      return `<div class="prow ${isMgr() ? "clk" : ""}" ${isMgr() ? `data-act="adjust" data-loc="${ws}" data-id="${i.id}"` : ""}><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}${frT(i)}</b>${low ? '<span class="tag warn">ناقص</span>' : ""}</div></div><b class="num ${q < 0 ? "neg" : ""}">${fmt(q)} <span class="muted">${esc(i.unit)}</span>${isMgr() ? " ✏️" : ""}</b></div>`;
     }).join("")}</div>`;
   };
   const todays = S.ops.filter((o) => o.type === "production" && o.ws === ws && o.date === today());
@@ -4068,7 +4071,7 @@ function vPos() {
   const head = canSwitch ? chipsHtml(POS, p, "setpos") : "";
   const recv = pend.length ? `<section class="card"><div class="head"><h2>📦 سلعة خاصها تستلم</h2><span class="tag acc">${pend.length}</span></div><ul class="list">${pend.map((o) => `<li><div class="lead"><span class="em">${LOCI[o.ws]}</span><div><b>من ${esc(LOC[o.ws])}</b><div class="muted">${hm(o.ts)} · ${o.lines.length} منتوج${o.driver ? " · مع " + esc(o.driver) : ""}</div></div></div><button class="btn primary small" data-act="receive" data-id="${o.id}">استلام</button></li>`).join("")}</ul></section>` : "";
   const rows = itemsArr().filter((i) => i.kind === "final" && (m[i.id] || 0) !== 0);
-  const stockCard = `<section class="card"><div class="head"><h2>🧺 المخزون فالمحل</h2><button class="link" data-act="returnpos">↩️ إرجاع غير المباع</button></div>${rows.length ? rows.map((i) => `<div class="prow ${isMgr() ? "clk" : ""}" ${isMgr() ? `data-act="adjust" data-loc="${p}" data-id="${i.id}"` : ""}><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}</b></div></div><b class="num ${m[i.id] < 0 ? "neg" : ""}">${fmt(m[i.id])}${isMgr() ? " ✏️" : ""}</b></div>`).join("") : emptyB("🧺", "المحل خاوي، كيتسنى السلعة.")}</section>`;
+  const stockCard = `<section class="card"><div class="head"><h2>🧺 المخزون فالمحل</h2><button class="link" data-act="returnpos">↩️ إرجاع غير المباع</button></div>${rows.length ? rows.map((i) => `<div class="prow ${isMgr() ? "clk" : ""}" ${isMgr() ? `data-act="adjust" data-loc="${p}" data-id="${i.id}"` : ""}><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}${frT(i)}</b></div></div><b class="num ${m[i.id] < 0 ? "neg" : ""}">${fmt(m[i.id])}${isMgr() ? " ✏️" : ""}</b></div>`).join("") : emptyB("🧺", "المحل خاوي، كيتسنى السلعة.")}</section>`;
   const pp = passPending(p);
   const ppb = pp.map((x) => `<button class="alert warn" style="border:0;width:100%;text-align:start" data-act="recvpass" data-id="${x.id}"><div class="lead"><span class="em">🤝</span><div><b>أكدي الاستلام من ${esc(x.seller)}</b><div class="muted">سدات النوبة ${hm(x.close.ts)} · شوفي السلعة وأكدي من الحساب ديالك</div></div></div></button>`).join("");
   const vf = S.shifts.filter((x) => x.pos === p && x.status === "verif");
@@ -4081,7 +4084,7 @@ function vPos() {
   cw.forEach((w) => catsOf(w).forEach((c2) => {
     if (!cl2.some((x) => x.id === c2) && itemsArr().some((i) => i.ws === w && i.cat === c2 && i.kind === "final" && +i.price > 0)) cl2.push({ id: c2, name: c2, i: catIcon(w, c2) });
   }));
-  const pc2 = cl2.length ? [{ id: "", name: "الكل", i: "🧁" }, ...cl2] : [];
+  const pc2 = S.pcat !== "all" && cl2.length ? [{ id: "", name: "الكل", i: "🧁" }, ...cl2] : [];
   const P2 = pc2.some((x) => x.id === S.pcat2) ? S.pcat2 : "";
   const SM = soldMap(p, daysAgo(13));
   const prods = itemsArr().filter((i) => i.kind === "final" && +i.price > 0 && (S.pcat === "all" || i.ws === S.pcat) && (!P2 || i.cat === P2) && (!q || (i.name + " " + (i.fr || "")).toLowerCase().includes(q.toLowerCase()))).sort((a, b) => (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
@@ -4098,7 +4101,7 @@ function vPos() {
   ${cats.length > 2 ? chipsHtml(cats, S.pcat, "setpcat") : ""}${pc2.length > 1 ? chipsHtml(pc2, P2, "setpcat2") : ""}
   <div class="grid">${prods.map((i) => {
     const st = m[i.id] || 0, inC = c[i.id] || 0;
-    return `<button class="prod ${st <= 0 ? "out" : ""} ${inC ? "in" : ""}" data-act="add" data-id="${i.id}">${pic(i.id, "pimg")}<b>${TOP.has(i.id) ? "🔥 " : ""}${esc(i.name)}</b><span class="p">${money(i.price)}</span><span class="q">كاين ${fmt(st)}</span>${inC ? `<span class="badge">${fmt(inC)}</span>` : ""}</button>`;
+    return `<button class="prod ${st <= 0 ? "out" : ""} ${inC ? "in" : ""}" data-act="add" data-id="${i.id}">${pic(i.id, "pimg")}<b>${TOP.has(i.id) ? "🔥 " : ""}${esc(i.name)}${frT(i)}</b><span class="p">${money(i.price)}</span><span class="q">كاين ${fmt(st)}</span>${inC ? `<span class="badge">${fmt(inC)}</span>` : ""}</button>`;
   }).join("") || emptyB("🧁", "ما كاين حتى منتوج هنا.")}</div>${VO ? "" : tempStatus(p) + stockCard}</div>
   ${ticketPanel(p)}</div>${posTeamCard(p)}`;
 }
@@ -4249,7 +4252,7 @@ function sheetGoals() {
     "🎯 الأهداف ديال البيع",
     `<p class="muted" style="margin:0">شحال من حبة خاص تتباع فالنهار فكل لاكيس. خلي خاوي إلا ما بغيتيش هدف. 📊 = المعدل ديال 14 يوم الأخيرة فـ ${esc(LOC[S.pos] || "")}.</p>
    <input id="gfind" type="search" placeholder="🔍 قلب..." style="height:44px;border-radius:12px;border:2px solid var(--line);background:var(--surface);padding:0 10px">
-   ${L.map((i) => `<div class="prow" data-grow="${i.id}"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}</b><div class="muted">${LOCI[i.ws] || ""} · 📊 ${fmt(Math.round((T[i.id] || 0) / 14 * 10) / 10)} فالنهار</div></div></div><input class="qty" style="width:80px" data-goal="${i.id}" inputmode="decimal" value="${goalOf(i) ? fmt(goalOf(i)) : ""}" placeholder="—"></div>`).join("")}
+   ${L.map((i) => `<div class="prow" data-grow="${i.id}"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}${frT(i)}</b><div class="muted">${LOCI[i.ws] || ""} · 📊 ${fmt(Math.round((T[i.id] || 0) / 14 * 10) / 10)} فالنهار</div></div></div><input class="qty" style="width:80px" data-goal="${i.id}" inputmode="decimal" value="${goalOf(i) ? fmt(goalOf(i)) : ""}" placeholder="—"></div>`).join("")}
    ${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,
     async (f) => {
       busy(f, true);
@@ -4568,7 +4571,7 @@ function vCatalog() {
     return `${chipsHtml(tabs, S.cat, "setcat")}<section class="card"><h2>🗄️ الأرشيف (ديزاكتيفي)</h2><p class="muted">هادو موقوفين: ما كيبانوش فالبيع، الإنتاج والشرا، ولكن ما تمسحو والو. الفيش تكنيك، الصورة، الثمن والسجل كلهم محفوظين. ملي تبغي ترجع تخدم بشي واحد، ضغط «✅ رجع أكتيف» ويرجع كيف كان.</p></section>
     ${grp.length ? grp.map((g) => `<section class="card"><h3>${g.i} ${esc(g.name)} <span class="tag">${g.rows.length}</span></h3><ul class="list">${g.rows.map((i) => {
       var _a, _b;
-      return `<li><div class="lead clk" data-act="itemview" data-id="${i.id}">${pic(i.id)}<div><b>${esc(i.name)}</b> <span class="tag warn">🗄️ أرشيف</span><div class="muted">${kindL(i)} · ${esc(i.unit)}${!isW(i.unit) && i.kind !== "final" && uwG(i) > 0 ? " (≈ " + fmt(Math.round(uwG(i))) + " غ)" : ""}${((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) ? " · 📋 الفيش تكنيك محفوظة (" + i.recipe.lines.length + " مكونات)" : ""}${i.kind === "final" ? " · " + money(i.price) : ""}${i.archivedAt ? " · تأرشف " + new Date(i.archivedAt).toLocaleDateString("fr-MA") : ""}</div></div></div><div class="btns" style="flex-wrap:nowrap;flex:none"><button class="sb" data-act="item" data-id="${i.id}" aria-label="بدل ${esc(i.name)}">✏️</button><button class="btn small" data-act="restore" data-id="${i.id}">✅ رجع أكتيف</button></div></li>`;
+      return `<li><div class="lead clk" data-act="itemview" data-id="${i.id}">${pic(i.id)}<div><b>${esc(i.name)}${frT(i)}</b> <span class="tag warn">🗄️ أرشيف</span><div class="muted">${kindL(i)} · ${esc(i.unit)}${!isW(i.unit) && i.kind !== "final" && uwG(i) > 0 ? " (≈ " + fmt(Math.round(uwG(i))) + " غ)" : ""}${((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) ? " · 📋 الفيش تكنيك محفوظة (" + i.recipe.lines.length + " مكونات)" : ""}${i.kind === "final" ? " · " + money(i.price) : ""}${i.archivedAt ? " · تأرشف " + new Date(i.archivedAt).toLocaleDateString("fr-MA") : ""}</div></div></div><div class="btns" style="flex-wrap:nowrap;flex:none"><button class="sb" data-act="item" data-id="${i.id}" aria-label="بدل ${esc(i.name)}">✏️</button><button class="btn small" data-act="restore" data-id="${i.id}">✅ رجع أكتيف</button></div></li>`;
     }).join("")}</ul></section>`).join("") : `<section class="card">${emptyB("✨", "الأرشيف خاوي. ملي تديزاكتيفي شي منتوج ولا مادة كيجي لهنا.")}</section>`}`;
   }
   const rows = S.cat === "raw" ? itemsArr().filter((i) => i.kind === "raw") : S.cat === "pack" ? itemsArr().filter((i) => i.kind === "pack") : S.cat === "cons" ? itemsArr().filter((i) => i.kind === "cons") : itemsArr().filter((i) => !isBought(i.kind) && i.ws === S.cat).sort((a, b) => a.kind.localeCompare(b.kind));
@@ -4578,7 +4581,7 @@ function vCatalog() {
     const md = i.kind === "final" && mg ? modOf(i) : null;
     const c = c0 + (i.kind === "final" ? packCost(i) : 0) + (md || 0);
     const m2 = i.kind === "final" && +i.price > 0 && c > 0 ? Math.round((1 - c / i.price) * 100) : null;
-    return `<li><div class="lead clk" data-act="${mg ? "item" : "itemview"}" data-id="${i.id}">${pic(i.id)}<div><b>${esc(i.name)}</b> ${i.example ? '<span class="tag warn">مثال</span>' : ""}<div class="muted">${kindL(i)} · ${esc(i.unit)}${!isW(i.unit) && i.kind !== "final" && uwG(i) > 0 ? " (≈ " + fmt(Math.round(uwG(i))) + " غ)" : ""}${i.kind !== "final" ? (() => {
+    return `<li><div class="lead clk" data-act="${mg ? "item" : "itemview"}" data-id="${i.id}">${pic(i.id)}<div><b>${esc(i.name)}${frT(i)}</b> ${i.example ? '<span class="tag warn">مثال</span>' : ""}<div class="muted">${kindL(i)} · ${esc(i.unit)}${!isW(i.unit) && i.kind !== "final" && uwG(i) > 0 ? " (≈ " + fmt(Math.round(uwG(i))) + " غ)" : ""}${i.kind !== "final" ? (() => {
       const n = usedBy(i.id).length;
       return " · " + (n ? `<button type="button" class="link" data-act="itemview" data-id="${i.id}">📍 داخلة ف ${n} وصفة</button>` : '<span class="muted">📍 ما داخلة ف حتى وصفة</span>');
     })() : ""}${i.kind !== "raw" && !((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) ? ' · <span class="neg">بلا وصفة</span>' : ""}${i.kind === "final" && !imgOf(i.id) ? PHOTO_REQ ? ' · <span class="neg">📷 بلا صورة</span>' : ' · <span class="muted">📷 بلا صورة</span>' : ""}${i.kind === "final" ? " · " + money(i.price) : ""}${mg ? " · تكلفة " + money(c) + (md != null ? " (👥 " + money(md) + ")" : "") + (m2 !== null ? ` · <span class="${m2 < 0 ? "neg" : ""}">هامش ${m2}%</span>` : "") + (i.kind === "final" ? (() => {
@@ -4689,8 +4692,8 @@ function inlineFinal(rows, title, w) {
    ${R.map(({ i, r }) => {
     var _a, _b;
     return `<div data-fr="${i.id}" data-nm="${esc(i.name)}" style="border-bottom:1px solid var(--line);padding:3px 0"><div style="display:grid;grid-template-columns:24px minmax(0,1fr) clamp(40px,10vw,64px) clamp(58px,15vw,84px) clamp(58px,14vw,84px);gap:5px;align-items:center">
-     <button type="button" class="link" data-act="itemview" data-id="${i.id}" aria-label="شوف" style="font-size:1.05rem">👁️</button><b style="font-size:.9rem;line-height:1.2">${esc(i.name)}</b><span class="num muted" style="font-size:.85rem;text-align:center">${r.v > 0 ? fmt(Math.round(r.v * 100) / 100) : "؟"}</span>
-     <input value="${+i.price > 0 ? fmt(i.price) : ""}" inputmode="decimal" placeholder="—" style="${inS};font-weight:700${+i.price > 0 ? "" : ";border-color:var(--bad,#dc2626)"}" onchange="inlineSave('${i.id}','sprice',this)" aria-label="ثمن البيع ${esc(i.name)}">
+     <button type="button" class="link" data-act="itemview" data-id="${i.id}" aria-label="شوف" style="font-size:1.05rem">👁️</button><b style="font-size:.9rem;line-height:1.2">${esc(i.name)}${frT(i)}</b><span class="num muted" style="font-size:.85rem;text-align:center">${r.v > 0 ? fmt(Math.round(r.v * 100) / 100) : "؟"}</span>
+     <input value="${+i.price > 0 ? fmt(i.price) : ""}" inputmode="decimal" placeholder="—" style="${inS};font-weight:700${+i.price > 0 ? "" : ";border-color:var(--bad,#dc2626)"}" onchange="inlineSave('${i.id}','sprice',this)" aria-label="ثمن البيع ${esc(i.name)}${frT(i)}">
 ${r.tag}</div>
      <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:3px;font-size:.8rem">${canPrice() && !i.bundle ? `<button type="button" class="btn small" data-act="recedit" data-id="${i.id}" style="margin-inline-end:auto">📋 الفيش</button>` : ""}${uwG(i) > 0 && ((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) ? `<span>⚖️</span><input value="${Math.round(uwG(i))}" inputmode="decimal" style="${inS};width:58px;height:34px" onchange="inlineSave('${i.id}','gram',this)" aria-label="الوزن ديال الحبة بالغرام"><span class="muted">غ</span><span style="width:6px"></span>` : ""}<span class="muted">ثمن الحبة إلا شرا</span><span>2️⃣</span><input value="${+i.price2 > 0 ? fmt(i.price2) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price2',this)" aria-label="ثمن الحبة إلا شرا 2"><span>3️⃣+</span><input value="${+i.price3 > 0 ? fmt(i.price3) : ""}" inputmode="decimal" placeholder="—" style="${inS};width:62px;height:34px" onchange="inlineSave('${i.id}','price3',this)" aria-label="ثمن الحبة إلا شرا 3 ولا كثر"></div>
      <div data-pxa="${i.id}" hidden style="margin-top:4px">${pxAdvice(i, i.price, 0, 0)}</div></div>`;
@@ -4881,7 +4884,7 @@ function sheetDelItem(id) {
     return (_b = (_a = x.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.some((l) => l.item === id);
   });
   const inStock = [...WS, ...POS].filter((l) => (stockMap(l.id)[id] || 0) !== 0);
-  openSheet("🗄️ أرشيف " + it.name, `<div class="lead"><span class="em" style="font-size:2.4rem">${ico(id)}</span><div><h2>${esc(it.name)}</h2><div class="muted">${KIND[it.kind]}</div></div></div>
+  openSheet("🗄️ أرشيف " + it.name, `<div class="lead"><span class="em" style="font-size:2.4rem">${ico(id)}</span><div><h2>${esc(it.name)}${frT(it)}</h2><div class="muted">${KIND[it.kind]}</div></div></div>
    <p>غادي نديزاكتيفيو هاد ${it.kind === "raw" ? "المادة" : "المنتوج"}: ما غاديش يبان فالبيع، الإنتاج والشرا. <b>ما كيتمسح والو</b>: الفيش تكنيك، الصورة، الثمن والسجل كيبقاو محفوظين فـ«🗄️ الأرشيف»، وتقدر ترجعو أكتيف فأي وقت بضغطة وحدة.</p>
    ${usedIn.length ? `<div class="alert bad" style="cursor:default"><div><b>⚠️ داخل فالوصفات ديال:</b><div class="muted">${usedIn.map((x) => esc(x.name)).join("، ")}</div></div></div>` : ""}
    ${inStock.length ? `<div class="alert" style="cursor:default"><div><b>📦 باقي عندو مخزون فـ:</b><div class="muted">${inStock.map((l) => esc(LOC[l.id]) + " (" + fmt(stockMap(l.id)[id]) + ")").join("، ")}</div></div></div>` : ""}
@@ -7025,7 +7028,7 @@ function sheetCart() {
       const have = stockOf(p, id);
       return prow(id, "كاين " + fmt(have) + (have < v ? ' · <span class="neg">ما كافيش</span>' : "") + (E[id] != null && D[id] != null && +E[id] !== D[id] ? ' · <span class="muted">العادي ' + fmt(D[id]) + "</span>" : ""), `<input class="qty" style="width:74px;height:44px" data-pk="${id}" type="text" inputmode="decimal" value="${fmt(v)}" aria-label="${esc(iname(id))}" onfocus="this.select()">`);
     }).join("") : '<p class="muted" style="margin:0">هاد المنتوجات ما عندهمش تغليف محدد.</p>'}
-      <select data-pkadd="1" aria-label="زيد تغليف" style="height:42px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:0 8px;font-weight:600"><option value="">➕ زيد تغليف (كيس، علبة...)</option>${pk.filter((i) => !ids2.includes(i.id)).map((i) => `<option value="${i.id}">${i.icon || "📦"} ${esc(i.name)}</option>`).join("")}</select></div>`;
+      <select data-pkadd="1" aria-label="زيد تغليف" style="height:42px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:0 8px;font-weight:600"><option value="">➕ زيد تغليف (كيس، علبة...)</option>${pk.filter((i) => !ids2.includes(i.id)).map((i) => `<option value="${i.id}">${i.icon || "📦"} ${esc(i.name)}${frT(i)}</option>`).join("")}</select></div>`;
   })()}
    ${custChip(p)}${redeemBox}${(() => {
     const X = (S.exch || {})[p];
@@ -12013,7 +12016,7 @@ function sheetBundle(id) {
   const B = (ed == null ? void 0 : ed.bundle) || {};
   const L = itemsArr().filter((i) => i.kind === "final" && i.active !== false && !i.bundle && +i.price > 0).sort((a, b) => a.name.localeCompare(b.name));
   let pick = B.item || null;
-  openSheet(ed ? "✏️ بدل الباك" : "📦 باك جديد", `${inp("bq", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div style="max-height:30vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-bp="${i.id}" data-n="${esc((i.name + " " + (i.fr || "")).toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit;${pick === i.id ? "outline:3px solid var(--acc,#e02843)" : ""}"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}</b></div><span class="num muted">${money(i.price)}</span></button>`).join("")}</div>
+  openSheet(ed ? "✏️ بدل الباك" : "📦 باك جديد", `${inp("bq", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div style="max-height:30vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-bp="${i.id}" data-n="${esc((i.name + " " + (i.fr || "")).toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit;${pick === i.id ? "outline:3px solid var(--acc,#e02843)" : ""}"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}${frT(i)}</b></div><span class="num muted">${money(i.price)}</span></button>`).join("")}</div>
    <div id="bsel" class="muted">${pick ? "✅ <b>" + esc(iname(pick)) + "</b>" : "👆 اختار المنتوج"}</div>
    <div class="two">${fld("bqty", "🔢 شحال من حبة فالباك", `<input name="bqty" class="big-in" inputmode="decimal" value="${B.qty ? fmt(B.qty) : ""}">`)}${moneyIn("bpu", "💰 ثمن الحبة فالباك", B.pu ? fmt(B.pu) : "")}</div>
    <div id="btot" class="box" style="gap:4px"></div>${inp("bname", "🏷️ السمية ديال الباك (اختيارية)", (ed == null ? void 0 : ed.name) || "", "text", 'autocomplete="off"')}${errP}<button class="btn primary block" type="submit">✅ حفظ الباك</button>`, async (f) => {
@@ -12116,7 +12119,7 @@ function sheetRecipeEdit(id) {
       if (e.target.name === "ryld") calc(f);
       if (e.target.id === "radd") {
         const t = e.target.value.trim().toLowerCase();
-        $("#raddl", f).innerHTML = t ? pool.filter((i) => (i.name || "").toLowerCase().includes(t)).slice(0, 30).map((i) => `<button type="button" data-ra="${i.id}" style="display:flex;justify-content:space-between;width:100%;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:start;padding:9px 4px"><span>${ico(i.id)} ${esc(i.name)}</span><span class="muted">${esc(i.unit || "")}</span></button>`).join("") : "";
+        $("#raddl", f).innerHTML = t ? pool.filter((i) => (i.name || "").toLowerCase().includes(t)).slice(0, 30).map((i) => `<button type="button" data-ra="${i.id}" style="display:flex;justify-content:space-between;width:100%;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:start;padding:9px 4px"><span>${ico(i.id)} ${esc(i.name)}${frT(i)}</span><span class="muted">${esc(i.unit || "")}</span></button>`).join("") : "";
       }
     });
     f.addEventListener("change", (e) => {
@@ -12205,7 +12208,7 @@ function sheetPurchase(req) {
     const row = (i) => {
       var _a2, _b, _c;
       const rl = (_a2 = req == null ? void 0 : req.lines) == null ? void 0 : _a2.find((x) => x.item === i.id);
-      return `<div class="box" style="gap:4px" data-prow="${i.id}"><div class="prow" style="border:0;padding:0"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}</b><span class="muted">${esc(i.unit)}</span></div></div>${stepper("data-pq", i.id, preq(i.id), i.unit)}</div>${rl && (brandOf(rl) || rl.note || ((_b = rl.photos) == null ? void 0 : _b.length)) ? `<div class="muted" style="font-size:.9rem">${brandOf(rl) ? "🏷️ الماركة المطلوبة: <b>" + esc(brandOf(rl)) + "</b> " : ""}${rl.note ? "· 📝 " + esc(rl.note) : ""}</div>${((_c = rl.photos) == null ? void 0 : _c.length) ? `<div class="media">${mediaBtns(rl.photos, i.name, "📷")}</div>` : ""}` : ""}
+      return `<div class="box" style="gap:4px" data-prow="${i.id}"><div class="prow" style="border:0;padding:0"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}${frT(i)}</b><span class="muted">${esc(i.unit)}</span></div></div>${stepper("data-pq", i.id, preq(i.id), i.unit)}</div>${rl && (brandOf(rl) || rl.note || ((_b = rl.photos) == null ? void 0 : _b.length)) ? `<div class="muted" style="font-size:.9rem">${brandOf(rl) ? "🏷️ الماركة المطلوبة: <b>" + esc(brandOf(rl)) + "</b> " : ""}${rl.note ? "· 📝 " + esc(rl.note) : ""}</div>${((_c = rl.photos) == null ? void 0 : _c.length) ? `<div class="media">${mediaBtns(rl.photos, i.name, "📷")}</div>` : ""}` : ""}
      ${rl ? `<div class="muted" style="font-size:.85rem">📋 مطلوب ${qtyTxt(rl.qty, i.unit)}${(req.delivered || {})[i.id] ? " · وصل قبل " + qtyTxt(req.delivered[i.id], i.unit) : ""} · باقي <b>${qtyTxt(+preq(i.id) || 0, i.unit)}</b></div>` : ""}
      <div class="prow" style="padding:4px 0 0;gap:6px"><span class="muted">🏪 المورد *</span><input type="text" data-psp="${i.id}" value="${esc((rl == null ? void 0 : rl.sup) || i.lastSup || "")}" placeholder="ضغط ولا كتب أول حرف..." autocomplete="off" style="flex:1;min-width:0;height:38px;border-radius:10px;border:2px solid var(--line);background:var(--surface);padding:0 8px" aria-label="المورد ${esc(i.name)}"></div>
      <div class="prow" style="padding:4px 0 0;gap:6px"><span class="muted">🏷️ الماركة *</span><input type="text" data-pbr="${i.id}" value="${esc((rl == null ? void 0 : rl.brand) || i.brand || "")}" placeholder="الماركة اللي وصلات" style="flex:1;min-width:0;height:38px;border-radius:10px;border:2px solid var(--line);background:var(--surface);padding:0 8px" aria-label="الماركة ${esc(i.name)}"></div>
@@ -13169,7 +13172,7 @@ function ficheBlock(id, mg, main) {
   var _a;
   const it = S.items[id];
   const y = yld(it);
-  return `<div class="blk"><h${main ? 2 : 3}>${main ? "" : "🥣 "}${esc(it.name)}</h${main ? 2 : 3}><div class="meta">${kindL(it)} · ${it.ws ? esc(LOC[it.ws]) + " · " : ""}الروسيطة كتعطي <b>${fmt(y)} ${esc(it.unit)}</b>${it.step && STEPL[it.step] ? " · " + STEPL[it.step] : ""}${+((_a = it.recipe) == null ? void 0 : _a.yp) > 0 && +it.recipe.yp !== 100 ? " · المردود " + fmt(it.recipe.yp) + "%" : ""}${it.frz ? " · ❄️ كيتجمد" + (+it.frzDays > 0 ? " (" + fmt(it.frzDays) + " يوم)" : "") : ""}${+it.fstep > 0 ? " · 🧊 كيتفينا بـ" + fmt(it.fstep) : ""}</div>${ficheTable(it, mg)}${it.rnote ? `<div class="meta">♻️ ${esc(it.rnote)}</div>` : ""}${mg && main ? `<div class="meta">💰 التكلفة لكل ${esc(it.unit)}: <b>${money(costOf(id, 0, it.ws || null))}</b>${it.kind === "final" && +it.price > 0 ? " · ثمن البيع: <b>" + money(it.price) + "</b>" : ""}</div>` : ""}</div>`;
+  return `<div class="blk"><h${main ? 2 : 3}>${main ? "" : "🥣 "}${esc(it.name)}${frT(it)}</h${main ? 2 : 3}><div class="meta">${kindL(it)} · ${it.ws ? esc(LOC[it.ws]) + " · " : ""}الروسيطة كتعطي <b>${fmt(y)} ${esc(it.unit)}</b>${it.step && STEPL[it.step] ? " · " + STEPL[it.step] : ""}${+((_a = it.recipe) == null ? void 0 : _a.yp) > 0 && +it.recipe.yp !== 100 ? " · المردود " + fmt(it.recipe.yp) + "%" : ""}${it.frz ? " · ❄️ كيتجمد" + (+it.frzDays > 0 ? " (" + fmt(it.frzDays) + " يوم)" : "") : ""}${+it.fstep > 0 ? " · 🧊 كيتفينا بـ" + fmt(it.fstep) : ""}</div>${ficheTable(it, mg)}${it.rnote ? `<div class="meta">♻️ ${esc(it.rnote)}</div>` : ""}${mg && main ? `<div class="meta">💰 التكلفة لكل ${esc(it.unit)}: <b>${money(costOf(id, 0, it.ws || null))}</b>${it.kind === "final" && +it.price > 0 ? " · ثمن البيع: <b>" + money(it.price) + "</b>" : ""}</div>` : ""}</div>`;
 }
 function ficheHtml(id) {
   const it = S.items[id];
@@ -13188,7 +13191,7 @@ function ficheHtml(id) {
   const raws = Object.entries(acc).map(([k, a]) => ({ k: a.miss || k, a })).filter((x) => S.items[x.k]).sort((a, b) => String(S.items[a.k].name).localeCompare(String(S.items[b.k].name), "ar"));
   const img = imgOf(id);
   return `<div class="fp"><div class="hd"><div class="lg">${MLOGO}<div><div class="wm">MORANGO</div><div class="ws">مورانڭو</div></div></div><div class="hr"><div class="ft">FICHE TECHNIQUE · الفيش تكنيك</div><div class="dt">${(/* @__PURE__ */ new Date()).toLocaleDateString("fr-MA")} · ${esc(meName())}</div></div></div>
-   <div class="ttl"><div><h1>${ico(id)} ${esc(it.name)}</h1><div class="meta">${kindL(it)} · ${esc(it.unit)}${it.ws ? " · " + LOCI[it.ws] + " " + esc(LOC[it.ws]) : ""}${it.cat ? " · 🏷️ " + esc(it.cat) : ""}</div></div>${img ? `<img src="${img}" crossorigin="anonymous" alt="">` : ""}</div>
+   <div class="ttl"><div><h1>${ico(id)} ${esc(it.name)}${frT(it)}</h1><div class="meta">${kindL(it)} · ${esc(it.unit)}${it.ws ? " · " + LOCI[it.ws] + " " + esc(LOC[it.ws]) : ""}${it.cat ? " · 🏷️ " + esc(it.cat) : ""}</div></div>${img ? `<img src="${img}" crossorigin="anonymous" alt="">` : ""}</div>
    ${ficheBlock(id, mg, true)}
    ${subs.length ? `<h2 class="sec">الوصفات ديال المكونات (ميز أون بلاس / ممفينيش)</h2>${subs.map((x) => ficheBlock(x, mg, false)).join("")}` : ""}
    ${raws.length ? `<h2 class="sec">📋 مجموع المواد الأولية لروسيطة كاملة (${fmt(yld(it))} ${esc(it.unit)})</h2><table><thead><tr><th>المادة الأولية</th><th style="width:170px">الكمية</th></tr></thead><tbody>${raws.map((x) => `<tr><td>${ico(x.k)} ${esc(S.items[x.k].name)}</td><td class="n">${qtyTxt(x.a.qty, S.items[x.k].unit || "")}</td></tr>`).join("")}</tbody></table>` : ""}
@@ -13319,7 +13322,7 @@ function rawListHtml(scope) {
     const c = +costOf(i.id, 0, scope === "all" ? null : scope) || 0;
     const v = q * c;
     tot += v;
-    return `<tr><td class="n" style="width:30px">${k + 1}</td><td>${ico(i.id)} ${esc(i.name)}${i.brand ? '<div class="meta">🏷️ ' + esc(i.brand) + "</div>" : ""}</td>${L.length > 1 ? L.map((w) => `<td class="n">${stockOf(w.id, i.id) > 0 ? qtyTxt(stockOf(w.id, i.id), i.unit) : "—"}</td>`).join("") : ""}<td class="n"><b>${q > 0 ? qtyTxt(q, i.unit) : "—"}</b></td>${mg ? `<td class="n">${c ? money(c) + " / " + esc(i.unit) : "—"}</td><td class="n">${v ? money(v) : "—"}</td>` : ""}<td style="width:90px;border-bottom:1px solid #b9a0a6"></td></tr>`;
+    return `<tr><td class="n" style="width:30px">${k + 1}</td><td>${ico(i.id)} ${esc(i.name)}${frT(i)}${i.brand ? '<div class="meta">🏷️ ' + esc(i.brand) + "</div>" : ""}</td>${L.length > 1 ? L.map((w) => `<td class="n">${stockOf(w.id, i.id) > 0 ? qtyTxt(stockOf(w.id, i.id), i.unit) : "—"}</td>`).join("") : ""}<td class="n"><b>${q > 0 ? qtyTxt(q, i.unit) : "—"}</b></td>${mg ? `<td class="n">${c ? money(c) + " / " + esc(i.unit) : "—"}</td><td class="n">${v ? money(v) : "—"}</td>` : ""}<td style="width:90px;border-bottom:1px solid #b9a0a6"></td></tr>`;
   }).join("");
   return `<div class="fp"><div class="hd"><div class="lg">${MLOGO}<div><div class="wm">MORANGO</div><div class="ws">مورانڭو</div></div></div><div class="hr"><div class="ft">MATIÈRES PREMIÈRES · المواد الأولية</div><div class="dt">${(/* @__PURE__ */ new Date()).toLocaleString("fr-MA", { dateStyle: "short", timeStyle: "short" })} · ${esc(meName())}</div></div></div>
    <h1>🌾 لائحة المواد الأولية${scope === "all" ? "" : " · " + esc(LOC[scope])}</h1><div class="meta">${rows.length} مادة${L.length ? " · المخزون ديال: " + L.map((w) => esc(LOC[w.id])).join("، ") : ""}${mg ? " · القيمة الإجمالية: <b>" + money(tot) + "</b>" : ""}</div>
@@ -13345,7 +13348,7 @@ function sheetFichePick(w) {
     `<p class="muted" style="margin:0">علّم على المنتوجات اللي بغيتي تطبع ليهم الفيش تكنيك. كيتجمعو كاملين فملف PDF واحد.</p>
    <input id="fpq" class="big-in" type="search" placeholder="🔍 قلب على منتوج..." autocomplete="off"><div class="btns"><button type="button" class="btn small" data-act="fpall" data-v="1">☑️ علّم كلشي</button><button type="button" class="btn small" data-act="fpall" data-v="0">⬜ حيد كلشي</button></div>
    ${G.map((g) => `<div class="box"><div class="head"><h3>${g.t} <span class="tag">${g.l.length}</span></h3><div class="btns" style="flex-wrap:nowrap"><button type="button" class="btn small" data-act="fpall" data-g="${g.k}" data-v="1">كلهم</button><button type="button" class="btn small" data-act="fpall" data-g="${g.k}" data-v="0">والو</button></div></div>
-    ${g.l.map((i) => `<label class="prow" style="cursor:pointer"><div class="lead">${pic(i.id)}<div><b>${esc(i.name)}</b><span class="muted">${esc(i.unit)}${i.cat ? " · 🏷️ " + esc(i.cat) : ""}</span></div></div><input type="checkbox" data-fp="${i.id}" data-g="${g.k}" ${pre(i) ? "checked" : ""} style="width:24px;height:24px;accent-color:var(--accent);flex:none"></label>`).join("")}</div>`).join("") || emptyB("📄", "ما كاين حتى منتوج بوصفة فهاد الورشة.")}
+    ${g.l.map((i) => `<label class="prow" style="cursor:pointer"><div class="lead">${pic(i.id)}<div><b>${esc(i.name)}${frT(i)}</b><span class="muted">${esc(i.unit)}${i.cat ? " · 🏷️ " + esc(i.cat) : ""}</span></div></div><input type="checkbox" data-fp="${i.id}" data-g="${g.k}" ${pre(i) ? "checked" : ""} style="width:24px;height:24px;accent-color:var(--accent);flex:none"></label>`).join("")}</div>`).join("") || emptyB("📄", "ما كاين حتى منتوج بوصفة فهاد الورشة.")}
    ${errP}<button class="btn primary block" type="submit">📄 طبع</button>`,
     async (f) => {
       const ids = $$("input[data-fp]:checked", f).map((c) => c.dataset.fp);
@@ -14129,7 +14132,7 @@ function sheetFreeze(loc0, fromId) {
         return;
       }
       const c = cands();
-      $("#fwrap", f).innerHTML = c.length ? `<div class="field"><span class="lbl">شنو؟</span><select name="fitem" class="big-in">${c.map((i) => `<option value="${i.id}">${i.frz ? "❄️ " : ""}${i.icon || KICON[i.kind]} ${esc(i.name)} · ${KIND[i.kind]} (${fmt(stockOf(loc, i.id))} ${esc(i.unit)})</option>`).join("")}</select></div>` : emptyB("📦", "ما كاين والو فالمخزون ديال هاد الورشة.");
+      $("#fwrap", f).innerHTML = c.length ? `<div class="field"><span class="lbl">شنو؟</span><select name="fitem" class="big-in">${c.map((i) => `<option value="${i.id}">${i.frz ? "❄️ " : ""}${i.icon || KICON[i.kind]} ${esc(i.name)}${frT(i)} · ${KIND[i.kind]} (${fmt(stockOf(loc, i.id))} ${esc(i.unit)})</option>`).join("")}</select></div>` : emptyB("📦", "ما كاين والو فالمخزون ديال هاد الورشة.");
     };
     const preps = () => {
       const ws = [.../* @__PURE__ */ new Set([...S.workers.filter((x) => x.ws === loc && x.active !== false).map((x) => x.name), ...Object.values(S.users).filter((u) => u.active !== false && (u.role === "ws" && u.loc === loc || u.role === "prod")).map((u) => u.name)])];
@@ -14812,7 +14815,7 @@ function sheetVmin() {
     `<p class="muted" style="margin:0">كتب شحال خاص يبقى على الأقل من كل منتوج فكل محل. ملي يوصل ليه ولا ينقص، البايعات والإدارة كيتوصلو بتنبيه «قرب يسالي». خلي خاوي = بلا تنبيه.</p>
    <div class="field"><input id="vmq" class="big-in" placeholder="🔍 قلب على منتوج" autocomplete="off" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px"></div>
    ${Object.entries(byW).map(([w, list]) => `<div class="box" style="gap:4px"><h3 style="margin:0">${LOCI[w] || ""} ${esc(LOC[w] || "")}</h3><div style="display:grid;grid-template-columns:1fr ${POS.map(() => "80px").join(" ")};gap:6px;align-items:center"><span></span>${POS.map((x) => `<b style="text-align:center;font-size:.8rem">${x.i} ${esc(x.name.split(" ")[0])}</b>`).join("")}
-     ${list.sort((a, b) => String(a.name).localeCompare(String(b.name), "fr")).map((i) => `<span data-vmr="${esc(nrm(i.name + " " + (i.fr || "")))}" style="font-size:.92rem">${ico(i.id)} ${esc(i.name)}</span>${POS.map((x) => `<input data-vm="${i.id}" data-p="${x.id}" data-vmr2="${esc(nrm(i.name + " " + (i.fr || "")))}" class="qty" inputmode="numeric" style="width:76px;height:42px" value="${minOf(i, x.id) || ""}" placeholder="—">`).join("")}`).join("")}</div></div>`).join("")}
+     ${list.sort((a, b) => String(a.name).localeCompare(String(b.name), "fr")).map((i) => `<span data-vmr="${esc(nrm(i.name + " " + (i.fr || "")))}" style="font-size:.92rem">${ico(i.id)} ${esc(i.name)}${frT(i)}</span>${POS.map((x) => `<input data-vm="${i.id}" data-p="${x.id}" data-vmr2="${esc(nrm(i.name + " " + (i.fr || "")))}" class="qty" inputmode="numeric" style="width:76px;height:42px" value="${minOf(i, x.id) || ""}" placeholder="—">`).join("")}`).join("")}</div></div>`).join("")}
    ${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,
     async (f) => {
       const up = {};
@@ -16350,7 +16353,7 @@ function sheetConsUse(ws) {
   const L = consOf(ws), m = stockMap(ws);
   if (!L.length) return openSheet("🧷 استهلاك المواد الثانوية", emptyB("🧷", "ما كاينة حتى مادة ثانوية لهاد الورشة."));
   openSheet("🧷 استهلاك · " + LOC[ws], `<p class="muted" style="margin:0">كتب شحال استعملتي من كل مادة. كيتنقص من المخزون وكيدخل فالمصاريف «🧷 المواد الثانوية» ديال هاد الشهر.</p>
-   ${L.map((i) => `<div class="box" style="gap:4px"><div class="prow" style="border:0;padding:0"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}</b><div class="muted">فالمخزون: ${fmt(m[i.id] || 0)} ${esc(i.unit)} · ${money(costOf(i.id, 0, ws))} لـ${esc(i.unit)}</div></div></div>${stepper("data-cu", i.id, "", i.unit)}</div></div>`).join("")}
+   ${L.map((i) => `<div class="box" style="gap:4px"><div class="prow" style="border:0;padding:0"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}${frT(i)}</b><div class="muted">فالمخزون: ${fmt(m[i.id] || 0)} ${esc(i.unit)} · ${money(costOf(i.id, 0, ws))} لـ${esc(i.unit)}</div></div></div>${stepper("data-cu", i.id, "", i.unit)}</div></div>`).join("")}
    <div class="receipt"><div class="tot"><span>القيمة</span><span id="cutot">0.00 د.م</span></div></div>${errP}<button class="btn primary block" type="submit">✅ سجل الاستهلاك</button>`, async (f) => {
     const lines = $$("input[data-cu]", f).map((x) => {
       const id = x.dataset.cu;
@@ -16395,7 +16398,7 @@ function sheetConsPreq(ws) {
   if (!ws) ws = ((_a = me.loc) == null ? void 0 : _a[0]) === "w" ? me.loc : S.ws;
   const L = consOf(ws), m = stockMap(ws);
   if (!L.length) return openSheet("📝 طلب مواد ثانوية", emptyB("🧷", "ما كاينة حتى مادة ثانوية لهاد الورشة. المسير يزيدها فالكتالوج."));
-  openSheet("📝 طلب مواد ثانوية · " + LOC[ws], `${L.map((i) => `<div class="box" style="gap:4px"><div class="prow" style="border:0;padding:0"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}</b><div class="muted">عندك ${fmt(m[i.id] || 0)} ${esc(i.unit)}${+i.min > 0 ? " · الحد الأدنى " + fmt(i.min) : ""}</div></div></div>${stepper("data-cq", i.id, "", i.unit)}</div></div>`).join("")}
+  openSheet("📝 طلب مواد ثانوية · " + LOC[ws], `${L.map((i) => `<div class="box" style="gap:4px"><div class="prow" style="border:0;padding:0"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}${frT(i)}</b><div class="muted">عندك ${fmt(m[i.id] || 0)} ${esc(i.unit)}${+i.min > 0 ? " · الحد الأدنى " + fmt(i.min) : ""}</div></div></div>${stepper("data-cq", i.id, "", i.unit)}</div></div>`).join("")}
    ${choice("rurg", "الاستعجال", [{ v: "0", l: "عادي", i: "🙂" }, { v: "1", l: "مستعجل", i: "🔥" }], "0", 2)}${dateQuick("rdl", "⏰ آخر أجل باش توصل", daysAgo(-2))}
    ${fld("rnote", "📝 ملاحظة (اختياري)", '<textarea id="rnote" name="rnote" rows="2"></textarea>')}${errP}<button class="btn primary block" type="submit">📤 صيفط الطلب</button>`, async (f) => {
     var _a2;
@@ -17145,7 +17148,7 @@ function sheetOrdCat() {
   recReset();
   let pick = null;
   const L = itemsArr().filter((i) => i.kind === "final" && i.active !== false && +i.price > 0).sort((a, b) => a.name.localeCompare(b.name));
-  openSheet("➕ منتوج من الكتالوج", `${inp("oc_q", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div id="oc_list" style="max-height:38vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-pick="${i.id}" data-n="${esc((i.name + " " + (i.fr || "")).toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}</b></div><b class="num">${money(i.price)}</b></button>`).join("")}</div>
+  openSheet("➕ منتوج من الكتالوج", `${inp("oc_q", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div id="oc_list" style="max-height:38vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-pick="${i.id}" data-n="${esc((i.name + " " + (i.fr || "")).toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}${frT(i)}</b></div><b class="num">${money(i.price)}</b></button>`).join("")}</div>
    <div id="oc_sel" class="muted">👆 اختار المنتوج</div>${stepper("data-ocq", "q", "1", "")}${fld("oc_note", "📝 ملاحظة (الكتابة، اللون، الحجم...)", '<textarea id="oc_note" name="oc_note" rows="2"></textarea>')}${photoField("ocph", "📷 صور (اختيارية)")}${voiceBox()}
    ${errP}<div class="btns"><button type="button" class="btn" id="oc_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
     if (!pick) return ferr("👆 اختار المنتوج من اللائحة.");
@@ -18721,6 +18724,7 @@ const ACT = {
   },
   setpcat: (el) => {
     S.pcat = el.dataset.id;
+    S.pcat2 = "";
     render();
   },
   fs: () => {
