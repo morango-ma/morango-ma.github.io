@@ -393,7 +393,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114160634" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114161138" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6930,7 +6930,7 @@ async function bonCancel(id) {
 const VNORM = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ًͯ-ٰٕـ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[گڭ]/g, "ك").replace(/ڤ/g, "ف").replace(/پ/g, "ب").replace(/[\u0660-\u0669]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^a-z0-9ء-ي\s]/g, " ").replace(/\s+/g, " ").trim();
 const VNUM = { "واحد": 1, "وحده": 1, "وحد": 1, "un": 1, "une": 1, "جوج": 2, "زوج": 2, "اثنين": 2, "جوز": 2, "deux": 2, "تلاته": 3, "ثلاثه": 3, "تلات": 3, "trois": 3, "ربعه": 4, "اربعه": 4, "ربع": 4, "quatre": 4, "خمسه": 5, "خمس": 5, "cinq": 5, "سته": 6, "ست": 6, "six": 6, "سبعه": 7, "سبع": 7, "sept": 7, "تمنيه": 8, "ثمانيه": 8, "تمن": 8, "huit": 8, "تسعه": 9, "تسع": 9, "neuf": 9, "عشره": 10, "عشر": 10, "dix": 10, "حداش": 11, "onze": 11, "طناش": 12, "اطناش": 12, "douze": 12, "خمسطاش": 15, "quinze": 15, "عشرين": 20, "vingt": 20 };
 const VSTOP = /* @__PURE__ */ new Set(["و", "et", "de", "du", "des", "la", "le", "les", "au", "aux", "a", "fi", "بغيت", "عطيني", "عطيها", "عطيه", "زيد", "زيدي", "ديال", "ديالي", "من", "مع", "بغا", "بغات", "حتى", "واحد", "لي", "اللي", "هاد", "هادي", "هادو", "svp", "stp"]);
-const VCOMP = [["ميل فاي", "ميلفاي"], ["ميل في", "ميلفاي"], ["تشيز كيك", "تشيزكيك"], ["بان او شوكولا", "بانشوكولا"], ["بان او شكلاط", "بانشوكولا"], ["بان شوكولا", "بانشوكولا"], ["بان شكلاط", "بانشوكولا"], ["pains au chocolat", "painchocolat"], ["pain au chocolat", "painchocolat"], ["pain chocolat", "painchocolat"], ["mille feuilles", "millefeuille"], ["mille feuille", "millefeuille"], ["cheese cake", "cheesecake"], ["نيو يورك", "نيويورك"], ["new york", "newyork"], ["هوت دوك", "هوتدوك"], ["hot dog", "hotdog"], ["بان سويس", "بانسويس"], ["pain suisse", "painsuisse"], ["pains suisses", "painsuisse"]];
+const VCOMP = [["ميل فاي", "ميلفاي"], ["ميل في", "ميلفاي"], ["تشيز كيك", "تشيزكيك"], ["بان او شوكولا", "بانشوكولا"], ["بانو شوكولا", "بانشوكولا"], ["بانو شكلاط", "بانشوكولا"], ["بان اوشوكولا", "بانشوكولا"], ["بنو شوكولا", "بانشوكولا"], ["بان او شوكولاته", "بانشوكولا"], ["بان شوكولاته", "بانشوكولا"], ["بانو شوكولاته", "بانشوكولا"], ["بان او شكلاط", "بانشوكولا"], ["بان شوكولا", "بانشوكولا"], ["بان شكلاط", "بانشوكولا"], ["pains au chocolat", "painchocolat"], ["pain au chocolat", "painchocolat"], ["pain chocolat", "painchocolat"], ["mille feuilles", "millefeuille"], ["mille feuille", "millefeuille"], ["cheese cake", "cheesecake"], ["نيو يورك", "نيويورك"], ["new york", "newyork"], ["هوت دوك", "هوتدوك"], ["hot dog", "hotdog"], ["بان سويس", "بانسويس"], ["pain suisse", "painsuisse"], ["pains suisses", "painsuisse"]];
 const vStem = (w) => w.length > 5 && (w.startsWith("وال") || w.startsWith("بال")) ? w.slice(3) : w.length > 4 && (w.startsWith("ال") || w.startsWith("لل")) ? w.slice(2) : w;
 const vTok = (t) => {
   let n = " " + VNORM(t) + " ";
@@ -6959,8 +6959,14 @@ function vLev(a, b) {
   }
   return d[b.length];
 }
+const vSk = (w) => w.replace(/[صس]/g, "س").replace(/[طتث]/g, "ت").replace(/[ضدذظ]/g, "د").replace(/[قك]/g, "ك").replace(/[اويهءئؤ]/g, "").replace(/[aeiouy]/g, "").replace(/(.)\1+/g, "$1");
 const vEq = (a, b) => {
   if (a === b) return true;
+  {
+    const x = vSk(a[0] === "و" && a.length > 3 ? a.slice(1) : a), y = vSk(b);
+    if (x.length >= 3 && x === y) return true;
+    if (x.length >= 4 && y.length >= 4 && vLev(x, y) <= 1) return true;
+  }
   const A = a[0] === "و" && a.length > 3 ? a.slice(1) : a;
   if (A === b) return true;
   const L = Math.min(A.length, b.length);
@@ -7107,8 +7113,9 @@ function vListen() {
   R.lang = VLANG;
   R.interimResults = true;
   R.continuous = false;
-  R.maxAlternatives = 1;
+  R.maxAlternatives = 5;
   VREC = R;
+  let ALT = [];
   const base = VTXT ? VTXT + " و " : "";
   const b = $("#vmic");
   if (b) {
@@ -7117,8 +7124,21 @@ function vListen() {
   }
   R.onresult = (e) => {
     let t = "";
-    for (const r of e.results) t += r[0].transcript;
-    VTXT = base + t;
+    const last = e.results[e.results.length - 1];
+    for (let k = 0; k < e.results.length - 1; k++) t += e.results[k][0].transcript + " ";
+    let best = last[0].transcript, bs = -1;
+    ALT = [];
+    for (let k = 0; k < last.length; k++) {
+      const tx = last[k].transcript;
+      ALT.push(tx);
+      const L = vParse(tx, S.pos);
+      const sc = L.filter((l) => l.id).length * 2 + L.filter((l) => l.sure).length - L.filter((l) => !l.id).length * 1.5;
+      if (sc > bs) {
+        bs = sc;
+        best = tx;
+      }
+    }
+    VTXT = base + t + best;
     vDraw(true);
   };
   R.onerror = (e) => {
@@ -7126,6 +7146,12 @@ function vListen() {
   };
   R.onend = () => {
     VREC = null;
+    if (VTXT) try {
+      db.collection("voicelog").add({ kind: "heard", pos: S.pos, by: meName(), byId: me.id, ts: Date.now(), date: today(), text: VTXT, alts: ALT, lang: VLANG, lines: (S.vLines || []).map((l) => ({ id: l.id, qty: l.qty, heard: l.heard })) }).catch(() => {
+      });
+    } catch (_) {
+    }
+    ;
     const b2 = $("#vmic");
     if (b2) {
       b2.classList.remove("rec");
