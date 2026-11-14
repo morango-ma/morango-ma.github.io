@@ -391,7 +391,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114153422" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114153541" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4087,7 +4087,7 @@ function vPos() {
   if (me.role === "seller" && HC.length) return `${helperConfCard(HC)}`;
   if (tempLocked(p)) return `${head}${tempBanner(p)}<section class="card c6" style="align-items:center;text-align:center;gap:12px;padding:28px 16px"><div style="font-size:3.4rem">🔒🌡️</div><h2>البيع مسدود</h2><p class="muted" style="margin:0">ما تسجلاتش الحرارة ديال الفيترينات المبردة فالوقت. سجليها (الرقم + صورة الشاشة) والبيع غادي يرجع يتحل مباشرة.</p><button class="btn primary block" data-act="tempin">🌡️ سجل الحرارة دابا</button></section>${recv}`;
   if (vitLocked(p)) return `${head}<section class="card c6" style="align-items:center;text-align:center;gap:12px;padding:28px 16px"><div style="font-size:3.4rem">🔒📸</div><h2>البيع مسدود</h2><p class="muted" style="margin:0">ما تصوراتش الفيترينة فالوقت. صوري كل جزء (الحلويات، الفيينوازري، الخبز…) وأكدي بلي مرتب ونقي، والبيع غادي يرجع يتحل مباشرة.</p><button class="btn primary block" data-act="vitshot">📸 صوري الفيترينة دابا</button></section>${recv}`;
-  return `${VO ? tempBanner(p) + vitBanner(p) : head + vfb + tempBanner(p) + vitBanner(p)}<div class="posgrid"><div>
+  return `${posInbox((VO ? "" : vfb) + tempBanner(p) + vitBanner(p)), VO ? "" : head}<div class="posgrid"><div>
   ${S.pbOpen ? "" : `<button type="button" class="posbar slim" data-act="pbtog"><span>${sh.team === "مسائية" ? "🌙" : "☀️"} ${esc(sh.seller)}${VO ? "" : ' · <b class="num">' + money(sumTickets(sh)) + "</b>"}</span><span class="muted">▾ التفاصيل</span></button>`}<section class="posbar" ${S.pbOpen ? "" : "hidden"}><div class="pbi" data-act="pbtog" style="cursor:pointer"><b>${sh.team === "مسائية" ? "🌙" : "☀️"} ${esc(sh.seller)}</b><span class="muted">${hm(sh.openTs)}${VO ? "" : " · " + (sh.tickets || []).length + " وصل"} · ${posMode(p) === "v" ? "🛍️ فوندوز" : "💵 كيسيير"}</span>${VO ? "" : `<b class="num">${money(sumTickets(sh))}</b>`}</div>
    <div class="pbb">${posMode(p) === "c" ? '<button class="ib" data-act="tickets" title="الوصولات">🧾</button>' : ""}<button class="ib hot" data-act="mytasks" title="المهام ديالي">✅</button><button class="ib" data-act="myplan" title="البلانينگ">📅</button><button class="ib" data-act="go" data-v="appfb" title="ملاحظة">💬</button><button class="ib" data-act="fs" title="شاشة كاملة">⛶</button><button class="ib" data-act="devices" title="الطابعة والأجهزة (ماشي طبع)">⚙️🖨️${PRN ? '<i class="dot"></i>' : ""}</button>${posMode(p) === "c" ? '<button class="ib danger" data-act="closeshift" title="إغلاق النوبة">🔒</button>' : ""}${((_a = window.MorangoNative) == null ? void 0 : _a.desktop) ? '<button class="ib" data-act="fsoff" title="خروج من الشاشة الكاملة">🗗</button><button class="ib danger" data-act="appquit" title="سد التطبيق" style="width:auto;padding:0 8px;font-size:.85rem;font-weight:800">✕ Fermer</button>' : ""}<button class="ib" data-act="pbtog" title="صغر">▴</button></div></section>${bonsCard(p)}${retCard(p)}${goalCard(p)}${VO ? "" : recv}
   <div class="field"><input id="q" placeholder="🔍 قلب على منتوج..." value="${esc(S.q)}" autocomplete="off" aria-label="قلب على منتوج"></div>
@@ -4282,6 +4282,20 @@ function inboxBadge() {
   if (!b) return;
   b.hidden = !(ALN > 0);
   if (n) n.textContent = ALN > 99 ? "99+" : String(ALN);
+}
+function posInbox(h) {
+  let A = [];
+  try {
+    A = alertsFor().filter((x) => !["tempin", "vitshot", "verif", "recvpass"].some((k) => x.includes('data-act="' + k + '"') && (h || "").includes('data-act="' + k + '"')));
+  } catch (_) {
+  }
+  const t = document.createElement("template");
+  t.innerHTML = h || "";
+  const n = [...t.content.children].length;
+  ALHTML = (h || "") + A.join("");
+  ALN = n + A.length;
+  setTimeout(inboxBadge, 0);
+  return "";
 }
 function openInbox() {
   openSheet("🔔 التنبيهات (" + ALN + ")", ALN ? '<div data-alwrap class="inbox" style="display:flex;flex-direction:column;gap:4px">' + ALHTML + "</div>" : emptyB("✨", "ما كاين حتى تنبيه."));
