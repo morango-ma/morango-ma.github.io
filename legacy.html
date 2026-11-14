@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114054048" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114054605" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -9023,7 +9023,7 @@ function vPlan() {
     if (c.P || c.br > 0) hist.push({ dd, c });
   }
   return `<h1>🗓️ برنامج الإنتاج اليومي</h1>${r !== "ws" ? chipsHtml(WS, w, "plws") : ""}${chipsHtml(dates, d, "pldate")}
-   <section class="card"><div class="head"><h2>${W.i} ${esc(W.name)} · 📋 البرنامج ${d === today() ? "ديال اليوم" : d > today() ? "ديال غدا" : "ديال " + d}</h2>${can ? POS.map((ps) => `<button class="btn small" data-act="planedit" data-id="${w}" data-v="${d}" data-k="${ps.id}">${ps.i} ${hasPos(x.P, ps.id) ? "✏️ برنامج" : "➕ برنامج"} ${esc(ps.name.split(" (")[0])}</button>`).join("") : ""}${can && manFrz(w) && d >= today() ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}')">🧊 ${((_a = x.P) == null ? void 0 : _a.frz) && Object.keys(x.P.frz).some((id) => {
+   <section class="card"><div class="head"><h2>${W.i} ${esc(W.name)} · 📋 البرنامج ${d === today() ? "ديال اليوم" : d > today() ? "ديال غدا" : "ديال " + d}</h2>${can ? POS.map((ps) => `<button class="btn small" data-act="planedit" data-id="${w}" data-v="${d}" data-k="${ps.id}">${ps.i} ${hasPos(x.P, ps.id) ? "✏️ برنامج" : "➕ برنامج"} ${esc(ps.name.split(" (")[0])}</button>${hasPos(planRaw(w, d), ps.id) && d >= today() ? `<button class="btn small" onclick="sheetPlanTimes('${w}','${d}','${ps.id}')">⏰ أوقات الإرسال</button>` : ""}`).join("") : ""}${can && manFrz(w) && d >= today() ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}')">🧊 ${((_a = x.P) == null ? void 0 : _a.frz) && Object.keys(x.P.frz).some((id) => {
     var _a2;
     return ((_a2 = S.items[id]) == null ? void 0 : _a2.store) !== "frigo";
   }) ? "✏️" : "➕"} برنامج التجميد</button>` : ""}${can && d >= today() && itemsArr().some((i) => i.ws === w && i.store === "frigo" && i.active !== false) ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}','frigo')">❄️ ${((_b = x.P) == null ? void 0 : _b.frz) && Object.keys(x.P.frz).some((id) => {
@@ -9944,7 +9944,8 @@ function sheetPlan(w, d, pos) {
         await runAutoNeeds(true);
       } catch (_) {
       }
-      if (d > today() && planOf(w, d) && planChain(w, d).length) setTimeout(() => sheetPlanSched(w, d), 300);
+      if (Object.keys(mine).length) setTimeout(() => sheetPlanTimes(w, d, pos, mine, more), 300);
+      else if (d > today() && planOf(w, d) && planChain(w, d).length) setTimeout(() => sheetPlanSched(w, d), 300);
     } catch (e) {
       fail(f, e);
     }
@@ -9972,6 +9973,103 @@ function sheetPlan(w, d, pos) {
       upd();
     };
     f.addEventListener("input", upd);
+    upd();
+  });
+}
+function sheetPlanTimes(w, d, pos, mine, more) {
+  var _a, _b;
+  if (!canDp()) return;
+  pos = pos || POS[0].id;
+  more = more || [];
+  if (!mine) {
+    mine = {};
+    (((_a = planRaw(w, d)) == null ? void 0 : _a.lines) || []).forEach((l) => {
+      const v = +(l.dist || { [POS[0].id]: l.qty })[pos] || 0;
+      if (v) mine[l.item] = v;
+    });
+  }
+  const ids = Object.keys(mine).filter((id) => S.items[id]);
+  if (!ids.length) return toast("دخل البرنامج الأول", true);
+  const dps = (S.dplans || []).filter((p) => p.date === d && p.pos === pos);
+  const R0 = {};
+  ids.forEach((id) => {
+    const r = [];
+    dps.forEach((p) => (p.lines || []).forEach((l) => {
+      if (l.item === id) r.push({ t: p.time, q: +l.qty || 0 });
+    }));
+    R0[id] = r.length ? r.sort((a, b) => a.t.localeCompare(b.t)) : [{ t: "", q: mine[id] }];
+  });
+  const rowH = (id, r, k) => `<div style="display:flex;gap:6px;align-items:center" data-tr="${id}"><input type="time" data-tt value="${r.t || ""}" style="height:42px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;font:inherit;padding:0 6px"><input class="qty" data-tq inputmode="decimal" value="${r.q ? fmt(r.q) : ""}" style="width:72px" aria-label="الكمية">${k ? `<button type="button" class="link neg" data-trx>✖️</button>` : ""}</div>`;
+  openSheet("⏰ وقت الإرسال · " + (((_b = POS.find((x) => x.id === pos)) == null ? void 0 : _b.name) || "") + " · " + d, `<p class="muted" style="margin:0">قسم كل منتوج على الأوقات. مثلاً: 10 فـ 10:00 و10 فـ 12:00. ${more.length ? "نفس الأوقات غادي تطبق حتى على " + more.length + " أيام اخرين." : ""}</p>
+   ${ids.map((id) => `<div class="box" style="gap:6px" data-ti="${id}"><div style="display:flex;justify-content:space-between;gap:8px"><b>${ico(id)} ${esc(iname(id).split(" (")[0])}</b><span>المجموع <b class="num">${fmt(mine[id])}</b> · <span data-tl="${id}"></span></span></div><div data-trs style="display:flex;flex-direction:column;gap:6px">${R0[id].map((r, k) => rowH(id, r, k)).join("")}</div><button type="button" class="btn small" data-tadd="${id}">➕ وقت آخر</button></div>`).join("")}
+   ${errP}<button class="btn primary block" type="submit">✅ حفظ الأوقات</button><button type="button" class="btn block" data-act="close">⏭️ من بعد</button>`, async (f) => {
+    const T = {};
+    let bad = "";
+    ids.forEach((id) => {
+      let sum = 0;
+      $$(`[data-tr="${id}"]`, f).forEach((x) => {
+        const t = $("[data-tt]", x).value, q = num($("[data-tq]", x).value) || 0;
+        if (!q) return;
+        if (!t) bad = bad || "⏰ خاص الوقت ديال " + iname(id).split(" (")[0];
+        sum += q;
+        const L = T[t] || (T[t] = {});
+        L[id] = (L[id] || 0) + q;
+      });
+      if (Math.abs(sum - mine[id]) > 1e-9) bad = bad || "⚖️ " + iname(id).split(" (")[0] + ": المجموع خاصو يكون " + fmt(mine[id]) + " (دابا " + fmt(sum) + ")";
+    });
+    if (bad) return ferr(bad);
+    busy(f, true);
+    const save = async (day) => {
+      const P = (S.dplans || []).filter((p) => p.date === day && p.pos === pos);
+      const set = new Set(ids);
+      for (const p of P) {
+        const keep = (p.lines || []).filter((l) => !set.has(l.item));
+        const add = Object.entries(T[p.time] || {}).map(([item, qty]) => ({ item, qty }));
+        const lines = [...keep, ...add];
+        if (!lines.length && !Object.keys(p.sent || {}).length) {
+          await db.doc("dplans/" + p.id).delete();
+          continue;
+        }
+        if (JSON.stringify(lines) !== JSON.stringify(p.lines || [])) await db.doc("dplans/" + p.id).update({ lines, by: meName(), ts: Date.now() });
+      }
+      for (const [t, m] of Object.entries(T)) {
+        if (P.some((p) => p.time === t)) continue;
+        await db.collection("dplans").add({ pos, date: day, time: t, lines: Object.entries(m).map(([item, qty]) => ({ item, qty })), note: "", by: meName(), byId: me.id, ts: Date.now(), sent: {}, transfers: [] });
+      }
+    };
+    try {
+      for (const dd of [d, ...more]) await save(dd);
+      closeSheet();
+      toast("⏰ الأوقات تسجلو");
+      render();
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    const upd = () => ids.forEach((id) => {
+      const s0 = $$(`[data-tr="${id}"] [data-tq]`, f).reduce((a, x) => a + (num(x.value) || 0), 0);
+      const left = r2(mine[id] - s0);
+      const el = f.querySelector(`[data-tl="${id}"]`);
+      el.innerHTML = left === 0 ? '<span class="tag good">✅</span>' : left > 0 ? `<span class="tag warn">باقي ${fmt(left)}</span>` : `<span class="tag bad">زايد ${fmt(-left)}</span>`;
+    });
+    f.addEventListener("input", upd);
+    f.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-tadd]"), x = e.target.closest("[data-trx]");
+      if (a) {
+        e.preventDefault();
+        const id = a.dataset.tadd;
+        const box = f.querySelector(`[data-ti="${id}"] [data-trs]`);
+        const s0 = $$(`[data-tr="${id}"] [data-tq]`, f).reduce((a2, y) => a2 + (num(y.value) || 0), 0);
+        box.insertAdjacentHTML("beforeend", rowH(id, { t: "", q: Math.max(0, r2(mine[id] - s0)) }, 1));
+        upd();
+        box.lastElementChild.querySelector("[data-tt]").focus();
+      }
+      if (x) {
+        e.preventDefault();
+        x.closest("[data-tr]").remove();
+        upd();
+      }
+    });
     upd();
   });
 }
