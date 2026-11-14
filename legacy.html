@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114052049" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114053019" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1472,7 +1472,7 @@ const POS = [{ id: "p1", name: "ميموزا (Mimouza)", i: "🏪" }];
 const POS_OLD = [{ id: "p2", name: "روان (Rawan)", i: "🏬" }];
 const LOC = Object.fromEntries([...WS, ...POS, ...POS_OLD].map((x) => [x.id, x.name])), LOCI = Object.fromEntries([...WS, ...POS, ...POS_OLD].map((x) => [x.id, x.i]));
 const ROLES = { admin: ["المشرف العام", "👑"], manager: ["المسير", "📊"], prod: ["عون الإدخال (Saisie)", "📝"], buyer: ["مسؤول المشتريات", "🛒"], ws: ["مسؤول ورشة", "👨‍🍳"], seller: ["بائعة", "🛍️"], driver: ["السائق", "🚚"], worker: ["عامل", "👷"], kiosk: ["طابليت الزبناء", "📱"] };
-const KIND = { raw: "مادة أولية", semi: "منتوج ميز أون بلاس", final: "منتوج مفيني", pack: "تغليف ولوازم", pre: "منتوج ممفينيش", cons: "مادة ثانوية" }, KICON = { raw: "🌾", semi: "🥣", final: "🧁", pack: "📦", pre: "🧊", cons: "🧷" };
+const KIND = { raw: "مادة أولية", semi: "منتوج ميز أون بلاس", final: "منتوج مفيني", pack: "تغليف ولوازم", pre: "منتوج ممفينيش", cons: "مادة ثانوية", frigo: "للتبريد (الفريگو)" }, KICON = { raw: "🌾", semi: "🥣", final: "🧁", pack: "📦", pre: "🧊", cons: "🧷", frigo: "❄️" };
 const isPre = (it) => (it == null ? void 0 : it.kind) === "semi" && it.stage === "pre";
 const kindOf = (it) => isPre(it) ? "pre" : it == null ? void 0 : it.kind;
 const kindL = (it) => KIND[kindOf(it)] || "";
@@ -3687,7 +3687,7 @@ function homeTiles(arr) {
   }
   if (r === "driver") T.push({ i: "⛽", l: "مصروف السيارة (مازوط…)", a: "vexpnew", c: 2 }, { i: "🚚", l: "مصاريف السيارة", a: "go", v: "vehicle", c: 5 });
   if (r === "driver") T.push({ i: "🚚", l: "السلعة اللي معايا", a: "go", v: "send", b: pendT.filter((o) => o.status === "with_driver").length, c: 4 }, { i: "📝", l: "طلبيات للتوصيل", a: "go", v: "orders", b: act.filter((o) => o.status === "ready" || o.status === "transit").length, c: 3 });
-  if (r === "prod") T.push({ i: "🥣", l: "إنتاج ميز أون بلاس", a: "produce", k: "semi", c: 2 }, { i: "🧊", l: "إنتاج ممفينيش", a: "produce", k: "pre", c: 3 }, { i: "🧁", l: "إنتاج منتوج مفيني", a: "produce", k: "final", c: 1 }, { i: "🚚", l: "إرسال لنقطة البيع", a: "newsend", c: 4 }, { i: "↩️", l: "المرتجعات", a: "go", v: "returns", b: pendR.length, c: 6 }, { i: "📝", l: "طلبيات الورشات", a: "go", v: "orders", b: act.filter((o) => o.status === "new" || o.status === "production").length, c: 3 }, { i: "📦", l: "مخزون الورشات", a: "go", v: "prod", b: lowList().length, c: 5 });
+  if (r === "prod") T.push({ i: "🥣", l: "إنتاج ميز أون بلاس", a: "produce", k: "semi", c: 2 }, { i: "🧊", l: "إنتاج للتجميد (ممفينيش)", a: "produce", k: "pre", c: 3 }, ...itemsArr().some((i) => i.store === "frigo" && i.active !== false && (!(me == null ? void 0 : me.loc) || !WS.some((w) => w.id === me.loc) || i.ws === me.loc)) ? [{ i: "❄️", l: "إنتاج للتبريد (الفريگو)", a: "produce", k: "frigo", c: 3 }] : [], { i: "🛒", l: "إنتاج للبيع (مفيني)", a: "produce", k: "final", c: 1 }, { i: "🚚", l: "إرسال لنقطة البيع", a: "newsend", c: 4 }, { i: "↩️", l: "المرتجعات", a: "go", v: "returns", b: pendR.length, c: 6 }, { i: "📝", l: "طلبيات الورشات", a: "go", v: "orders", b: act.filter((o) => o.status === "new" || o.status === "production").length, c: 3 }, { i: "📦", l: "مخزون الورشات", a: "go", v: "prod", b: lowList().length, c: 5 });
   if (r === "admin" || r === "manager") T.unshift({ i: "🗓️", l: "برنامج الإنتاج (أوامر الإنتاج)", a: "go", v: "plan", c: 3 }, { i: "📥", l: "طلبات الشراء", a: "go", v: "preqs", b: S.preqs.filter((x) => ["pending", "approved", "partial"].includes(x.status)).length, c: 2 });
   if (r === "buyer" || r === "prod") T.push({ i: "📥", l: "طلبات الشراء", a: "go", v: "preqs", b: S.preqs.filter((x) => ["pending", "approved", "partial"].includes(x.status)).length, c: 2 }, { i: "🛒", l: "شراء مباشر", a: "newpurchase", c: 1 }, { i: "⚠️", l: "المخزون الناقص", a: "go", v: "prod", b: lowList().length, c: 6 }, { i: "📋", l: "المشتريات", a: "go", v: "purchases", c: 5 });
   if (r === "manager") T.push({ i: "🛒", l: "شراء جديد", a: "newpurchase", c: 2 }, { i: "⚠️", l: "المخزون الناقص", a: "go", v: "prod", b: lowList().length, c: 6 });
@@ -5193,13 +5193,14 @@ function sheetProduce(kind, pre) {
   if (invGuard()) return;
   if (ordOnly() && !pre) return sheetOrders();
   ensureRates();
+  const FGK = kind === "frigo";
   const stg = kind === "pre" ? "pre" : kind === "semi" ? "inter" : null;
   const kl = kind;
-  kind = kind === "pre" ? "semi" : kind;
+  kind = kind === "pre" || FGK ? "semi" : kind;
   const ws = S.ws;
   const opts = pre ? [S.items[pre.item]] : itemsArr().filter((i) => {
     var _a, _b;
-    return i.kind === kind && (!stg || (i.stage === "pre" ? "pre" : "inter") === stg) && i.ws === ws && ((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length);
+    return i.kind === kind && (FGK ? i.store === "frigo" : !stg || (i.stage === "pre" ? "pre" : "inter") === stg) && i.ws === ws && ((_b = (_a = i.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length);
   });
   if (!opts.length) return openSheet("إنتاج " + KIND[kl], `${emptyB(KICON[kl], "ما كاين حتى " + KIND[kl] + " عندو وصفة فـ" + esc(LOC[ws]) + ".")}${isMgr() ? '<button type="button" class="btn primary block" data-act="go" data-v="catalog">📒 فتح الكتالوج</button>' : ""}`);
   const first = opts[0];
@@ -8978,7 +8979,7 @@ function latestPlanRate(w) {
   return null;
 }
 function vPlan() {
-  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
   const r = me.role;
   if (!(isMgr() || r === "prod" || r === "ws")) return emptyB("🔒", "ما عندكش الحق.");
   const w = r === "ws" ? me.loc : S.plw || S.ws || "w1";
@@ -8996,14 +8997,20 @@ function vPlan() {
     if (c.P || c.br > 0) hist.push({ dd, c });
   }
   return `<h1>🗓️ برنامج الإنتاج اليومي</h1>${r !== "ws" ? chipsHtml(WS, w, "plws") : ""}${chipsHtml(dates, d, "pldate")}
-   <section class="card"><div class="head"><h2>${W.i} ${esc(W.name)} · 📋 البرنامج ${d === today() ? "ديال اليوم" : d > today() ? "ديال غدا" : "ديال " + d}</h2>${can ? POS.map((ps) => `<button class="btn small" data-act="planedit" data-id="${w}" data-v="${d}" data-k="${ps.id}">${ps.i} ${hasPos(x.P, ps.id) ? "✏️ برنامج" : "➕ برنامج"} ${esc(ps.name.split(" (")[0])}</button>`).join("") : ""}${can && manFrz(w) && d >= today() ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}')">🧊 ${((_a = x.P) == null ? void 0 : _a.frz) && Object.keys(x.P.frz).length ? "✏️" : "➕"} برنامج التجميد</button>` : ""}${can && x.P ? `<button class="btn small danger" data-act="plandel" data-id="${w}" data-v="${d}">🗑️ مسح البرنامج</button>` : ""}${canSched(w) && x.P && d >= today() ? `<button class="btn small" data-act="plsched" data-id="${w}" data-v="${d}">🗓️ وقتاش يكونو واجدين${x.P.sched ? " ✅" : ""}</button>` : ""}</div>
-    ${x.P ? `${x.P.auto ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">🤖</span><div><b>برنامج أوتوماتيكي</b><div class="muted">فالبداية كيتبع البرنامج الأول اللي دخلتو بيديكم، ومن بعد كيمشي كيتبدل على حساب المبيعات ديال 14 يوم (نفس النهار فالسيمانة) + الريبتير − المرتجوعات − المخزون اللي كاين. كيتحدث بوحدو. إلا بدلتيه بيدك، كيولي يدوي.</div></div></div></div>` : can && ((_b = S.pcfg) == null ? void 0 : _b.autoPlan) ? `<button type="button" class="btn small" data-act="planauto" data-id="${w}" data-v="${d}">🤖 رجعو أوتوماتيكي</button>` : ""}<p class="muted" style="margin:0">دخلو ${esc(x.P.by || "")} ${x.P.ts ? new Date(x.P.ts).toLocaleString("fr-MA", { dateStyle: "short", timeStyle: "short" }) : ""}</p>` : `<p class="muted">ما تدخلش البرنامج ديال هاد النهار. ${can ? "ضغط «➕ برنامج» ديال المحل." : ""}</p>`}</section>
+   <section class="card"><div class="head"><h2>${W.i} ${esc(W.name)} · 📋 البرنامج ${d === today() ? "ديال اليوم" : d > today() ? "ديال غدا" : "ديال " + d}</h2>${can ? POS.map((ps) => `<button class="btn small" data-act="planedit" data-id="${w}" data-v="${d}" data-k="${ps.id}">${ps.i} ${hasPos(x.P, ps.id) ? "✏️ برنامج" : "➕ برنامج"} ${esc(ps.name.split(" (")[0])}</button>`).join("") : ""}${can && manFrz(w) && d >= today() ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}')">🧊 ${((_a = x.P) == null ? void 0 : _a.frz) && Object.keys(x.P.frz).some((id) => {
+    var _a2;
+    return ((_a2 = S.items[id]) == null ? void 0 : _a2.store) !== "frigo";
+  }) ? "✏️" : "➕"} برنامج التجميد</button>` : ""}${can && d >= today() && itemsArr().some((i) => i.ws === w && i.store === "frigo" && i.active !== false) ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}','frigo')">❄️ ${((_b = x.P) == null ? void 0 : _b.frz) && Object.keys(x.P.frz).some((id) => {
+    var _a2;
+    return ((_a2 = S.items[id]) == null ? void 0 : _a2.store) === "frigo";
+  }) ? "✏️" : "➕"} برنامج التبريد</button>` : ""}${can && x.P ? `<button class="btn small danger" data-act="plandel" data-id="${w}" data-v="${d}">🗑️ مسح البرنامج</button>` : ""}${canSched(w) && x.P && d >= today() ? `<button class="btn small" data-act="plsched" data-id="${w}" data-v="${d}">🗓️ وقتاش يكونو واجدين${x.P.sched ? " ✅" : ""}</button>` : ""}</div>
+    ${x.P ? `${x.P.auto ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">🤖</span><div><b>برنامج أوتوماتيكي</b><div class="muted">فالبداية كيتبع البرنامج الأول اللي دخلتو بيديكم، ومن بعد كيمشي كيتبدل على حساب المبيعات ديال 14 يوم (نفس النهار فالسيمانة) + الريبتير − المرتجوعات − المخزون اللي كاين. كيتحدث بوحدو. إلا بدلتيه بيدك، كيولي يدوي.</div></div></div></div>` : can && ((_c = S.pcfg) == null ? void 0 : _c.autoPlan) ? `<button type="button" class="btn small" data-act="planauto" data-id="${w}" data-v="${d}">🤖 رجعو أوتوماتيكي</button>` : ""}<p class="muted" style="margin:0">دخلو ${esc(x.P.by || "")} ${x.P.ts ? new Date(x.P.ts).toLocaleString("fr-MA", { dateStyle: "short", timeStyle: "short" }) : ""}</p>` : `<p class="muted">ما تدخلش البرنامج ديال هاد النهار. ${can ? "ضغط «➕ برنامج» ديال المحل." : ""}</p>`}</section>
    <section class="card"><h2>👥 اليد العاملة ديال النهار</h2>
     <div class="stats"><div class="stat"><span>💼 أجور النهار</span><b>${money(x.pay)}</b></div><div class="stat"><span>📋 المبرمج</span><b>${fmt(Math.round(x.bp * 10) / 10)} ${BU}</b></div><div class="stat"><span>✅ المنتج</span><b>${fmt(Math.round(x.br * 10) / 10)} ${BU}</b>${x.pct != null ? `<span class="muted">${x.pct}%</span>` : ""}</div></div>
     <div class="stats"><div class="stat"><span>🎯 taux المبرمج</span><b>${x.tp != null ? money(x.tp) + "/" + BU : "—"}</b></div><div class="stat"><span>📍 taux الحقيقي</span><b class="${x.tr != null && x.tp != null && x.tr > x.tp * 1.02 ? "neg" : x.tr != null && x.tp != null && x.tr < x.tp * 0.98 ? "pos" : ""}">${x.tr != null ? money(x.tr) + "/" + BU : future ? "⏳" : "—"}</b></div>${x.ecart != null && !future && x.br > 0 ? `<div class="stat"><span>⚖️ فرق الحجم</span><b class="${x.ecart > 0 ? "neg" : "pos"}">${x.ecart > 0 ? "−" : "+"}${money(Math.abs(x.ecart))}</b></div>` : ""}</div>
     <p class="muted" style="margin:0">💼 أجور النهار = أجور ${esc(W.name)} ديال ${mLabel(x.payM)} (${money(monthPay(w, ym(d)).v)}) ÷ ${wDays(w)} نهار خدمة.${!x.pay ? ' <span class="neg">⚠️ ما تدخلاتش الأجور فـ💼 المصاريف.</span>' : ""} ${x.ecart > 0 && x.br > 0 ? `<br>⚖️ تصاوب أقل من البرنامج: ${money(x.ecart)} ديال الأجور ما تحملاتش على الإنتاج (sous-activité)، وكل ${BU} طلع لـ${money(x.tr)} بلاصة ${money(x.tp)}.` : x.ecart < 0 && x.br > 0 ? `<br>🎉 تصاوب كثر من البرنامج: كل ${BU} رخص لـ${money(x.tr)}.` : ""}</p></section>
    ${prepBox(w, d)}${stageBox(w, d)}${ordCloseBox(w, d)}
-   ${isMgr() ? `<div class="alert" style="cursor:default"><div class="lead"><span class="em">${((_c = S.pcfg) == null ? void 0 : _c.autoPlan) ? "🤖" : "✍️"}</span><div><b>${((_d = S.pcfg) == null ? void 0 : _d.autoPlan) ? "البرنامج أوتوماتيكي من المبيعات" : "البرنامج يدوي: الإدارة هي اللي كتعطي أوامر الإنتاج"}</b><div class="muted">طلبات الشراء كتحسب أوتوماتيكياً من البرنامج اللي كتدخلو${((_e = S.pcfg) == null ? void 0 : _e.autoPlan) ? "، والأيام بلا برنامج كتحسب بالمتوسط ديال الاستهلاك" : ""}.</div></div></div><button type="button" class="btn small" data-act="autoplan">${((_f = S.pcfg) == null ? void 0 : _f.autoPlan) ? "✍️ رجعو يدوي" : "🤖 شعل الأوتوماتيك"}</button></div><div class="alert ${((_g = S.pcfg) == null ? void 0 : _g.sminOn) ? "acc" : ""}" style="cursor:default"><div class="lead"><span class="em">⚖️</span><div><b>المخزون الأدنى الأوتوماتيكي: ${((_h = S.pcfg) == null ? void 0 : _h.sminOn) ? "✅ شاعل" : "⛔ مطفي"}</b><div class="muted">${((_i = S.pcfg) == null ? void 0 : _i.sminOn) ? "كل منتوج عندو «⚖️ المخزون الأدنى» فالفيش كيتعاود يتصاوب بوحدو ملي ينقص (أوامر الإنتاج + طلبات الشراء)." : "ملي تشعلو، كل منتوج ميز أون بلاس ولا ممفينيش عندو «⚖️ المخزون الأدنى» فالفيش كيتصاوب بوحدو ملي ينقص."} (${itemsArr().filter((i) => i.kind === "semi" && +i.smin > 0).length} منتوج عندو مخزون أدنى)</div></div></div><button type="button" class="btn small ${((_j = S.pcfg) == null ? void 0 : _j.sminOn) ? "" : "primary"}" data-act="sminon">${((_k = S.pcfg) == null ? void 0 : _k.sminOn) ? "⛔ طفيه" : "▶️ شعل المخزون الأدنى"}</button></div>` : ""}
+   ${isMgr() ? `<div class="alert" style="cursor:default"><div class="lead"><span class="em">${((_d = S.pcfg) == null ? void 0 : _d.autoPlan) ? "🤖" : "✍️"}</span><div><b>${((_e = S.pcfg) == null ? void 0 : _e.autoPlan) ? "البرنامج أوتوماتيكي من المبيعات" : "البرنامج يدوي: الإدارة هي اللي كتعطي أوامر الإنتاج"}</b><div class="muted">طلبات الشراء كتحسب أوتوماتيكياً من البرنامج اللي كتدخلو${((_f = S.pcfg) == null ? void 0 : _f.autoPlan) ? "، والأيام بلا برنامج كتحسب بالمتوسط ديال الاستهلاك" : ""}.</div></div></div><button type="button" class="btn small" data-act="autoplan">${((_g = S.pcfg) == null ? void 0 : _g.autoPlan) ? "✍️ رجعو يدوي" : "🤖 شعل الأوتوماتيك"}</button></div><div class="alert ${((_h = S.pcfg) == null ? void 0 : _h.sminOn) ? "acc" : ""}" style="cursor:default"><div class="lead"><span class="em">⚖️</span><div><b>المخزون الأدنى الأوتوماتيكي: ${((_i = S.pcfg) == null ? void 0 : _i.sminOn) ? "✅ شاعل" : "⛔ مطفي"}</b><div class="muted">${((_j = S.pcfg) == null ? void 0 : _j.sminOn) ? "كل منتوج عندو «⚖️ المخزون الأدنى» فالفيش كيتعاود يتصاوب بوحدو ملي ينقص (أوامر الإنتاج + طلبات الشراء)." : "ملي تشعلو، كل منتوج ميز أون بلاس ولا ممفينيش عندو «⚖️ المخزون الأدنى» فالفيش كيتصاوب بوحدو ملي ينقص."} (${itemsArr().filter((i) => i.kind === "semi" && +i.smin > 0).length} منتوج عندو مخزون أدنى)</div></div></div><button type="button" class="btn small ${((_k = S.pcfg) == null ? void 0 : _k.sminOn) ? "" : "primary"}" data-act="sminon">${((_l = S.pcfg) == null ? void 0 : _l.sminOn) ? "⛔ طفيه" : "▶️ شعل المخزون الأدنى"}</button></div>` : ""}
    <section class="card"><h2>📊 المبرمج مقابل المنتج</h2>${x.rows.length ? x.rows.map((o) => prow(o.id, (() => {
     var _a2;
     const ln = (((_a2 = x.P) == null ? void 0 : _a2.lines) || []).find((l) => l.item === o.id);
@@ -9252,15 +9259,16 @@ function fzRowInfo(f, Q) {
     el.innerHTML = `<span>🔪 ${T}: 1 باطو متور = <b>${fmt(c.N)} قطعة</b> · نص باطو = <b>${fmt(c.H)}</b>${c.chute > 1e-6 ? " · شياطة " + fmt(Math.round(c.chute * 1e3)) + " غ للباطو" : ""}</span>${q > 0 ? `<span>← <b>${sp.ok ? fmt(bt) : fmt(Math.round(q / c.N * 100) / 100)} باطو</b> = ${fmt(Math.round(q * c.per * 100) / 100)} كغ</span>` : ""}${act}${q > 0 && sp.ok ? btn(Math.max(0, q - c.H), "−½ باطو") : ""}${btn(sp.ok ? q + c.H : (sp.a + 1) * c.N, "+½ باطو")}${btn(sp.ok ? q + c.N : (sp.a + 1) * c.N + c.N, "+1 باطو")}${ms > 0 && sp.ok ? btn(q + ms * c.N, "+" + fmt(ms) + " باطو باش تعمّر العجنة (" + fmt(ms * c.N) + ")") : ""}`;
   });
 }
-function sheetFrzPlan(w, d) {
+function sheetFrzPlan(w, d, mode) {
   if (!isMgr()) return;
+  const FG = mode === "frigo";
   const P = planOf(w, d);
   const cur = (P == null ? void 0 : P.frz) || {};
-  const L = itemsArr().filter((i) => i.ws === w && i.kind === "semi" && i.frz && i.active !== false).sort((a, b) => isPre(a) - isPre(b) || String(a.name).localeCompare(String(b.name), "ar"));
+  const L = itemsArr().filter((i) => i.ws === w && i.kind === "semi" && i.active !== false && (FG ? i.store === "frigo" : i.frz && i.store !== "frigo")).sort((a, b) => isPre(a) - isPre(b) || String(a.name).localeCompare(String(b.name), "ar"));
   FZL = L;
   openSheet(
-    "🧊 برنامج التجميد · " + LOC[w] + " · " + d,
-    `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">🧊</span><div><b>شحال غادي يتشكل ويتجمد هاد النهار</b><div class="muted">${L.some((i) => +i.first === 2) ? "دخل بالبواطو الكاملين باش ما تبقاش الشياطة. " : "دخل شحال من حبة غادي تتقطع (بالغرام ديالها) وتتجمد. "}الطياب كيتبع برنامج المحلات وكياخد من المخزون المجمد.</div></div></div></div>
+    (FG ? "❄️ برنامج التبريد · " : "🧊 برنامج التجميد · ") + LOC[w] + " · " + d,
+    `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">${FG ? "❄️" : "🧊"}</span><div><b>${FG ? "شحال غادي يتصاوب ويبات فالفريگو هاد النهار (باش يتطيب غدا)" : "شحال غادي يتشكل ويتجمد هاد النهار"}</b><div class="muted">${L.some((i) => +i.first === 2) ? "دخل بالبواطو الكاملين باش ما تبقاش الشياطة. " : "دخل شحال من حبة غادي تتقطع (بالغرام ديالها) وتتجمد. "}الطياب كيتبع برنامج المحلات وكياخد من المخزون المجمد.</div></div></div></div>
    ${L.map((i) => {
       const isB = +i.first === 3;
       const Yb = yld(i) || 1;
@@ -9268,7 +9276,7 @@ function sheetFrzPlan(w, d) {
     }).join("")}
    <div class="stat" style="background:var(--bg)"><span>🧊 المجموع</span><b class="num" id="fztot">—</b></div><div class="box" id="fzdough" style="gap:4px" hidden></div><div class="box" id="fzbatch" style="gap:8px"></div>${errP}<button class="btn primary block" type="submit">✅ حفظ برنامج التجميد</button>`,
     async (f) => {
-      const frz = {};
+      const frz = Object.fromEntries(Object.entries(cur).filter(([id]) => !L.some((i) => i.id === id)));
       $$("[data-fz]", f).forEach((x) => {
         const q = (num(x.value) || 0) * (+x.dataset.fzb || 1);
         if (q > 0) frz[x.dataset.fz] = q;
@@ -9277,7 +9285,7 @@ function sheetFrzPlan(w, d) {
         const x = $(`[data-fz="${id}"]`, f);
         return x.dataset.fzb && Math.abs(num(x.value) - Math.round(num(x.value))) > 1e-6;
       })) return ferr("🥣 العجنات خاصهم يكونو عدد كامل (1، 2، 3…).");
-      if (Object.keys(frz).length && FZOK !== true && !confirm("⚠️ " + (Array.isArray(FZOK) ? FZOK.join(" · ") : "") + "\n\nغادي تبقى شياطة. الشاف غادي يأكد فالأخير شحال صاوب وشحال شاط ليه. واش تحفظ هكا؟")) return;
+      if (!FG && Object.keys(frz).length && FZOK !== true && !confirm("⚠️ " + (Array.isArray(FZOK) ? FZOK.join(" · ") : "") + "\n\nغادي تبقى شياطة. الشاف غادي يأكد فالأخير شحال صاوب وشحال شاط ليه. واش تحفظ هكا؟")) return;
       busy(f, true);
       try {
         const B = planOf(w, d);
