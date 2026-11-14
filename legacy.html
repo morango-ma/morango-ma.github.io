@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114062220" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114062402" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -8692,6 +8692,9 @@ function sheetClient(back) {
     var _a, _b;
     const id = phoneId(f.cph.value);
     if (id.length < 10) return ferr("دخل النمرة كاملة.");
+    if (!$("#cres", f).innerHTML.trim()) return ferr("⏳ تسنى شوية حتى يبان الزبون.");
+    if (f.cwa && !f.cwa.checked) return ferr("📲 خاص تأكدي بلي النمرة فيها الواتساب.");
+    const waD = f.cwa ? { waOk: true, waBy: meName(), waAt: Date.now() } : {};
     busy(f, true);
     try {
       const ref = db.doc("clients/" + id);
@@ -8700,9 +8703,10 @@ function sheetClient(back) {
       if (cs.exists) {
         cd = cs.data();
         const nm = (((_a = f.cname) == null ? void 0 : _a.value) || "").trim();
-        if (!cd.name && nm) {
-          await ref.update({ name: nm });
-          cd = __spreadProps(__spreadValues({}, cd), { name: nm });
+        const up = __spreadValues(__spreadValues({}, waD), !cd.name && nm ? { name: nm } : {});
+        if (Object.keys(up).length) {
+          await ref.update(up);
+          cd = __spreadValues(__spreadValues({}, cd), up);
         }
       } else {
         const name = (((_b = f.cname) == null ? void 0 : _b.value) || "").trim();
@@ -8710,7 +8714,7 @@ function sheetClient(back) {
           busy(f, false);
           return ferr("كتب سمية الزبون الجديد.");
         }
-        cd = { name, phone: f.cph.value.trim(), points: 0, total: 0, visits: 0, createdTs: Date.now(), by: meName() };
+        cd = __spreadValues({ name, phone: f.cph.value.trim(), points: 0, total: 0, visits: 0, createdTs: Date.now(), by: meName() }, waD);
         await ref.set(cd);
         toast("🎉 زبون جديد فالوفاء");
       }
@@ -8735,7 +8739,7 @@ function sheetClient(back) {
         try {
           const cs = await db.doc("clients/" + id).get();
           if (phoneId(f.cph.value) !== id) return;
-          box.innerHTML = cs.exists ? `${cs.data().name ? "" : inp("cname", "👤 هاد الزبون تسجل من الطابليت بلا سمية، كتب السمية ديالو (اختياري)", "", "text", 'autocomplete="off"')}<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">⭐</span><div><b>${esc(cs.data().name || "زبون الوفاء")}</b><div class="muted num">${fmt(cs.data().points)} نقطة · ${cs.data().visits || 0} زيارة</div></div></div></div>` : `<p class="muted">🆕 زبون جديد، كتب السمية ديالو:</p>${inp("cname", "👤 السمية", "", "text", 'autocomplete="off"')}`;
+          box.innerHTML = cs.exists ? `${cs.data().name ? "" : inp("cname", "👤 هاد الزبون تسجل من الطابليت بلا سمية، كتب السمية ديالو (اختياري)", "", "text", 'autocomplete="off"')}${cs.data().waOk ? "" : `<label class="prow" style="gap:8px;justify-content:flex-start;align-items:flex-start;border:2px solid var(--acc,#e02843);border-radius:12px;padding:10px"><input type="checkbox" id="cwa" name="cwa" style="width:24px;height:24px;flex:none"><span><b>✅ تأكدت بلي هاد النمرة فيها الواتساب</b><br><span class="muted">سولي الزبون، ولا ضغطي «📲 جربي» وشوفي واش كيبان الحساب ديالو.</span></span></label><a class="btn small" target="_blank" rel="noopener" href="https://wa.me/${waNum(f.cph.value)}">📲 جربي فالواتساب</a>`}<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">⭐</span><div><b>${esc(cs.data().name || "زبون الوفاء")}</b><div class="muted num">${fmt(cs.data().points)} نقطة · ${cs.data().visits || 0} زيارة</div></div></div></div>` : `<p class="muted">🆕 زبون جديد، كتب السمية ديالو:</p>${inp("cname", "👤 السمية", "", "text", 'autocomplete="off"')}<label class="prow" style="gap:8px;justify-content:flex-start;align-items:flex-start;border:2px solid var(--acc,#e02843);border-radius:12px;padding:10px"><input type="checkbox" id="cwa" name="cwa" style="width:24px;height:24px;flex:none"><span><b>✅ تأكدت بلي هاد النمرة فيها الواتساب</b><br><span class="muted">سولي الزبون، ولا ضغطي «📲 جربي» وشوفي واش كيبان الحساب ديالو.</span></span></label><a class="btn small" target="_blank" rel="noopener" href="https://wa.me/${waNum(f.cph.value)}">📲 جربي فالواتساب</a>`;
         } catch (_) {
         }
       }, 350);
@@ -8756,7 +8760,7 @@ function vLoyalty() {
   return `<h1>⭐ الوفاء</h1>${bdayCard(30)}<section class="card c2"><div class="head"><h2>${L.on ? "✅ خدام" : "⛔ موقوف"}</h2>${isAdmin() ? '<button class="btn small" data-act="loycfg">⚙️ القواعد</button>' : ""}</div>
    <p style="margin:0">🛍️ النقاط على كل منتوج: <b>${ptsRule()}</b><br>📱 كل تقييم فالطابليت = <b>${fmt(L.fbPts)} نقطة</b><br>🔒 ما كاين حتى خصم أوتوماتيكي: الخصم كيكون غير ملي المسير ولا المشرف كيصادق عليه.</p></section>
    ${!isMgr() ? '<p class="muted">باش تزيد زبون للوفاء، ضغط على «⭐ زبون الوفاء» ملي كتخلص.</p>' : `<div class="stats"><div class="stat"><span>👥 الزبناء</span><b>${cl.length}</b></div><div class="stat"><span>🎁 النقاط عند الزبناء</span><b>${fmt(cl.reduce((s, c) => s + (+c.points || 0), 0))}</b></div></div>
-   <section class="card"><h2>🏆 أحسن الزبناء</h2>${cl.length ? `<ul class="list">${cl.slice(0, 60).map((c) => `<li class="clk" data-act="clmgr" data-id="${c.id}"><div class="lead"><span class="em">${activeVouchers(c).length ? "🎁" : "⭐"}</span><div><b>${esc(c.name || "زبون")}${c.source === "kiosk" ? " · 📱" : ""}</b><div class="muted num">${esc(c.phone || "")} · ${c.visits || 0} زيارة</div></div></div><div style="text-align:end"><b class="num">${fmt(c.points)} نقطة</b><div class="muted num">${money(c.total)}</div></div></li>`).join("")}</ul>` : emptyB("⭐", "مازال ما كاين حتى زبون فالوفاء.")}</section>`}`;
+   <section class="card"><div class="head"><h2>👥 لائحة الزبناء (${cl.length})</h2><span class="tag ${cl.some((c) => !c.waOk) ? "warn" : "good"}">📲 واتساب مأكد: ${cl.filter((c) => c.waOk).length}/${cl.length}</span></div><div class="chips">${[["", "الكل"], ["wa", "✅ واتساب مأكد"], ["nowa", "⚠️ ما مأكدش"]].map(([v, l]) => `<button type="button" class="chip ${(S.clf || "") === v ? "on" : ""}" onclick="S.clf='${v}';render()">${l}</button>`).join("")}</div>${cl.length ? `<ul class="list">${cl.filter((c) => !S.clf || (S.clf === "wa" ? c.waOk : !c.waOk)).map((c) => `<li class="clk" data-act="clmgr" data-id="${c.id}"><div class="lead"><span class="em">${activeVouchers(c).length ? "🎁" : "⭐"}</span><div><b>${esc(c.name || "زبون")}${c.source === "kiosk" ? " · 📱" : ""} ${c.waOk ? '<span class="tag good">✅ واتساب</span>' : '<span class="tag warn">⚠️ واتساب؟</span>'}</b><div class="muted num">${esc(c.phone || "")} · ${c.visits || 0} زيارة${c.createdTs ? " · من " + new Date(c.createdTs).toLocaleDateString("fr-FR") : ""}</div></div></div><div style="text-align:end"><b class="num">${fmt(c.points)} نقطة</b><div class="muted num">${money(c.total)}</div></div></li>`).join("")}</ul>` : emptyB("⭐", "مازال ما كاين حتى زبون فالوفاء.")}</section>`}`;
 }
 function sheetLoyCfg() {
   if (!isAdmin()) return;
