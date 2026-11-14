@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114053019" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114053427" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -8795,9 +8795,33 @@ const dayPay = (w, d) => {
   const mp = monthPay(w, ym(d));
   return { v: mp.v / wDays(w), m: mp.m };
 };
-const planOf = (w, d) => {
+const dpLinesFor = (w, d) => {
+  const M = {};
+  (S.dplans || []).filter((p) => p.date === d).forEach((p) => (p.lines || []).forEach((l) => {
+    const it = S.items[l.item];
+    if ((it == null ? void 0 : it.ws) !== w || it.kind !== "final") return;
+    const x = M[l.item] || (M[l.item] = { item: l.item, qty: 0, dist: {}, slots: {}, fromDp: true });
+    const q = +l.qty || 0;
+    x.qty += q;
+    x.dist[p.pos] = (x.dist[p.pos] || 0) + q;
+    const s0 = x.slots[p.pos] || (x.slots[p.pos] = { m: 0, e: 0 });
+    s0[(p.time || "00:00") < "14:30" ? "m" : "e"] += q;
+  }));
+  return Object.values(M);
+};
+const planRaw = (w, d) => {
   var _a;
   return ((_a = S.plans) == null ? void 0 : _a[w + "_" + d]) || null;
+};
+const planOf = (w, d) => {
+  var _a;
+  const P = ((_a = S.plans) == null ? void 0 : _a[w + "_" + d]) || null;
+  const X = dpLinesFor(w, d);
+  if (!X.length) return P;
+  const have = new Set(((P == null ? void 0 : P.lines) || []).map((l) => l.item));
+  const add = X.filter((l) => !have.has(l.item));
+  if (!add.length) return P;
+  return __spreadProps(__spreadValues({}, P || { ws: w, date: d, auto: false, fromDp: true, frz: null }), { lines: [...(P == null ? void 0 : P.lines) || [], ...add] });
 };
 function sentLines(w, d) {
   const m = {};
@@ -8852,7 +8876,7 @@ function planBasis(w, d) {
 }
 function sheetPlanDel(w, d) {
   if (!isMgr()) return;
-  const P = planOf(w, d);
+  const P = planRaw(w, d);
   if (!P) return toast("ما كاين حتى برنامج");
   const W = WS.find((x) => x.id === w);
   const nl = (P.lines || []).length, nf = Object.keys(P.frz || {}).length;
@@ -9288,7 +9312,7 @@ function sheetFrzPlan(w, d, mode) {
       if (!FG && Object.keys(frz).length && FZOK !== true && !confirm("⚠️ " + (Array.isArray(FZOK) ? FZOK.join(" · ") : "") + "\n\nغادي تبقى شياطة. الشاف غادي يأكد فالأخير شحال صاوب وشحال شاط ليه. واش تحفظ هكا؟")) return;
       busy(f, true);
       try {
-        const B = planOf(w, d);
+        const B = planRaw(w, d);
         if (B) await db.doc("plans/" + w + "_" + d).update({ frz: Object.keys(frz).length ? frz : null, frzBy: meName(), frzTs: Date.now() });
         else if (Object.keys(frz).length) await db.doc("plans/" + w + "_" + d).set({ ws: w, date: d, lines: [], frz, auto: false, by: meName(), byId: me.id, ts: Date.now() });
         closeSheet();
@@ -9839,7 +9863,7 @@ function sheetPlan(w, d, pos) {
   pos = pos || POS[0].id;
   const PS = POS.find((x) => x.id === pos) || POS[0];
   const fin = itemsArr().filter((i) => i.kind === "final" && i.ws === w);
-  const P = planOf(w, d);
+  const P = planRaw(w, d);
   const pm = {};
   ((P == null ? void 0 : P.lines) || []).forEach((l) => {
     const v = +(l.dist || { [POS[0].id]: l.qty })[pos] || 0;
@@ -9882,7 +9906,7 @@ function sheetPlan(w, d, pos) {
       const pf = ((_a2 = f.plpf) == null ? void 0 : _a2.value) || null;
       if (pf && !(pf >= today() && pf < d)) return fail(f, new Error("تاريخ بداية التحضير خاصو يكون بين اليوم ونهار قبل البرنامج."));
       for (const dd of [d, ...more]) {
-        const B = planOf(w, dd);
+        const B = planRaw(w, dd);
         const M = {};
         ((B == null ? void 0 : B.lines) || []).forEach((l) => {
           M[l.item] = __spreadValues({}, l.dist || { [POS[0].id]: l.qty });
@@ -12471,12 +12495,26 @@ function ordRow(ws, o) {
   return `<div class="prow"><div class="lead">${pic(o.id)}<div><b>${esc(iname(o.id))}</b><span class="muted">${o.lvl === "final" && distTxt(ws, o.id, o.day || today()) ? "<b>" + distTxt(ws, o.id, o.day || today()) + "</b><br>" : ""}${L}${stepTag(it)}${!o.cl && o.q > 0 && ((_b = (_a = it == null ? void 0 : it.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) && o.lvl !== "final" && Math.abs(yld(it) - 1) > 1e-9 ? " · 📖 " + fmt(Math.round(o.q / yld(it) * 100) / 100) + " وصفة" : ""} · ${o.cl ? "📋 الأمر " + fmt(o.cl.ordered) + " " + esc((it == null ? void 0 : it.unit) || "") + " · ✅ تصاوب " + fmt(o.cl.done) : `📋 ${left > 0 ? "باقي " + fmt(left) : "سالا"} ${esc((it == null ? void 0 : it.unit) || "")}${o.dn ? " · ✅ تأكد " + fmt(o.dn) : ""}`}${o.cl ? " · " + ORD_RL(o.cl.reason) + (o.cl.note ? " (" + esc(o.cl.note) + ")" : "") : ""}${fsTxt}${o.sl ? "<br>🚚 ☀️ الصباح: <b>" + fmt(o.sl.m) + "</b> · 🌙 العشية: <b>" + fmt(o.sl.e) + "</b>" : ""}${o.wait ? " · 🔒 تسنى حتى يسالا: " + o.wait.slice(0, 3).map((v) => esc(vName(v))).join("، ") : ""}${((_c = o.via) == null ? void 0 : _c.length) ? " · ل: " + (o.vq && o.via.length > 1 ? o.via.map((v) => esc(vName(v)) + " (" + fmt(Math.round((o.vq[v] || 0) * 100) / 100) + ")").join(" + ") + (Math.abs(o.q - Object.values(o.vq).reduce((a, b) => a + b, 0)) > 1e-6 ? " → مقرّب لـ" + fmt(o.q) : "") : o.via.slice(0, 2).map((v) => esc(vName(v))).join("، ")) : ""}</span></div></div>
    ${toSend > 0 ? `<button type="button" class="btn small primary" data-act="ordsend" data-id="${ws}" data-k="${o.id}" data-v="${toSend}">🚚 صيفط ${fmt(toSend)}</button>` : ""}${o.wait ? `<span class="tag" title="تسنى">🔒 تسنى</span>` : o.cl ? `<span class="tag ${o.cl.status === "none" ? "bad" : "warn"}" title="${esc(ORD_RL(o.cl.reason))}">${o.cl.status === "none" ? "❌ ما تصاوبش" : o.cl.status === "more" ? "➕ كثر" : "⚠️ جزئي"}</span>` : left > 0 ? `<button type="button" class="btn small primary" data-act="pord" data-id="${ws}" data-k="${o.id}" data-v="${left}">✅ أكد</button>` : '<span class="tag ok">✅</span>'}</div>`;
 }
+function dpTimesCard(ws) {
+  var _a;
+  const d = today(), now = (/* @__PURE__ */ new Date()).toTimeString().slice(0, 5);
+  const L = (S.dplans || []).filter((p) => p.date === d).map((p) => ({ p, ls: (p.lines || []).filter((l) => {
+    var _a2;
+    return ((_a2 = S.items[l.item]) == null ? void 0 : _a2.ws) === ws;
+  }) })).filter((x) => x.ls.length).sort((a, b) => (a.p.time || "").localeCompare(b.p.time || ""));
+  if (!L.length) return "";
+  const nx = (_a = L.find((x) => dpState(x.p) !== "sent")) == null ? void 0 : _a.p.id;
+  return `<section class="card" style="gap:6px"><h2 style="margin:0">⏰ الإنتاج للبيع حسب الأوقات (${esc(LOC[POS[0].id] || "")})</h2><p class="muted" style="margin:0">كل وقت = شنو خاصو يكون طايب وواجد قبل ديك الساعة.</p>${L.map(({ p, ls }) => {
+    const st = dpState(p), s = dpSent(p), late = dpLate(p);
+    return `<div class="box" style="gap:4px;${p.id === nx ? "border:2px solid var(--acc,#e02843)" : ""}"><div style="display:flex;justify-content:space-between;gap:8px"><b>⏰ ${esc(p.time || "")}${p.id === nx ? " · 👉 الجاي" : ""}</b><span class="tag ${st === "sent" ? "good" : late ? "bad" : st === "part" ? "warn" : ""}">${st === "sent" ? "✅ تصيفط" : late ? "⏰ متأخر" : st === "part" ? "🟡 جزء" : "⏳"}</span></div>${ls.map((l) => `<div style="display:flex;justify-content:space-between;font-size:.92rem"><span>${ico(l.item)} ${esc(iname(l.item).split(" (")[0])}</span><b class="num">${fmt(+s[l.item] || 0)} / ${fmt(l.qty)}</b></div>`).join("")}</div>`;
+  }).join("")}</section>`;
+}
 function ordersHtml(ws) {
   var _a;
   const O = prodOrders(ws);
   const T = ordLock(O.today.filter((o) => o.q > 0 || o.dn || o.cl)), M = ordLock(O.tomorrow.filter((o) => o.q > 0));
   if (!O.hasPlan && !M.length) return `<section class="card"><h2>📋 أوامر الإنتاج ديال اليوم</h2>${emptyB("🗓️", "ما كاين حتى أمر ديال اليوم ولا غدا.")}</section>${ordUpcoming(ws)}`;
-  return `<section class="card"><h2>📋 أوامر الإنتاج ديال اليوم</h2><p class="muted" style="margin-top:0">صاوب بالترتيب: 🥣 الميز أون بلاس ← 🧊 الممفينيش ← 🧁 المفيني. الأمر كيبقى 🔒 مسدود حتى يسالاو الأوامر اللي قبلو. ضغط «✅ أكد» واختار: تسالا كامل، ولا جزئياً، ولا ما تصاوبش (مع السبب).</p>${T.length ? T.map((o) => ordRow(ws, o)).join("") : '<p class="muted">✅ سالاو كاملين.</p>'}</section>
+  return `${dpTimesCard(ws)}<section class="card"><h2>📋 أوامر الإنتاج ديال اليوم</h2><p class="muted" style="margin-top:0">صاوب بالترتيب: 🥣 الميز أون بلاس ← 🧊 الممفينيش ← 🧁 المفيني. الأمر كيبقى 🔒 مسدود حتى يسالاو الأوامر اللي قبلو. ضغط «✅ أكد» واختار: تسالا كامل، ولا جزئياً، ولا ما تصاوبش (مع السبب).</p>${T.length ? T.map((o) => ordRow(ws, o)).join("") : '<p class="muted">✅ سالاو كاملين.</p>'}</section>
    ${manFrz(ws) && ((_a = planOf(ws, today())) == null ? void 0 : _a.frz) ? dcloseCard(ws) : ""}${M.length ? `<section class="card"><h2>🌙 تحضير ديال غدا (ميز أون بلاس وممفينيش)</h2><p class="muted" style="margin-top:0">تقدر تصاوبهم من اليوم.</p>${M.map((o) => ordRow(ws, o)).join("")}</section>` : ""}${ordUpcoming(ws)}`;
 }
 const CHUTE = { s_pate_vien_t: "s_chute_vien", s_pate_vien_tc: "s_chute_vien", s_pate_feuil_t: "s_chute_feuil" };
@@ -13162,7 +13200,7 @@ async function runAutoPlans(wss) {
   for (const ws of wss) {
     const P = autoPlanFor(ws);
     for (const d of weekDays()) {
-      const cur = planOf(ws, d);
+      const cur = planRaw(ws, d);
       if (cur && !cur.auto) continue;
       const lines = P[d];
       if (!lines.length) {
