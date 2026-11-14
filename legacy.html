@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114063355" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114065813" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -5927,7 +5927,6 @@ function rosterTodayCard() {
   return `<section class="card"><div class="head"><h2>📅 النوبة ديالك</h2><button type="button" class="btn small" data-act="myplan">📅 البلانينگ ←</button></div>${L.map((x) => `<div class="prow"><div><b>${x.d === today() ? "اليوم" : "غدا"} · ${x.ic} ${x.l}</b><div class="muted">${esc(LOC[x.p])}</div></div><span class="tag ${RTAG[x.r][2]}">${RTAG[x.r][0]} ${RTAG[x.r][1]}</span></div>`).join("")}</section>`;
 }
 function sheetMyPlan() {
-  var _a;
   if (!me) return;
   const p = me.loc, sh = p && openShift(p);
   const W = rosterMine(me.id, wkMon(today()), 14).filter((x) => x.d >= today()).slice(0, 10);
@@ -5935,8 +5934,7 @@ function sheetMyPlan() {
   if (sh) {
     const C = VC();
     if (C.on) {
-      const last = ((_a = S.vit.find((v) => v.pos === p && v.date === today())) == null ? void 0 : _a.ts) || 0;
-      const nx = Math.max(last, sh.openTs) + C.interval * 6e4;
+      const nx = vitNext();
       const late = vitDue(p);
       T.push([late ? "bad" : "", "📸", "تصوير الفيترينة والكولوار والبلاصة ديال الزبناء", late ? "دابا! " + (late.lock ? "البيع مسدود" : "") : "الجاي: " + hm(nx)]);
     }
@@ -14819,19 +14817,35 @@ function vitSections(p) {
   const has = new Set(itemsArr().filter((i) => i.kind === "final").map((i) => i.ws));
   return [...WS.filter((w) => has.has(w.id)), ...VAREA];
 }
+const vitIvH = () => Math.max(1, Math.round((+VC().interval || 60) / 60));
+const vitTop = (ts) => {
+  const d = new Date(ts);
+  d.setMinutes(0, 0, 0);
+  d.setHours(d.getHours() - d.getHours() % vitIvH());
+  return d.getTime();
+};
+const vitNext = () => {
+  const C = VC();
+  let t = vitTop(Date.now()) + vitIvH() * 36e5;
+  if (C.start && t < +C.start) t = +C.start;
+  return t;
+};
 function vitDue(p) {
   var _a;
   const C = VC();
   if (!C.on) return null;
   const sh = openShift(p);
   if (!sh) return null;
-  const last = ((_a = S.vit.find((v) => v.pos === p && v.date === today())) == null ? void 0 : _a.ts) || null;
-  const from = Math.max(last || 0, sh.openTs);
-  const el = Date.now() - from;
-  const iv = C.interval * 6e4;
-  if (el < iv) return null;
-  const late = el >= iv + (+C.grace || 10) * 6e4;
-  return { last, late, lock: late && C.lock !== false, lateMs: el - iv, lockAt: from + iv + (+C.grace || 10) * 6e4 };
+  const now = Date.now();
+  if (C.start && now < +C.start) return null;
+  const slot = vitTop(now);
+  if (C.start && slot < +C.start) return null;
+  if (slot < sh.openTs - 10 * 6e4) return null;
+  const last = ((_a = S.vit.find((v) => v.pos === p && v.ts >= slot - 10 * 6e4)) == null ? void 0 : _a.ts) || null;
+  if (last) return null;
+  const gr = (+C.grace || 10) * 6e4;
+  const late = now >= slot + gr;
+  return { last, late, lock: late && C.lock !== false, lateMs: now - slot, lockAt: slot + gr };
 }
 const vitLocked = (p) => {
   var _a;
@@ -15177,7 +15191,7 @@ function sheetVitCfg() {
    ${choice("vcrm", "🔔 تذكير البايعات (رتبي، نقي، شوفي النظافة)", [0, 15, 20, 30, 45, 60].map((m) => ({ v: String(m), l: m ? "كل " + m + " دقيقة" : "موقوف", i: m ? "🔔" : "⛔" })), String(RMD_MIN()), 3)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`, async (f) => {
     busy(f, true);
     try {
-      await db.doc("config/vitrine").set({ on: f.vcon.value === "1", interval: +f.vciv.value, lock: f.vclk.value === "1", grace: +f.vcgr.value, remind: +f.vcrm.value });
+      await db.doc("config/vitrine").set(__spreadProps(__spreadValues({}, S.vitcfg || {}), { on: f.vcon.value === "1", interval: +f.vciv.value, lock: f.vclk.value === "1", grace: +f.vcgr.value, remind: +f.vcrm.value }));
       closeSheet();
       toast("✅ تحفظ");
     } catch (e) {
