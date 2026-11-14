@@ -392,7 +392,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114212959" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114220824" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -11161,7 +11161,7 @@ function sheetClose0() {
   const packs = itemsArr().filter((i) => i.kind === "pack" && (m[i.id] || 0) !== 0).map((i) => i.id);
   const TKs = sh.tickets || [];
   const night = sh.team === "مسائية";
-  const nexts = usersArr().filter((u) => u.role === "seller" && u.name !== sh.seller).map((u) => ({ v: u.name, l: u.name, i: "🛍️" }));
+  const nexts = [...usersArr().filter((u) => u.role === "seller" && u.name !== sh.seller).map((u) => ({ v: u.name, l: u.name, i: "🛍️" })), { v: "-", l: "سد نهائي ديال النهار", i: "🔚" }];
   const GRP = [];
   ids.forEach((id) => {
     var _a2;
@@ -11176,7 +11176,7 @@ function sheetClose0() {
   });
   const STP = (n, last) => `<div class="btns" style="margin-top:6px">${n > 1 ? `<button type="button" class="btn" data-stp="-1">→ رجع</button>` : ""}${last ? `<button class="btn primary" type="submit">🔒 سد النوبة</button>` : `<button type="button" class="btn primary" data-stp="1">التالي ←</button>`}</div>`;
   openSheet(night ? "🌙 إغلاق النوبة · جرد الليل" : "🔒 إغلاق النوبة · جرد التسليم", `<div data-step="1" style="display:flex;flex-direction:column;gap:10px">${night ? `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🌙</span><div><b>جرد الليل إجباري</b><div class="muted">حسبي كل منتوج باقي فالمحل بيدك. كلشي اللي حسبتي غادي يتسجل <b>مرتجع (retour)</b> ويرجع للورشة ديالو، والمحل غادي يبقى خاوي لغدا.</div></div></div></div>` : `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🤝</span><div><b>جرد التسليم بين الصباح والعشية (Inventaire inter-passation) إجباري</b><div class="muted">حسبي كل منتوج، التغليف والفلوس بيدك مع البائعة اللي غادي تستلم من بعدك. إلا كان كلشي صحيح، الصندوق كيتسد. إلا كان شي فرق، الصندوق ما كيتسدش والإدارة كتوصلها نوتيفيكاسيون.</div></div></div></div>
-   ${choice("cnext", "🤝 شكون غادي تستلم المحل من بعدك؟", nexts.length ? nexts : [{ v: "-", l: "ما كاينة حتى بائعة أخرى", i: "—" }], ((_a = nexts[0]) == null ? void 0 : _a.v) || "-", 3)}`}${TKs.length ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📋</span><div><b>🧾 ${TKs.length} وصل فهاد النوبة</b><div class="muted">${TKs[0].no ? "من " + esc(rNo(TKs[0])) + " حتى " + esc(rNo(TKs[TKs.length - 1])) : ""} · المجموع ${money(sumTickets(sh))}</div></div></div></div>` : ""}
+   ${choice("cnext", "🤝 شكون غادي تستلم المحل من بعدك؟", nexts, isMgr() ? "-" : ((_a = nexts[0]) == null ? void 0 : _a.v) || "-", 3)}`}${TKs.length ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📋</span><div><b>🧾 ${TKs.length} وصل فهاد النوبة</b><div class="muted">${TKs[0].no ? "من " + esc(rNo(TKs[0])) + " حتى " + esc(rNo(TKs[TKs.length - 1])) : ""} · المجموع ${money(sumTickets(sh))}</div></div></div></div>` : ""}
    <h3 style="margin:0">🧺 الخطوة 1: جرد السلعة</h3>${ids.length ? GRP.map((g) => `<div data-grp="${g.id}" style="border:1px solid var(--line,#eee);border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;gap:6px"><b>${g.i} ${esc(g.name)}</b>${g.ids.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("")}${photoField("nret_" + g.id, night ? "📷 صورة " + g.name + " اللي راجعة (retour)" : "📷 صورة الفيترينة ديال " + g.name + " (التسليم)")}</div>`).join("") : emptyB("🧺", "ما كاين حتى منتوج.")}
    ${STP(1, false)}</div>
    <div data-step="2" hidden style="display:flex;flex-direction:column;gap:10px">${packs.length ? `<h3 style="margin:0">📦 الخطوة 2: جرد التغليف واللوازم</h3><div>${packs.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("")}</div>` : ""}${STP(2, false)}</div>
@@ -11210,7 +11210,7 @@ function sheetClose0() {
     const { stockDiff, packDiff } = closeDiffs(counted, theo);
     const salesCost = Math.round((sh.tickets || []).reduce((s, t) => s + t.lines.reduce((a, l) => a + l.qty * (+l.unitCost || 0) + (+l.packCost || 0), 0), 0) * 100) / 100;
     const salesT = r2(sumTickets(sh)), expected = r2((+sh.float || 0) + salesT + (sh.ocash || []).reduce((a, c) => a + (+c.amt || 0), 0)), cashDiff = r2(cash - expected);
-    if (!night && (Math.abs(cashDiff) >= 0.01 || stockDiff.length || packDiff.length)) {
+    if (!night && !isMgr() && (Math.abs(cashDiff) >= 0.01 || stockDiff.length || packDiff.length)) {
       busy(f, true);
       try {
         const passPhotos = {};
