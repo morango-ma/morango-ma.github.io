@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114151745" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114152346" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -14659,11 +14659,18 @@ function ntfDraw() {
     d.id = "ntf";
     document.body.appendChild(d);
   }
-  d.style.cssText = "position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;background:rgba(20,8,12,.55);display:flex;align-items:center;justify-content:center;padding:16px";
+  d.style.cssText = "position:fixed;z-index:9000;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);inset-inline-end:12px;width:min(360px,calc(100vw - 24px));pointer-events:none";
   const n = NTF[0];
-  d.innerHTML = `<div role="alertdialog" aria-live="assertive" style="background:var(--surface,#fff);border-radius:20px;max-width:420px;width:100%;padding:22px 18px;display:flex;flex-direction:column;gap:12px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);border:3px solid var(--bad,#e02843)"><div style="font-size:3.6rem;line-height:1">${n.ic}</div><h2 style="margin:0">${esc(n.title)}</h2>${n.text ? `<p style="margin:0;color:var(--muted,#7a5a62)">${esc(n.text)}</p>` : ""}<div class="muted" style="font-size:.85rem">${hm(n.ts)}${NTF.length > 1 ? " · كاينين " + (NTF.length - 1) + " تنبيهات أخرين" : ""}</div>${n.act ? `<button type="button" class="btn block" id="ntfgo">${esc(n.act[1])}</button>` : ""}<button type="button" class="btn primary block" id="ntfok" style="min-height:58px;font-size:1.2rem">✅ OK</button></div>`;
-  d.querySelector("#ntfok").onclick = () => {
+  d.innerHTML = `<div role="alert" aria-live="assertive" style="pointer-events:auto;background:var(--surface,#fff);border-radius:16px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 10px 30px rgba(0,0,0,.25);border:2px solid var(--bad,#e02843)"><div style="font-size:1.7rem;line-height:1">${n.ic}</div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><b style="font-size:.95rem">${esc(n.title)}</b>${n.text ? `<span class="muted" style="font-size:.82rem">${esc(n.text)}</span>` : ""}<span class="muted" style="font-size:.72rem">${hm(n.ts)}${NTF.length > 1 ? " · +" + (NTF.length - 1) + " تنبيهات" : ""}</span><div style="display:flex;gap:6px;flex-wrap:wrap">${n.act ? `<button type="button" class="btn small primary" id="ntfgo">${esc(n.act[1])}</button>` : ""}<button type="button" class="btn small" id="ntfok">✅ OK</button>${NTF.length > 1 ? `<button type="button" class="btn small" id="ntfall">🔕 كلشي</button>` : ""}</div></div><button type="button" class="link" id="ntfx" aria-label="سد" style="font-size:1.1rem">✖️</button></div>`;
+  const ok = () => {
     NTF.shift();
+    ntfDraw();
+  };
+  d.querySelector("#ntfok").onclick = ok;
+  d.querySelector("#ntfx").onclick = ok;
+  const al = d.querySelector("#ntfall");
+  if (al) al.onclick = () => {
+    NTF.length = 0;
     ntfDraw();
   };
   const g = d.querySelector("#ntfgo");
