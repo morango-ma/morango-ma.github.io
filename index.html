@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114071629"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114072018"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -958,7 +958,9 @@ async function doSetup(){
   try{const ref=db.collection('users').doc();await ref.set({name,role:'admin',loc:'',color:0,active:true,ts:Date.now()});await window.morangoPin.set(ref.id,pin);try{localStorage.setItem('bk-uid',ref.id)}catch(_){}S.view='home';S.users[ref.id]={id:ref.id,name,role:'admin',loc:'',color:0,active:true};setMe();render();toast('مرحبا '+name+' 🎉')}catch(er){e.textContent='ما تسجلش الحساب: '+(er.code||er.message);e.hidden=false}
 }
 /* ===== dispatch programme (برنامج الإرسال): the manager plans what goes to each shop and at what time; the agent sends it ===== */
-const dpSent=p=>p.sent||{};
+/* what reached each timed delivery: every transfer of the day to that shop counts (sent from the dispatch page or straight from a production order), given to the deliveries in time order */
+const dpAlloc=(d,pos)=>{const tot={};S.ops.filter(o=>o.type==='transfer'&&o.date===d&&o.pos===pos&&o.status!=='cancel').forEach(o=>(o.lines||[]).forEach(l=>tot[l.item]=(tot[l.item]||0)+(+l.qty||0)));const A={};(S.dplans||[]).filter(p=>p.date===d&&p.pos===pos).sort((a,b)=>(a.time||'').localeCompare(b.time||'')).forEach(p=>{const m=A[p.id]={};(p.lines||[]).forEach(l=>{const x=Math.min(tot[l.item]||0,+l.qty||0);if(x>0){m[l.item]=r2(x);tot[l.item]=r2(tot[l.item]-x)}})});return A};
+const dpSent=p=>{const own=p.sent||{},al=dpAlloc(p.date,p.pos)[p.id]||{};const o={...own};for(const k in al)o[k]=Math.max(+o[k]||0,al[k]);return o};
 const dpState=p=>{const L=p.lines||[];const s=dpSent(p);const done=L.filter(l=>(+s[l.item]||0)>=l.qty-1e-9).length;return !done?'todo':done===L.length?'sent':'part'};
 const dpLate=p=>dpState(p)!=='sent'&&(p.date<today()||(p.date===today()&&(p.time||'99:99')<new Date().toTimeString().slice(0,5)));
 const dpSoon=p=>{if(dpState(p)==='sent'||p.date!==today())return false;const [h,m]=(p.time||'0:0').split(':').map(Number);const t=new Date();t.setHours(h,m,0,0);return t-Date.now()<=30*60000};
