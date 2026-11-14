@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114063355"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114065813"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1685,7 +1685,7 @@ async function rosCopy(){const p=S.rosP,w0=S.rosW;if(!confirm('ننسخو الن
 function rosterTodayCard(){if(me?.role!=='seller')return '';const L=rosterMine(me.id,today(),2);if(!L.length)return '';return `<section class="card"><div class="head"><h2>📅 النوبة ديالك</h2><button type="button" class="btn small" data-act="myplan">📅 البلانينگ ←</button></div>${L.map(x=>`<div class="prow"><div><b>${x.d===today()?'اليوم':'غدا'} · ${x.ic} ${x.l}</b><div class="muted">${esc(LOC[x.p])}</div></div><span class="tag ${RTAG[x.r][2]}">${RTAG[x.r][0]} ${RTAG[x.r][1]}</span></div>`).join('')}</section>`}
 /* seller: my planning and what I have to do now */
 function sheetMyPlan(){if(!me)return;const p=me.loc,sh=p&&openShift(p);const W=rosterMine(me.id,wkMon(today()),14).filter(x=>x.d>=today()).slice(0,10);
-  const T=[];if(sh){const C=VC();if(C.on){const last=S.vit.find(v=>v.pos===p&&v.date===today())?.ts||0;const nx=Math.max(last,sh.openTs)+C.interval*60000;const late=vitDue(p);T.push([late?'bad':'','📸','تصوير الفيترينة والكولوار والبلاصة ديال الزبناء',late?'دابا! '+(late.lock?'البيع مسدود':''):'الجاي: '+hm(nx)])}
+  const T=[];if(sh){const C=VC();if(C.on){const nx=vitNext();const late=vitDue(p);T.push([late?'bad':'','📸','تصوير الفيترينة والكولوار والبلاصة ديال الزبناء',late?'دابا! '+(late.lock?'البيع مسدود':''):'الجاي: '+hm(nx)])}
     const TD=tempDue(p);if(TD.length)T.push(['bad','🌡️','سجلي الحرارة ديال الفيترينات المبردة','دابا']);
     const mb=(S.bons||[]).filter(b=>b.pos===p&&b.byId===me.id&&b.status==='open');if(mb.length)T.push([mb.some(b=>bonAge(b)>=BON_LATE)?'bad':'warn','📝',mb.length+' بون ما زال ما تخلص','تنسقي مع لاكيس']);
     if(posMode(p)==='c'){const ob=bonsOf(p,'open');if(ob.length)T.push(['warn','🧾',ob.length+' بون كيتسنا الخلاص فلاكيس','']);}
@@ -3616,8 +3616,12 @@ function sheetRefill(){const p=me.loc?.[0]==='p'?me.loc:S.pos;const outs=openOut
 const VAREA=[{id:'cor',name:'الكولوار ديال الخدمة (اللور ديال الكونطوار)',i:'🚶',area:true},{id:'cli',name:'البلاصة ديال الزبناء (القدام والأرض)',i:'🛍️',area:true}];
 const vsIcon=w=>VAREA.find(a=>a.id===w)?.i||LOCI[w]||'';
 function vitSections(p){const has=new Set(itemsArr().filter(i=>i.kind==='final').map(i=>i.ws));return [...WS.filter(w=>has.has(w.id)),...VAREA]}
-function vitDue(p){const C=VC();if(!C.on)return null;const sh=openShift(p);if(!sh)return null;const last=S.vit.find(v=>v.pos===p&&v.date===today())?.ts||null;const from=Math.max(last||0,sh.openTs);const el=Date.now()-from;const iv=C.interval*60000;
-  if(el<iv)return null;const late=el>=iv+(+C.grace||10)*60000;return{last,late,lock:late&&C.lock!==false,lateMs:el-iv,lockAt:from+iv+(+C.grace||10)*60000}}
+/* vitrine photos on the clock: every «interval» (e.g. 2 h → 12:00, 14:00, 16:00…), starting from C.start */
+const vitIvH=()=>Math.max(1,Math.round((+VC().interval||60)/60));
+const vitTop=ts=>{const d=new Date(ts);d.setMinutes(0,0,0);d.setHours(d.getHours()-d.getHours()%vitIvH());return d.getTime()};
+const vitNext=()=>{const C=VC();let t=vitTop(Date.now())+vitIvH()*3600000;if(C.start&&t<+C.start)t=+C.start;return t};
+function vitDue(p){const C=VC();if(!C.on)return null;const sh=openShift(p);if(!sh)return null;const now=Date.now();if(C.start&&now<+C.start)return null;const slot=vitTop(now);if(C.start&&slot<+C.start)return null;if(slot<sh.openTs-10*60000)return null;
+  const last=S.vit.find(v=>v.pos===p&&v.ts>=slot-10*60000)?.ts||null;if(last)return null;const gr=(+C.grace||10)*60000;const late=now>=slot+gr;return{last,late,lock:late&&C.lock!==false,lateMs:now-slot,lockAt:slot+gr}}
 const vitLocked=p=>!!vitDue(p)?.lock;
 function sheetVitShot(){const p=me.loc?.[0]==='p'?me.loc:S.pos;const secs=vitSections(p);if(!secs.length)return toast('ما كاين حتى منتوج فالكتالوج',true);
   openSheet('📸 تصوير الفيترينة · '+LOC[p],`<p class="muted" style="margin:0">صوري كل جزء من الفيترينة (السلعة مرتبة، معمرة، ونقية)، والكولوار فين كتخدمي، والبلاصة فين كيوقف الزبون. الصور كتوصل للمسير.</p>
@@ -3717,7 +3721,7 @@ function sheetVitCfg(){if(!isAdmin())return;const C=VC();
    ${choice('vclk','إلا تأخرات البايعة',[{v:'1',l:'البيع كيتسد',i:'🔒'},{v:'0',l:'غير تنبيه',i:'🔔'}],C.lock!==false?'1':'0',2)}
    ${choice('vcgr','كيتسد من بعد',[5,10,15,30].map(m=>({v:String(m),l:m+' دقيقة',i:'⏳'})),String(C.grace||10),4)}
    ${choice('vcrm','🔔 تذكير البايعات (رتبي، نقي، شوفي النظافة)',[0,15,20,30,45,60].map(m=>({v:String(m),l:m?'كل '+m+' دقيقة':'موقوف',i:m?'🔔':'⛔'})),String(RMD_MIN()),3)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,async f=>{
-    busy(f,true);try{await db.doc('config/vitrine').set({on:f.vcon.value==='1',interval:+f.vciv.value,lock:f.vclk.value==='1',grace:+f.vcgr.value,remind:+f.vcrm.value});closeSheet();toast('✅ تحفظ')}catch(e){fail(f,e)}})}
+    busy(f,true);try{await db.doc('config/vitrine').set({...(S.vitcfg||{}),on:f.vcon.value==='1',interval:+f.vciv.value,lock:f.vclk.value==='1',grace:+f.vcgr.value,remind:+f.vcrm.value});closeSheet();toast('✅ تحفظ')}catch(e){fail(f,e)}})}
 /* ---------- shop packaging & supplies: stock per shop, requests to purchasing, inventory (consumption = expected - counted) ---------- */
 const packPos=()=>me.role==='seller'?me.loc:(S.ppos||S.pos);
 function vPack(){const p=packPos();const m=stockMap(p);const items=itemsArr().filter(i=>i.kind==='pack');const canSw=me.role!=='seller';
