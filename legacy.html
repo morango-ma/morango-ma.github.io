@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114083051" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114093025" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3442,7 +3442,7 @@ function sheetDpEdit(id) {
   const fin = itemsArr().filter((i) => i.kind === "final" && i.active !== false);
   const G = WS.map((w) => ({ w, L: fin.filter((i) => i.ws === w.id) })).filter((g) => g.L.length);
   openSheet(p ? "✏️ بدل الإرسال" : "➕ إرسال مبرمج", `${choice("dpp", "🏪 لفين؟", POS.map((x) => ({ v: x.id, l: x.name, i: x.i })), (p == null ? void 0 : p.pos) || "p1", 2)}<div class="two">${inp("dpd", "📅 النهار", (p == null ? void 0 : p.date) || S.dpd || today(), "date")}${inp("dpt", "⏰ الساعة", (p == null ? void 0 : p.time) || "", "time")}</div>
-   ${inp("dpf", "🔍 قلب على منتوج", "", "text", 'autocomplete="off"')}${G.map((g) => `<details class="box" ${g.L.some((i) => q[i.id]) ? "open" : ""}><summary style="cursor:pointer;font-weight:700">${g.w.i} ${esc(g.w.name)} <span class="muted">(${g.L.length})</span></summary>${g.L.map((i) => `<div data-dpr data-n="${esc(i.name.toLowerCase())}">${prow(i.id, `<span class="muted">فالمخزون ${fmt(stockOf(i.ws, i.id))}</span>`, stepper("data-dq", i.id, q[i.id] ? fmt(q[i.id]) : "", i.unit))}</div>`).join("")}</details>`).join("")}
+   ${inp("dpf", "🔍 قلب على منتوج", "", "text", 'autocomplete="off"')}${G.map((g) => `<details class="box" ${g.L.some((i) => q[i.id]) ? "open" : ""}><summary style="cursor:pointer;font-weight:700">${g.w.i} ${esc(g.w.name)} <span class="muted">(${g.L.length})</span></summary>${g.L.map((i) => `<div data-dpr data-n="${esc((i.name + " " + (i.fr || "")).toLowerCase())}">${prow(i.id, `<span class="muted">فالمخزون ${fmt(stockOf(i.ws, i.id))}</span>`, stepper("data-dq", i.id, q[i.id] ? fmt(q[i.id]) : "", i.unit))}</div>`).join("")}</details>`).join("")}
    ${fld("dpn", "📝 ملاحظة (اختيارية)", `<textarea id="dpn" name="dpn" rows="2">${esc((p == null ? void 0 : p.note) || "")}</textarea>`)}${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`, async (f) => {
     const lines = $$("input[data-dq]", f).map((i) => ({ item: i.dataset.dq, qty: num(i.value) })).filter((l) => l.qty > 0);
     const date = f.dpd.value, time = f.dpt.value;
@@ -4076,7 +4076,7 @@ function vPos() {
   const pc2 = cl2.length ? [{ id: "", name: "الكل", i: "🧁" }, ...cl2] : [];
   const P2 = pc2.some((x) => x.id === S.pcat2) ? S.pcat2 : "";
   const SM = soldMap(p, daysAgo(13));
-  const prods = itemsArr().filter((i) => i.kind === "final" && +i.price > 0 && (S.pcat === "all" || i.ws === S.pcat) && (!P2 || i.cat === P2) && (!q || i.name.includes(q))).sort((a, b) => (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
+  const prods = itemsArr().filter((i) => i.kind === "final" && +i.price > 0 && (S.pcat === "all" || i.ws === S.pcat) && (!P2 || i.cat === P2) && (!q || (i.name + " " + (i.fr || "")).toLowerCase().includes(q.toLowerCase()))).sort((a, b) => (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
   const TOP = new Set(prods.filter((i) => SM[i.id] > 0).slice(0, 5).map((i) => i.id));
   const VO = me.role === "seller" && posMode(p) === "v";
   const HC = helperPending(me.id);
@@ -11941,7 +11941,7 @@ function sheetBundle(id) {
   const B = (ed == null ? void 0 : ed.bundle) || {};
   const L = itemsArr().filter((i) => i.kind === "final" && i.active !== false && !i.bundle && +i.price > 0).sort((a, b) => a.name.localeCompare(b.name));
   let pick = B.item || null;
-  openSheet(ed ? "✏️ بدل الباك" : "📦 باك جديد", `${inp("bq", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div style="max-height:30vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-bp="${i.id}" data-n="${esc(i.name.toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit;${pick === i.id ? "outline:3px solid var(--acc,#e02843)" : ""}"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}</b></div><span class="num muted">${money(i.price)}</span></button>`).join("")}</div>
+  openSheet(ed ? "✏️ بدل الباك" : "📦 باك جديد", `${inp("bq", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div style="max-height:30vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-bp="${i.id}" data-n="${esc((i.name + " " + (i.fr || "")).toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit;${pick === i.id ? "outline:3px solid var(--acc,#e02843)" : ""}"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}</b></div><span class="num muted">${money(i.price)}</span></button>`).join("")}</div>
    <div id="bsel" class="muted">${pick ? "✅ <b>" + esc(iname(pick)) + "</b>" : "👆 اختار المنتوج"}</div>
    <div class="two">${fld("bqty", "🔢 شحال من حبة فالباك", `<input name="bqty" class="big-in" inputmode="decimal" value="${B.qty ? fmt(B.qty) : ""}">`)}${moneyIn("bpu", "💰 ثمن الحبة فالباك", B.pu ? fmt(B.pu) : "")}</div>
    <div id="btot" class="box" style="gap:4px"></div>${inp("bname", "🏷️ السمية ديال الباك (اختيارية)", (ed == null ? void 0 : ed.name) || "", "text", 'autocomplete="off"')}${errP}<button class="btn primary block" type="submit">✅ حفظ الباك</button>`, async (f) => {
@@ -12080,7 +12080,7 @@ function sheetTasting() {
   if (!p || !LOC[p]) return toast("اختار المحل", true);
   const L = itemsArr().filter((i) => i.kind === "final" && i.active !== false && stockOf(p, i.id) > 0).sort((a, b) => a.name.localeCompare(b.name));
   openSheet("🍰 التذوق (Dégustation) · " + LOC[p], `<p class="muted" style="margin:0">السلعة اللي خرجات للتذوق ديال الزبناء. كتنقص من المخزون وما كتبانش فرق فلاكيس.</p>${inp("tq", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}
-   <div style="max-height:46vh;overflow:auto">${L.length ? L.map((i) => `<div data-tr data-n="${esc(i.name.toLowerCase())}">${prow(i.id, `<span class="muted">فالمحل ${fmt(stockOf(p, i.id))}</span>`, stepper("data-tg", i.id, "", i.unit))}</div>`).join("") : emptyB("🧺", "ما كاين حتى منتوج فالمحل.")}</div>
+   <div style="max-height:46vh;overflow:auto">${L.length ? L.map((i) => `<div data-tr data-n="${esc((i.name + " " + (i.fr || "")).toLowerCase())}">${prow(i.id, `<span class="muted">فالمحل ${fmt(stockOf(p, i.id))}</span>`, stepper("data-tg", i.id, "", i.unit))}</div>`).join("") : emptyB("🧺", "ما كاين حتى منتوج فالمحل.")}</div>
    ${fld("tnote", "📝 ملاحظة (اختيارية)", '<textarea id="tnote" name="tnote" rows="2" placeholder="مثلاً: قطعتها على 8 للتذوق"></textarea>')}${photoField("tph", "📷 صورة (اختيارية)")}${errP}<button class="btn primary block" type="submit">✅ سجل التذوق</button>`, async (f) => {
     const lines = $$("input[data-tg]", f).map((i) => ({ item: i.dataset.tg, qty: num(i.value) })).filter((l) => l.qty > 0);
     if (!lines.length) return ferr("دخل الكمية ديال منتوج واحد على الأقل.");
@@ -13339,7 +13339,7 @@ function searchAll(q) {
   if (!Q) return R;
   R.pages = searchPages().filter((p) => nrm(p.t).includes(Q)).slice(0, 8);
   const r = me.role, mine = r === "ws" ? myLocs() : null;
-  R.items = Object.values(S.items).filter((i) => i.active !== false && (nrm(i.name).includes(Q) || nrm(i.id).includes(Q)) && (!mine || isBought(i.kind) || mine.includes(i.ws))).sort((a, b) => nrm(a.name).indexOf(Q) - nrm(b.name).indexOf(Q)).slice(0, 12);
+  R.items = Object.values(S.items).filter((i) => i.active !== false && (nrm(i.name + " " + (i.fr || "")).includes(Q) || nrm(i.id).includes(Q)) && (!mine || isBought(i.kind) || mine.includes(i.ws))).sort((a, b) => nrm(a.name).indexOf(Q) - nrm(b.name).indexOf(Q)).slice(0, 12);
   R.lots = Object.values(S.lotm || {}).filter((l) => {
     var _a;
     return l.status !== "closed" && (nrm(l.n).includes(Q) || nrm((_a = S.items[l.item]) == null ? void 0 : _a.name).includes(Q));
@@ -14733,7 +14733,7 @@ function sheetVmin() {
     `<p class="muted" style="margin:0">كتب شحال خاص يبقى على الأقل من كل منتوج فكل محل. ملي يوصل ليه ولا ينقص، البايعات والإدارة كيتوصلو بتنبيه «قرب يسالي». خلي خاوي = بلا تنبيه.</p>
    <div class="field"><input id="vmq" class="big-in" placeholder="🔍 قلب على منتوج" autocomplete="off" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px"></div>
    ${Object.entries(byW).map(([w, list]) => `<div class="box" style="gap:4px"><h3 style="margin:0">${LOCI[w] || ""} ${esc(LOC[w] || "")}</h3><div style="display:grid;grid-template-columns:1fr ${POS.map(() => "80px").join(" ")};gap:6px;align-items:center"><span></span>${POS.map((x) => `<b style="text-align:center;font-size:.8rem">${x.i} ${esc(x.name.split(" ")[0])}</b>`).join("")}
-     ${list.sort((a, b) => String(a.name).localeCompare(String(b.name), "fr")).map((i) => `<span data-vmr="${esc(nrm(i.name))}" style="font-size:.92rem">${ico(i.id)} ${esc(i.name)}</span>${POS.map((x) => `<input data-vm="${i.id}" data-p="${x.id}" data-vmr2="${esc(nrm(i.name))}" class="qty" inputmode="numeric" style="width:76px;height:42px" value="${minOf(i, x.id) || ""}" placeholder="—">`).join("")}`).join("")}</div></div>`).join("")}
+     ${list.sort((a, b) => String(a.name).localeCompare(String(b.name), "fr")).map((i) => `<span data-vmr="${esc(nrm(i.name + " " + (i.fr || "")))}" style="font-size:.92rem">${ico(i.id)} ${esc(i.name)}</span>${POS.map((x) => `<input data-vm="${i.id}" data-p="${x.id}" data-vmr2="${esc(nrm(i.name + " " + (i.fr || "")))}" class="qty" inputmode="numeric" style="width:76px;height:42px" value="${minOf(i, x.id) || ""}" placeholder="—">`).join("")}`).join("")}</div></div>`).join("")}
    ${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,
     async (f) => {
       const up = {};
@@ -17066,7 +17066,7 @@ function sheetOrdCat() {
   recReset();
   let pick = null;
   const L = itemsArr().filter((i) => i.kind === "final" && i.active !== false && +i.price > 0).sort((a, b) => a.name.localeCompare(b.name));
-  openSheet("➕ منتوج من الكتالوج", `${inp("oc_q", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div id="oc_list" style="max-height:38vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-pick="${i.id}" data-n="${esc(i.name.toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}</b></div><b class="num">${money(i.price)}</b></button>`).join("")}</div>
+  openSheet("➕ منتوج من الكتالوج", `${inp("oc_q", "🔍 قلب على المنتوج", "", "text", 'autocomplete="off"')}<div id="oc_list" style="max-height:38vh;overflow:auto;display:flex;flex-direction:column;gap:4px">${L.map((i) => `<button type="button" class="prow" data-pick="${i.id}" data-n="${esc((i.name + " " + (i.fr || "")).toLowerCase())}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:6px 10px;font:inherit"><div class="lead"><span class="em">${ico(i.id)}</span><b>${esc(i.name)}</b></div><b class="num">${money(i.price)}</b></button>`).join("")}</div>
    <div id="oc_sel" class="muted">👆 اختار المنتوج</div>${stepper("data-ocq", "q", "1", "")}${fld("oc_note", "📝 ملاحظة (الكتابة، اللون، الحجم...)", '<textarea id="oc_note" name="oc_note" rows="2"></textarea>')}${photoField("ocph", "📷 صور (اختيارية)")}${voiceBox()}
    ${errP}<div class="btns"><button type="button" class="btn" id="oc_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
     if (!pick) return ferr("👆 اختار المنتوج من اللائحة.");
@@ -17658,7 +17658,7 @@ function sheetItem(id) {
             return;
           }
           const used = new Set(lines.map((l) => l.item));
-          hits = cands.filter((c) => nrm(c.name).includes(q)).sort((a, b) => nrm(a.name).indexOf(q) - nrm(b.name).indexOf(q)).slice(0, 8);
+          hits = cands.filter((c) => nrm(c.name + " " + (c.fr || "")).includes(q)).sort((a, b) => nrm(a.name).indexOf(q) - nrm(b.name).indexOf(q)).slice(0, 8);
           sr.innerHTML = hits.length ? hits.map((c, k) => `<button type="button" class="opt" data-hit="${k}" style="justify-content:flex-start;text-align:start"><span class="ico">${c.icon || KICON[c.kind]}</span><span>${esc(c.name)}${c.kind === "semi" ? ' <small class="muted">(' + kindL(c) + ")</small>" : ""} <small class="muted">· ${esc(c.unit)}</small>${used.has(c.id) ? ' <span class="tag warn">كاين ديجا</span>' : ""}</span></button>`).join("") : '<p class="muted" style="margin:0">ما لقيت والو. جرب كلمة أخرى ولا اختار من اللائحة.</p>';
           $$("[data-hit]", sr).forEach((b) => b.onclick = () => addIt(hits[+b.dataset.hit]));
         };
