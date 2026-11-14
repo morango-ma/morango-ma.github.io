@@ -391,7 +391,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114153541" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114154040" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3868,6 +3868,10 @@ function alertsFor0() {
       if (hp.length) A.push(`<div class="alert bad" data-act="helpconf" data-id="${hp[0].id}"><div class="lead"><span class="em">🤝</span><div><b>أكدي الجرد ديال النوبة</b><div class="muted">${esc(hp[0].seller)} · ${hp[0].date}</div></div></div></div>`);
     }
   }
+  if (isMgr()) {
+    const ob = (S.bons || []).filter((b) => b.status === "open" && bonAge(b) >= BON_LATE);
+    if (ob.length) A.push(`<div class="alert warn" data-act="bonrep"><div class="lead"><span class="em">⏳</span><div><b>${ob.length} بون كيتسنا الخلاص بزاف</b><div class="muted">${money(ob.reduce((a, b) => a + (+b.total || 0), 0))} · ضغط باش تخلصو ولا تلغيه</div></div></div></div>`);
+  }
   {
     const bi = bonIssues();
     if (bi.length) A.push(`<div class="alert bad" data-act="bonrep"><div class="lead"><span class="em">🧾</span><div><b>${bi.length} بون ما دازش فلاكيس</b><div class="muted">${money(bi.reduce((a, b) => a + (+b.total || 0), 0))} · ${[...new Set(bi.map((b) => b.by))].join("، ")}</div></div></div></div>`);
@@ -6391,14 +6395,14 @@ function sheetBons(p) {
   p = p || S.pos;
   const L = bonsOf(p, "open");
   openSheet("🧾 البونات اللي كتسنا الخلاص · " + LOC[p], `<div class="field"><input id="bq" class="big-in" placeholder="🔎 كتب سمية الزبون (ولا رقم البون)" autocomplete="off" inputmode="text" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px"></div>
-   <div id="bl">${L.length ? L.map((b) => `<button type="button" class="alert ${b.nudge ? "warn" : ""}" style="border:0;width:100%;text-align:start" data-act="bonpay" data-id="${b.id}" data-bno="${esc(b.no)}" data-bnm="${esc(nrm(b.name || ""))}"><div class="lead"><span class="em">👤</span><div><b style="font-size:1.15rem">${esc(b.name || b.no)} · ${money(b.total)}</b><div class="muted">${esc(b.no)} · 🛍️ ${esc(b.by)} · قبل ${bonAge(b)} د · ${b.lines.length} منتوج${b.cust ? " · ⭐ " + esc(b.cust.name) : ""}${b.nudge ? " · 🔔 البائعة كتسول" : ""}</div></div></div><b>💵 خلص</b></button>`).join("") : emptyB("🧾", "ما كاين حتى بون كيتسنى.")}</div>`, null, (f) => {
+   <div id="bl">${L.length ? L.map((b) => `<div data-bno="${esc(b.no)}" data-bnm="${esc(nrm(b.name || ""))}" style="display:flex;gap:6px;align-items:stretch"><button type="button" class="alert ${b.nudge ? "warn" : ""}" style="border:0;flex:1;min-width:0;text-align:start" data-act="bonpay" data-id="${b.id}"><div class="lead"><span class="em">👤</span><div><b style="font-size:1.15rem">${esc(b.name || b.no)} · ${money(b.total)}</b><div class="muted">${esc(b.no)} · 🛍️ ${esc(b.by)} · قبل ${bonAge(b)} د · ${b.lines.length} منتوج${b.cust ? " · ⭐ " + esc(b.cust.name) : ""}${b.nudge ? " · 🔔 البائعة كتسول" : ""}</div></div></div><b>💵 خلص</b></button>${isMgr() ? `<button type="button" class="btn small" style="color:#e11d48;flex:0 0 auto" title="لغي البون" onclick="sheetBonCancel('${b.id}')">🚫<br>لغي</button>` : ""}</div>`).join("") : emptyB("🧾", "ما كاين حتى بون كيتسنى.")}</div>`, null, (f) => {
     const q = $("#bq", f);
     q.focus();
     q.addEventListener("input", () => {
       const v = q.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
       const qn = nrm(q.value.trim());
       $$("[data-bno]", f).forEach((x) => {
-        x.style.display = !qn || v && x.dataset.bno.replace(/[^A-Z0-9]/g, "").includes(v) || (x.dataset.bnm || "").includes(qn) ? "" : "none";
+        x.style.display = !qn || v && x.dataset.bno.replace(/[^A-Z0-9]/g, "").includes(v) || (x.dataset.bnm || "").includes(qn) ? "flex" : "none";
       });
     });
   });
@@ -6881,6 +6885,32 @@ async function bonEdit(id) {
   render();
   toast("✏️ بدلي السلعة (زيدي ولا نقصي) ومن بعد ضغطي «صيفط» باش يتسجل التبديل");
 }
+const BON_WHY = ["الزبون مشا وما خلصش", "الزبون بدل رأيو", "غلطة فالبون", "بون مكرر", "تيست"];
+function sheetBonCancel(id) {
+  if (!isMgr()) return toast("🔒 غير الإدارة تقدر تلغي البون", true);
+  const b = (S.bons || []).find((x) => x.id === id);
+  if (!b || b.status !== "open") return toast("هاد البون ما بقاش مفتوح", true);
+  openSheet("🚫 لغي البون " + b.no, `<div class="box"><b>👤 ${esc(b.name || "")} · ${money(b.total)}</b><div class="muted">${esc(b.no)} · 🛍️ ${esc(b.by || "")} · ${hm(b.ts)} · ${b.lines.length} منتوج</div></div>
+   <div style="display:flex;flex-wrap:wrap;gap:6px">${BON_WHY.map((w) => `<button type="button" class="btn small" onclick="const t=document.getElementById('bcw');t.value='${w}';t.focus()">${w}</button>`).join("")}</div>
+   ${fld("bcw", "✍️ السبب (ضروري)", '<textarea id="bcw" name="bcw" rows="3" placeholder="علاش كتلغي هاد البون؟"></textarea>')}<div id="bce" class="muted" style="color:#e11d48"></div>
+   <button class="btn primary block" type="submit" style="background:#e11d48;border-color:#e11d48">🚫 لغي البون</button>`, async (f) => {
+    const why = (f.bcw.value || "").trim();
+    if (why.length < 3) {
+      $("#bce", f).textContent = "⚠️ كتب السبب";
+      return;
+    }
+    try {
+      await db.doc("bons/" + id).update({ status: "cancel", why, cancelBy: meName(), cancelById: me.id, cancelTs: Date.now(), seen: true });
+      b.status = "cancel";
+      b.why = why;
+      closeSheet();
+      render();
+      toast("🚫 البون تلغى");
+    } catch (e) {
+      $("#bce", f).textContent = "❌ " + e.message;
+    }
+  });
+}
 async function bonCancel(id) {
   const b = (S.bons || []).find((x) => x.id === id);
   if (!b || b.status !== "open") return;
@@ -6922,7 +6952,8 @@ const bonIssues = () => isMgr() ? (S.bons || []).filter((b) => (b.status === "un
 function sheetBonReport() {
   const L = (S.bons || []).filter((b) => b.status === "unpaid" || b.status === "cancel");
   const nw = bonIssues();
-  openSheet("🧾 بونات ما دازوش فلاكيس", `${L.length ? L.map((b) => `<div class="box" style="gap:4px"><div class="prow" style="border:0;padding:0"><b>👤 ${esc(b.name || "")} · ${esc(b.no)} · ${money(b.total)}</b><span class="tag ${b.status === "cancel" ? "warn" : "bad"}">${b.status === "cancel" ? "🚫 تلغى" : "❌ ما تخلصش"}</span></div><div class="muted">${esc(LOC[b.pos] || "")} · ${b.date} ${hm(b.ts)} · 🛍️ ${esc(b.by)}${b.why ? " · 📝 " + esc(b.why) : ""}${b.cancelBy && b.cancelBy !== b.by ? " · لغاه " + esc(b.cancelBy) : ""}</div><div class="muted">${b.lines.map((l) => esc(iname(l.item)) + " ×" + fmt(l.qty)).join("، ")}</div>${b.seen ? '<div class="muted">👍 ' + esc(b.seenBy || "") + "</div>" : ""}</div>`).join("") : emptyB("✅", "كلشي داز فلاكيس.")}
+  const O = (S.bons || []).filter((b) => b.status === "open").sort((a, b) => a.ts - b.ts);
+  openSheet("🧾 البونات", `${O.length ? `<h3 style="margin:0">⏳ كيتسناو الخلاص (${O.length})</h3>${O.map((b) => `<div class="box" style="gap:4px;flex-direction:row;align-items:center"><div style="flex:1;min-width:0"><b>👤 ${esc(b.name || "")} · ${esc(b.no)} · ${money(b.total)}</b><div class="muted">${esc(LOC[b.pos] || "")} · ${b.date} ${hm(b.ts)} · قبل ${bonAge(b)} د · 🛍️ ${esc(b.by)}</div><div class="muted">${b.lines.map((l) => esc(iname(l.item)) + " ×" + fmt(l.qty)).join("، ")}</div></div>${isMgr() ? `<button type="button" class="btn small" style="color:#e11d48" onclick="sheetBonCancel('${b.id}')">🚫 لغي</button>` : ""}</div>`).join("")}<h3 style="margin:6px 0 0">❌ ما دازوش فلاكيس</h3>` : ""}${L.length ? L.map((b) => `<div class="box" style="gap:4px"><div class="prow" style="border:0;padding:0"><b>👤 ${esc(b.name || "")} · ${esc(b.no)} · ${money(b.total)}</b><span class="tag ${b.status === "cancel" ? "warn" : "bad"}">${b.status === "cancel" ? "🚫 تلغى" : "❌ ما تخلصش"}</span></div><div class="muted">${esc(LOC[b.pos] || "")} · ${b.date} ${hm(b.ts)} · 🛍️ ${esc(b.by)}${b.why ? " · 📝 " + esc(b.why) : ""}${b.cancelBy && b.cancelBy !== b.by ? " · لغاه " + esc(b.cancelBy) : ""}</div><div class="muted">${b.lines.map((l) => esc(iname(l.item)) + " ×" + fmt(l.qty)).join("، ")}</div>${b.seen ? '<div class="muted">👍 ' + esc(b.seenBy || "") + "</div>" : ""}</div>`).join("") : emptyB("✅", "كلشي داز فلاكيس.")}
    ${nw.length ? `<button type="button" class="btn primary block" data-act="bonseen">👍 شفتهم (${nw.length})</button>` : ""}`);
 }
 async function bonCloseCheck() {
