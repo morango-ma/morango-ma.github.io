@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114143607" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114144739" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -8933,7 +8933,9 @@ const dayPay = (w, d) => {
   const mp = monthPay(w, ym(d));
   return { v: mp.v / wDays(w), m: mp.m };
 };
+const DP_STOCK_WS = ["w1"];
 const dpLinesFor = (w, d) => {
+  if (DP_STOCK_WS.includes(w)) return [];
   const M = {};
   (S.dplans || []).filter((p) => p.date === d).forEach((p) => (p.lines || []).forEach((l) => {
     const it = S.items[l.item];
@@ -9159,10 +9161,10 @@ function vPlan() {
     if (c.P || c.br > 0) hist.push({ dd, c });
   }
   return `<h1>🗓️ برنامج الإنتاج اليومي</h1>${r !== "ws" ? chipsHtml(WS, w, "plws") : ""}${chipsHtml(dates, d, "pldate")}
-   <section class="card"><div class="head"><h2>${W.i} ${esc(W.name)} · 📋 البرنامج ${d === today() ? "ديال اليوم" : d > today() ? "ديال غدا" : "ديال " + d}</h2>${can ? POS.map((ps) => `<button class="btn small" data-act="planedit" data-id="${w}" data-v="${d}" data-k="${ps.id}">${ps.i} ${hasPos(x.P, ps.id) ? "✏️ برنامج" : "➕ برنامج"} ${esc(ps.name.split(" (")[0])}</button>`).join("") : ""}${can && manFrz(w) && d >= today() ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}')">🧊 ${((_a = x.P) == null ? void 0 : _a.frz) && Object.keys(x.P.frz).some((id) => {
+   <section class="card"><div class="head"><h2>${W.i} ${esc(W.name)} · 📋 البرنامج ${d === today() ? "ديال اليوم" : d > today() ? "ديال غدا" : "ديال " + d}</h2>${can ? POS.map((ps) => `<button class="btn small" data-act="planedit" data-id="${w}" data-v="${d}" data-k="${ps.id}">${ps.i} ${hasPos(x.P, ps.id) ? "✏️ برنامج" : "➕ برنامج"} ${esc(ps.name.split(" (")[0])}</button>`).join("") : ""}${can && manFrz(w) && d >= today() ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}')">${DP_STOCK_WS.includes(w) ? "🥣" : "🧊"} ${((_a = x.P) == null ? void 0 : _a.frz) && Object.keys(x.P.frz).some((id) => {
     var _a2;
     return ((_a2 = S.items[id]) == null ? void 0 : _a2.store) !== "frigo";
-  }) ? "✏️" : "➕"} برنامج التجميد</button>` : ""}${can && d >= today() && itemsArr().some((i) => i.ws === w && i.store === "frigo" && i.active !== false) ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}','frigo')">❄️ ${((_b = x.P) == null ? void 0 : _b.frz) && Object.keys(x.P.frz).some((id) => {
+  }) ? "✏️" : "➕"} ${DP_STOCK_WS.includes(w) ? "برنامج غير المفيني" : "برنامج التجميد"}</button>` : ""}${can && d >= today() && itemsArr().some((i) => i.ws === w && i.store === "frigo" && i.active !== false) ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}','frigo')">❄️ ${((_b = x.P) == null ? void 0 : _b.frz) && Object.keys(x.P.frz).some((id) => {
     var _a2;
     return ((_a2 = S.items[id]) == null ? void 0 : _a2.store) === "frigo";
   }) ? "✏️" : "➕"} برنامج التبريد</button>` : ""}${can && x.P ? `<button class="btn small danger" data-act="plandel" data-id="${w}" data-v="${d}">🗑️ مسح البرنامج</button>` : ""}${canSched(w) && x.P && d >= today() ? `<button class="btn small" data-act="plsched" data-id="${w}" data-v="${d}">🗓️ وقتاش يكونو واجدين${x.P.sched ? " ✅" : ""}</button>` : ""}</div>
@@ -9426,11 +9428,12 @@ function sheetFrzPlan(w, d, mode) {
   const FG = mode === "frigo";
   const P = planOf(w, d);
   const cur = (P == null ? void 0 : P.frz) || {};
-  const L = itemsArr().filter((i) => i.ws === w && i.kind === "semi" && i.active !== false && (FG ? i.store === "frigo" : i.frz && i.store !== "frigo")).sort((a, b) => isPre(a) - isPre(b) || String(a.name).localeCompare(String(b.name), "ar"));
+  const NF = !FG && DP_STOCK_WS.includes(w);
+  const L = itemsArr().filter((i) => i.ws === w && i.kind === "semi" && i.active !== false && (FG ? i.store === "frigo" : NF ? true : i.frz && i.store !== "frigo")).sort((a, b) => isPre(a) - isPre(b) || String(a.name).localeCompare(String(b.name), "ar"));
   FZL = L;
   openSheet(
-    (FG ? "❄️ برنامج التبريد · " : "🧊 برنامج التجميد · ") + LOC[w] + " · " + d,
-    `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">${FG ? "❄️" : "🧊"}</span><div><b>${FG ? "شحال غادي يتصاوب ويبات فالفريگو هاد النهار (باش يتطيب غدا)" : "شحال غادي يتشكل ويتجمد هاد النهار"}</b><div class="muted">${L.some((i) => +i.first === 2) ? "دخل بالبواطو الكاملين باش ما تبقاش الشياطة. " : "دخل شحال من حبة غادي تتقطع (بالغرام ديالها) وتتجمد. "}الطياب كيتبع برنامج المحلات وكياخد من المخزون المجمد.</div></div></div></div>
+    (FG ? "❄️ برنامج التبريد · " : NF ? "🥣 برنامج الإنتاج غير المفيني · " : "🧊 برنامج التجميد · ") + LOC[w] + " · " + d,
+    `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">${FG ? "❄️" : "🧊"}</span><div><b>${FG ? "شحال غادي يتصاوب ويبات فالفريگو هاد النهار (باش يتطيب غدا)" : NF ? "شحال غادي يتصاوب من الكادرات والتحضيرات (غير مفيني) هاد النهار" : "شحال غادي يتشكل ويتجمد هاد النهار"}</b><div class="muted">${L.some((i) => +i.first === 2) ? "دخل بالبواطو الكاملين باش ما تبقاش الشياطة. " : "دخل شحال من حبة غادي تتقطع (بالغرام ديالها) وتتجمد. "}الطياب كيتبع برنامج المحلات وكياخد من المخزون المجمد.</div></div></div></div>
    ${L.map((i) => {
       const isB = +i.first === 3;
       const Yb = yld(i) || 1;
@@ -10032,7 +10035,7 @@ function sheetPlan(w, d, pos) {
   };
   const trRow2 = (id, r, k) => `<div style="display:flex;gap:6px;align-items:center" data-tr="${id}"><input type="time" data-tt value="${r.t || ""}" aria-label="⏰" style="height:40px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;font:inherit;padding:0 6px"><input class="qty" data-tq inputmode="decimal" value="${r.q ? fmt(r.q) : ""}" style="width:72px" aria-label="الكمية">${k ? `<button type="button" class="link neg" data-trx>✖️</button>` : ""}</div>`;
   openSheet(PS.i + " برنامج " + PS.name + " · " + LOC[w] + " · " + d, `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">${PS.i}</span><div><b>البرنامج ديال ${esc(PS.name)} بوحدو</b><div class="muted">كتب شحال خاص هاد المحل من كل منتوج. الورشة كتصاوب المجموع ديال كاع المحلات.</div></div></div></div>${prev ? `<button type="button" class="btn small" id="plcopy">📄 نقل البرنامج ديال ${esc(PS.name)} ديال ${prev.date}</button>` : ""}
-   <p class="muted" style="margin:0">⏰ كل منتوج: الساعة اللي خاصو يوصل فيها و شحال. بغيتي تقسمو؟ ➕ وقت آخر (مثلاً 10 فـ 10:00 و10 فـ 12:00).</p><div style="display:flex;flex-direction:column;gap:6px">${fin.map((i) => {
+   ${DP_STOCK_WS.includes(w) ? `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🍰</span><div><b>هاد البرنامج = الإنتاج المفيني اللي غادي يدخل للمخزون ديال الحلويات</b><div class="muted">الإرسال للمحلات كيتدار بوحدو فـ 🗓️ برنامج الإرسال ← 📅 جدول بالأوقات، وكياخد من المخزون المفيني. الساعة هنا اختيارية.</div></div></div></div>` : `<p class="muted" style="margin:0">⏰ كل منتوج: الساعة اللي خاصو يوصل فيها و شحال. بغيتي تقسمو؟ ➕ وقت آخر (مثلاً 10 فـ 10:00 و10 فـ 12:00).</p>`}<div style="display:flex;flex-direction:column;gap:6px">${fin.map((i) => {
     const r = TR0(i.id);
     return `<div class="box" style="gap:6px;padding:8px 10px" data-ti="${i.id}"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b style="font-size:.95rem">${ico(i.id)} ${esc(i.name.split(" (")[0])}</b><b class="num" data-tsum="${i.id}"></b></div><div data-trs style="display:flex;flex-direction:column;gap:6px">${r.map((x, k) => trRow2(i.id, x, k)).join("")}</div><button type="button" class="link" data-tadd="${i.id}" style="align-self:flex-start">➕ وقت آخر</button></div>`;
   }).join("")}</div>
@@ -10045,13 +10048,14 @@ function sheetPlan(w, d, pos) {
       $$(`[data-tr="${i.id}"]`, f).forEach((x) => {
         const t = $("[data-tt]", x).value, q = num($("[data-tq]", x).value) || 0;
         if (!(q > 0)) return;
-        if (!t) {
+        if (!t && !DP_STOCK_WS.includes(w)) {
           bad = bad || "⏰ خاص الساعة ديال " + i.name.split(" (")[0];
           return;
         }
         mine[i.id] = (mine[i.id] || 0) + q;
         const sl = mslot[i.id] || (mslot[i.id] = { m: 0, e: 0 });
-        sl[t < "14:30" ? "m" : "e"] += q;
+        sl[(t || "00:00") < "14:30" ? "m" : "e"] += q;
+        if (!t || DP_STOCK_WS.includes(w)) return;
         const L = T[t] || (T[t] = {});
         L[i.id] = (L[i.id] || 0) + q;
       });
@@ -10075,7 +10079,7 @@ function sheetPlan(w, d, pos) {
         });
         const lines = Object.entries(M).map(([item, dist]) => ({ item, dist, qty: Object.values(dist).reduce((a, b) => a + (+b || 0), 0) })).filter((l) => l.qty > 0);
         if (!lines.length && !((B == null ? void 0 : B.frz) && Object.keys(B.frz).length)) {
-          await dpSaveTimes(pos, dd, fin.map((i) => i.id), T);
+          if (!DP_STOCK_WS.includes(w)) await dpSaveTimes(pos, dd, fin.map((i) => i.id), T);
           if (B) await db.doc("plans/" + w + "_" + dd).delete();
           continue;
         }
@@ -10090,7 +10094,7 @@ function sheetPlan(w, d, pos) {
         lines.forEach((l) => {
           if (SL[l.item] && Object.keys(SL[l.item]).length) l.slots = SL[l.item];
         });
-        await dpSaveTimes(pos, dd, fin.map((i) => i.id), T);
+        if (!DP_STOCK_WS.includes(w)) await dpSaveTimes(pos, dd, fin.map((i) => i.id), T);
         await db.doc("plans/" + w + "_" + dd).set({ ws: w, date: dd, lines, frz: (B == null ? void 0 : B.frz) || null, auto: false, prepFrom: dd === d ? pf || null : (B == null ? void 0 : B.prepFrom) || null, sched: (B == null ? void 0 : B.sched) || null, by: meName(), byId: me.id, ts: Date.now() });
       }
       closeSheet();
@@ -12819,7 +12823,7 @@ function ordersHtml(ws) {
   if (!O.hasPlan && !M.length) return `<section class="card"><h2>📋 أوامر الإنتاج ديال اليوم</h2>${emptyB("🗓️", "ما كاين حتى أمر ديال اليوم ولا غدا.")}</section>${ordUpcoming(ws)}`;
   return `${dpTimesCard(ws)}<section class="card"><h2>📋 أوامر الإنتاج ديال اليوم</h2><p class="muted" style="margin-top:0">صاوب بالترتيب: 🥣 الميز أون بلاس ← 🧊 الممفينيش ← 🧁 المفيني. الأمر كيبقى 🔒 مسدود حتى يسالاو الأوامر اللي قبلو. ضغط «✅ أكد» واختار: تسالا كامل، ولا جزئياً، ولا ما تصاوبش (مع السبب).</p>${T.length ? (() => {
     const isF = (o) => o.lvl !== "final" && (o.via || []).includes("frz") && !(o.via || []).some((v) => v !== "frz");
-    const G = [["🥣 التحضير (ميز أون بلاس)", T.filter((o) => o.lvl !== "final" && !isF(o))], ["🧊 الإنتاج للتجميد (الكونجيلاتور)", T.filter(isF)], ["🛒 الإنتاج للإرسال للمحل (البيع)", T.filter((o) => o.lvl === "final")]].filter((g) => g[1].length);
+    const G = [["🥣 التحضير (ميز أون بلاس)", T.filter((o) => o.lvl !== "final" && !isF(o))], [DP_STOCK_WS.includes(ws) ? "🥣 الإنتاج غير المفيني (الكادرات)" : "🧊 الإنتاج للتجميد (الكونجيلاتور)", T.filter(isF)], [DP_STOCK_WS.includes(ws) ? "🍰 الإنتاج المفيني (للمخزون)" : "🛒 الإنتاج للإرسال للمحل (البيع)", T.filter((o) => o.lvl === "final")]].filter((g) => g[1].length);
     return G.length > 1 ? G.map(([h, L]) => `<h3 style="margin:12px 0 4px;padding:6px 10px;border-radius:10px;background:var(--bg)">${h} <span class="tag">${L.length}</span></h3>${L.map((o) => ordRow(ws, o)).join("")}`).join("") : T.map((o) => ordRow(ws, o)).join("");
   })() : '<p class="muted">✅ سالاو كاملين.</p>'}</section>
    ${manFrz(ws) && ((_a = planOf(ws, today())) == null ? void 0 : _a.frz) ? dcloseCard(ws) : ""}${M.length ? `<section class="card"><h2>🌙 تحضير ديال غدا (ميز أون بلاس وممفينيش)</h2><p class="muted" style="margin-top:0">تقدر تصاوبهم من اليوم.</p>${M.map((o) => ordRow(ws, o)).join("")}</section>` : ""}${ordUpcoming(ws)}`;
