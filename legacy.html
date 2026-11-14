@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114060043" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114060303" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1624,6 +1624,10 @@ function nutBox(it) {
 const noSt = (id) => {
   var _a;
   return !!((_a = S.items[id]) == null ? void 0 : _a.noStock);
+};
+const optSt = (id) => {
+  var _a;
+  return !!((_a = S.items[id]) == null ? void 0 : _a.optional);
 };
 const outsOf = (id) => itemsArr().filter((x) => {
   var _a, _b;
@@ -5230,7 +5234,8 @@ async function autoMake(ws, id, qty, forName) {
   const it = S.items[id];
   const k = qty / yld(it);
   const cons = it.recipe.lines.map((l) => {
-    const qq = cq(l, r2(lineQty(l) * k));
+    let qq = cq(l, r2(lineQty(l) * k));
+    if (optSt(l.item)) qq = r2(Math.min(qq, Math.max(0, stockOf(ws, l.item))));
     const uc = costOf(l.item, 0, ws);
     return { item: l.item, qty: qq, unitCost: uc, cost: Math.round(qq * uc * 100) / 100 };
   });
@@ -5320,11 +5325,11 @@ function sheetProduce(kind, pre) {
       return a;
     })() : null;
     if (AS) {
-      const rs = Object.entries(AS.use).filter(([i, u]) => !autoSemiOf(ws, i) && haveX(ws, i) + 1e-9 < u);
+      const rs = Object.entries(AS.use).filter(([i, u]) => !autoSemiOf(ws, i) && !optSt(i) && haveX(ws, i) + 1e-9 < u);
       if (rs.length) return ferr("⛔ ما يمكنش تسجل: ناقص فالمخزون ← " + rs.map(([i, u]) => iname(i) + " (خاص " + fmt(r2(u)) + "، كاين " + fmt(haveX(ws, i)) + " " + iunit(i) + ")").join(" · "));
     }
     {
-      const sh = it.recipe.lines.filter((l) => !noSt(l.item) && !(AS && autoSemiOf(ws, l.item))).map((l) => {
+      const sh = it.recipe.lines.filter((l) => !noSt(l.item) && !optSt(l.item) && !(AS && autoSemiOf(ws, l.item))).map((l) => {
         const h = homeOf(l.item);
         return { l, h, need: cq(l, r2(lineQty(l) * k * rfOf(l))), have: Math.max(0, stockOf(ws, l.item)) + (h ? Math.max(0, stockOf(h, l.item)) : 0) };
       }).filter((x) => x.have + 1e-9 < x.need);
@@ -5332,6 +5337,7 @@ function sheetProduce(kind, pre) {
     }
     const cons = it.recipe.lines.map((l) => {
       let qq = cq(l, r2(lineQty(l) * k));
+      if (optSt(l.item)) qq = r2(Math.min(qq, Math.max(0, stockOf(ws, l.item))));
       if (rfOf(l) < 1) qq = r2(Math.min(qq, Math.max(stockOf(ws, l.item), qq * rfOf(l))));
       const uc = costOf(l.item, 0, ws);
       return { item: l.item, qty: qq, unitCost: uc, cost: Math.round(qq * uc * 100) / 100 };
@@ -5488,7 +5494,7 @@ function sheetProduce(kind, pre) {
         var _a2;
         return cq(l, r2(lineQty(l) * k * (((_a2 = S.items[l.item]) == null ? void 0 : _a2.kind) === "semi" ? rf2 : 1)));
       };
-      const short = q > 0 && r.lines.some((l) => !noSt(l.item) && !(it.kind === "final" && autoSemiOf(ws, l.item)) && haveX(ws, l.item) + 1e-9 < nd(l));
+      const short = q > 0 && r.lines.some((l) => !noSt(l.item) && !optSt(l.item) && !(it.kind === "final" && autoSemiOf(ws, l.item)) && haveX(ws, l.item) + 1e-9 < nd(l));
       {
         const sb = $("button[type=submit]", f);
         if (sb) sb.disabled = short;
@@ -5496,7 +5502,7 @@ function sheetProduce(kind, pre) {
       $("#pprev", f).innerHTML = q > 0 ? `<div class="box"><h3>🥄 غادي يتنقص من المخزون</h3>${r.lines.map((l) => {
         const need = cq(l, r2(lineQty(l) * k)), have = haveX(ws, l.item), ns = noSt(l.item), hh = xHome(ws, l.item);
         return prow(l.item, ns ? "ما كيتحسبش فالمخزون" : "كاين " + fmt(have) + " " + esc(iunit(l.item)) + (hh ? " (هنا " + fmt(Math.max(0, stockOf(ws, l.item))) + " + فـ" + esc(LOC[hh] || hh) + " " + fmt(Math.max(0, stockOf(hh, l.item))) + ")" : ""), `<b class="num ${!ns && have < need ? "neg" : ""}">${fmt(need)} ${esc(iunit(l.item))}</b>`);
-      }).join("")}${it.kind === "final" && q > 0 && r.lines.some((l) => autoSemiOf(ws, l.item) && haveX(ws, l.item) + 1e-9 < nd(l)) ? `<p class="muted">🥣 العجينة (${r.lines.filter((l) => autoSemiOf(ws, l.item)).map((l) => esc(iname(l.item).split(" (")[0])).join("، ")}) كتسجل أوتوماتيك مع الخبز.</p>` : ""}${short ? `<p class="err">⛔ ما يمكنش تسجل هاد الإنتاج: ${r.lines.filter((l) => !noSt(l.item) && !(it.kind === "final" && autoSemiOf(ws, l.item)) && haveX(ws, l.item) + 1e-9 < nd(l)).map((l) => {
+      }).join("")}${it.kind === "final" && q > 0 && r.lines.some((l) => autoSemiOf(ws, l.item) && haveX(ws, l.item) + 1e-9 < nd(l)) ? `<p class="muted">🥣 العجينة (${r.lines.filter((l) => autoSemiOf(ws, l.item)).map((l) => esc(iname(l.item).split(" (")[0])).join("، ")}) كتسجل أوتوماتيك مع الخبز.</p>` : ""}${short ? `<p class="err">⛔ ما يمكنش تسجل هاد الإنتاج: ${r.lines.filter((l) => !noSt(l.item) && !optSt(l.item) && !(it.kind === "final" && autoSemiOf(ws, l.item)) && haveX(ws, l.item) + 1e-9 < nd(l)).map((l) => {
         var _a2;
         return xHome(ws, l.item) ? "🥣 " + esc(iname(l.item)) + " (ما كافيش حتى فـ" + esc(LOC[xHome(ws, l.item)]) + ": زيدو فبرنامج الإنتاج ديالهم)" : ((_a2 = S.items[l.item]) == null ? void 0 : _a2.kind) === "semi" ? "🥣 " + esc(iname(l.item)) + " (نصف مصنع ماكاينش كافي، صاوبو الأول)" : "🌾 " + esc(iname(l.item)) + " (ريبتير)";
       }).join("، ")}. إلا المخزون غالط، خلي المسير يصححو.</p>` : ""}</div>${it.kind === "final" && q > 0 ? (() => {
@@ -12270,6 +12276,7 @@ function needsFor(ws) {
   const need = (id, q, d, tag, pd, par, top) => {
     var _a2, _b;
     pd = pd || today();
+    if (optSt(id)) return;
     const it = S.items[id];
     if (!it || !(q > 1e-9) || d > 12 || noSt(id) || it.manualBuy) return;
     if (d > 0 && manFrz(ws) && it.frz && it.kind === "semi" && par !== "frz") {
@@ -12486,6 +12493,7 @@ function stagePlan(ws) {
   const go = (id, q, d, dep, via) => {
     var _a, _b;
     const it = S.items[id];
+    if (optSt(id)) return;
     if ((it == null ? void 0 : it.egg) && EG && q > 1e-9) {
       const take = Math.min(R[id] || 0, q);
       R[id] = (R[id] || 0) - take;
