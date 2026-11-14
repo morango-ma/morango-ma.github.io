@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114053427" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114053654" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2929,7 +2929,7 @@ function allTiles() {
   add({ i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 });
   if (vendRole()) {
     const sh = openShift(me.loc || S.pos);
-    return [{ i: "🛍️", l: sh ? "البيع" : "البيع (لاكيس مسدودة)", a: "go", v: "pos", c: 1 }, { i: "✅", l: "المهام ديالي والجرد", a: "mytasks", c: 5, b: helperPending(me.id).length }, ...frOf(me.loc || S.pos).length ? [{ i: "🌡️", l: "الحرارة ديال الفيترينات", a: "tempin", b: tempDue(me.loc || S.pos).length, c: 4 }] : [], { i: "📸", l: "صور الفيترينة والنظافة", a: "vitshot", c: 3 }, { i: "📦", l: "استلام السلعة من الأتولي", a: "rcvlist", c: 4, b: S.pend.filter((o) => o.type === "transfer" && o.pos === (me.loc || S.pos)).length }, { i: "🍰", l: "التذوق (Dégustation)", a: "tasting", c: 5 }, { i: "📝", l: "طلبية جديدة", a: "neworder", c: 2 }, { i: "📋", l: "الطلبيات", a: "go", v: "orders", c: 3 }, { i: "📅", l: "البلانينگ ديالي", a: "myplan", c: 3 }, { i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 }];
+    return [{ i: "🛍️", l: sh ? "البيع" : "البيع (لاكيس مسدودة)", a: "go", v: "pos", c: 1 }, { i: "✅", l: "المهام ديالي والجرد", a: "mytasks", c: 5, b: helperPending(me.id).length }, ...frOf(me.loc || S.pos).length ? [{ i: "🌡️", l: "الحرارة ديال الفيترينات", a: "tempin", b: tempDue(me.loc || S.pos).length, c: 4 }] : [], { i: "📸", l: "صور الفيترينة والنظافة", a: "vitshot", c: 3 }, ...canRcvAt(me.loc || S.pos) ? [{ i: "📦", l: "استلام السلعة من الأتولي", a: "rcvlist", c: 4, b: S.pend.filter((o) => o.type === "transfer" && o.pos === (me.loc || S.pos)).length }] : [], { i: "🍰", l: "التذوق (Dégustation)", a: "tasting", c: 5 }, { i: "📝", l: "طلبية جديدة", a: "neworder", c: 2 }, { i: "📋", l: "الطلبيات", a: "go", v: "orders", c: 3 }, { i: "📅", l: "البلانينگ ديالي", a: "myplan", c: 3 }, { i: "🙂", l: "الحساب ديالي", a: "profile", c: 4 }];
   }
   return out;
 }
@@ -5516,6 +5516,7 @@ function sheetSend(pre) {
 function sheetReceive(id) {
   const o = getOp(id);
   if (!o) return;
+  if (!canRcvAt(o.pos)) return toast("📦 الاستلام كتديرو الكاسة (Caisse)", true);
   openSheet("📦 استلام من " + LOC[o.ws], `<p class="muted">الكميات اللي تصيفطات معمرة أوتوماتيكياً.${o.driver ? " جابها " + esc(o.driver) + "." : ""}</p>
    ${choice("rok", "📦 واش وصل كلشي؟", [{ v: "ok", l: "وصل كلشي مطابق", i: "✅" }, { v: "less", l: "كاين نقص / مشكل", i: "⚠️" }], "ok", 2)}
    <div>${o.lines.map((l) => prow(l.item, "تصيفط: " + fmt(l.qty) + " " + esc(iunit(l.item)), stepper("data-rc", l.item, l.qty, iunit(l.item)))).join("")}</div>
@@ -5590,7 +5591,7 @@ function sheetTransfer(id, ov) {
   const o = ov || getOp(id);
   if (!o) return;
   const rows = o.diff || o.lines.map((l) => ({ item: l.item, sent: l.qty }));
-  const canRecv = o.status !== "received" && (me.role === "seller" || isMgr());
+  const canRecv = o.status !== "received" && canRcvAt(o.pos);
   openSheet(LOCI[o.ws] + " " + LOC[o.ws] + " ← " + LOC[o.pos], `<div class="head"><span class="muted">${dhm(o.ts)}</span>${stTag(o)}</div>
    <div>${rows.map((r) => prow(r.item, "تصيفط: " + fmt(r.sent) + (o.diff ? " · وصل: " + fmt(r.got) : ""), o.diff ? `<b class="num ${r.d < 0 ? "neg" : r.d > 0 ? "pos" : ""}">${r.d > 0 ? "+" : ""}${fmt(r.d)}</b>` : `<b class="num">${fmt(r.sent)}</b>`)).join("")}</div>
    ${o.hasDiff ? `<p class="err">⚠️ ${((_a = o.diff) == null ? void 0 : _a.some((x) => x.d)) ? "كاين فرق." : "كاين مشكل فالسلعة."} ${o.driver ? "السلعة دازت على يد " + esc(o.driver) + ". " : ""}شوف الصور والتوقيعات باش تعرف شكون المسؤول.</p>` : ""}
@@ -5909,6 +5910,7 @@ function sheetHelpIssues() {
 const posRoleOf = (u) => (u == null ? void 0 : u.posRole) === "v" ? "v" : "c";
 const vendOnly = () => (me == null ? void 0 : me.role) === "seller" && !!openShift(me.loc) && posMode(me.loc) === "v";
 const vendRole = () => (me == null ? void 0 : me.role) === "seller" && posRoleOf(me) === "v";
+const canRcvAt = (p) => isMgr() || (me == null ? void 0 : me.role) === "seller" && (openShift(p) ? posMode(p) === "c" : posRoleOf(me) === "c");
 const VO_V = /* @__PURE__ */ new Set(["bonedit", "add", "cdel", "cclear", "cstep", "cart", "cust", "custclear", "fs", "logout", "logoutq", "chpin", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "mytasks", "disp", "pbtog", "appquit", "fsoff", "helpconf", "tempin", "vitshot", "myplan", "neworder", "order", "ofilter", "media", "ocancel", "oslip", "transfer", "receive", "rcvlist", "tasting", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser", "pushon", "vld"]);
 const VO_OK = /* @__PURE__ */ new Set(["bonedit", "retnew", "retopen", "add", "cdel", "cclear", "cart", "cust", "custclear", "wawel", "devices", "fs", "logout", "profile", "admlogin", "appupd", "close", "back", "pick", "stp", "bons", "bonshow", "bonprint", "boncancel", "bonnudge", "setpcat", "setpcat2", "myplan", "mytasks", "disp", "pbtog", "appquit", "fsoff", "afbnew", "afbopen", "afba", "afbf", "refillreq", "tempin", "vitshot", "helpconf", "order", "ofilter", "neworder", "ost", "oadv", "emo", "mtog", "pin", "pinb", "pind", "pinc", "viewer", "search", "loginback", "pickuser"]);
 const posMode = (p) => {
