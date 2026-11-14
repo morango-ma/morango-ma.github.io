@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114072018" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114083051" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4272,9 +4272,11 @@ function sheetGoals() {
     }
   );
 }
+const NOLOY = { none: true, name: "🚫 بلا وفاء" };
 function custChip(p) {
   if (!LOY().on) return "";
   const cu = S.cust[p];
+  if (cu == null ? void 0 : cu.none) return `<div class="alert" style="cursor:default"><div class="lead"><span class="em">🚫</span><div><b>الزبون بلا وفاء</b><div class="muted">ما عندوش النمرة ولا ما بغاش</div></div></div><button type="button" class="link" data-act="custclear">حيد</button></div>`;
   return cu ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">⭐</span><div><b>${esc(cu.name)}</b><div class="muted num">${fmt(cu.points)} نقطة${(cu.vouchers || []).some((v) => v.status === "active") ? " · 🎁 عندو خصم مصادق عليه" : ""}</div></div></div><button type="button" class="link" data-act="custclear">حيد</button></div>
    <div class="btns" hidden>${""}<button type="button" class="btn small" data-act="bdays" data-id="${cu.id}">🎂 أعياد الميلاد${cu.bn ? " (" + cu.bn + ")" : ""}</button></div>` : `<button type="button" class="btn block" data-act="cust">⭐ زبون الوفاء</button>`;
 }
@@ -6285,7 +6287,8 @@ function sheetBonNew() {
           throw new Error("هاد البون " + (d.status === "paid" ? "تخلص" : "ما بقاش مفتوح") + "، ما يمكنش يتبدل");
         }
         const up = { name: bname, lines, total: tot, pack: pk, editTs: Date.now(), edits: [...d.edits || [], { ts: Date.now(), by: meName(), before: { lines: d.lines, total: d.total, name: d.name } }] };
-        if (cu) up.cust = { id: cu.id, name: cu.name };
+        if (cu && !cu.none) up.cust = { id: cu.id, name: cu.name };
+        if (cu == null ? void 0 : cu.none) up.noLoy = true;
         await db.doc("bons/" + ED.id).update(up);
         const b = __spreadProps(__spreadValues(__spreadValues({}, d), up), { id: ED.id });
         const L = S.bons || [];
@@ -6312,7 +6315,8 @@ function sheetBonNew() {
       if (sq == null) sq = bonsOf(p).length + 1;
       const no = (RPFX[p] || "X") + "B-" + String(sq).padStart(4, "0");
       const b = { pos: p, shiftId: sh.id, date: today(), seq: sq, no, name: bname, lines, total: tot, by: meName(), byId: me.id, ts: Date.now(), status: "open", pack: pk, avis: av };
-      if (cu) b.cust = { id: cu.id, name: cu.name };
+      if (cu && !cu.none) b.cust = { id: cu.id, name: cu.name };
+      if (cu == null ? void 0 : cu.none) b.noLoy = true;
       const ref = await db.collection("bons").add(b);
       b.id = ref.id;
       S.cart[p] = {};
@@ -6336,6 +6340,7 @@ async function bonPay(id) {
   S.bonPay[p] = b.id;
   S.bonSeen = S.bonSeen || {};
   S.bonSeen[p] = b.id + ":" + (b.editTs || 0);
+  if (b.noLoy) S.cust[p] = __spreadValues({}, NOLOY);
   if (b.cust) {
     try {
       const cs = await db.doc("clients/" + b.cust.id).get();
@@ -6827,6 +6832,7 @@ async function bonEdit(id) {
   S.bonEdit = S.bonEdit || {};
   S.bonEdit[p] = { id: b.id, no: b.no, name: b.name };
   delete S.cust[p];
+  if (b.noLoy) S.cust[p] = __spreadValues({}, NOLOY);
   if (b.cust) {
     try {
       const cs = await db.doc("clients/" + b.cust.id).get();
@@ -7006,7 +7012,8 @@ function sheetCart() {
         t.given = r2(gv);
         t.change = r2(gv - tot);
       }
-      if (cu) {
+      if (cu == null ? void 0 : cu.none) t.noLoy = true;
+      if (cu && !cu.none) {
         const L = LOY();
         const cref = db.doc("clients/" + cu.id);
         const cs = await cref.get();
@@ -8707,7 +8714,7 @@ function sheetTickets() {
   );
 }
 function sheetClient(back) {
-  openSheet("⭐ زبون الوفاء", `${fld("cph", "📱 نمرة الواتساب ديال الزبون (WhatsApp)", '<p class="muted" style="margin:0 0 6px">💬 طلب من الزبون النمرة اللي فيها الواتساب، حيت عليها كيوصلو العروض والهدايا.</p><input id="cph" name="cph" class="big-in" type="tel" inputmode="numeric" autocomplete="off" placeholder="06 00 00 00 00">')}<div id="cres"></div>${errP}<button class="btn primary block" type="submit">✅ اختار</button>`, async (f) => {
+  openSheet("⭐ زبون الوفاء", `${fld("cph", "📱 نمرة الواتساب ديال الزبون (WhatsApp)", '<p class="muted" style="margin:0 0 6px">💬 طلب من الزبون النمرة اللي فيها الواتساب، حيت عليها كيوصلو العروض والهدايا.</p><input id="cph" name="cph" class="big-in" type="tel" inputmode="numeric" autocomplete="off" placeholder="06 00 00 00 00">')}<div id="cres"></div>${errP}<button class="btn primary block" type="submit">✅ اختار</button><button type="button" class="btn block" id="cnoloy">🚫 الزبون ما عندوش النمرة / ما بغاش الوفاء</button>`, async (f) => {
     var _a, _b;
     const id = phoneId(f.cph.value);
     if (id.length < 10) return ferr("دخل النمرة كاملة.");
@@ -8745,6 +8752,10 @@ function sheetClient(back) {
   }, (f) => {
     let tm = 0;
     f.cph.focus();
+    $("#cnoloy", f).onclick = () => {
+      S.cust[S.pos] = __spreadValues({}, NOLOY);
+      back === "cart" ? sheetCart() : (closeSheet(), render());
+    };
     f.addEventListener("input", (e) => {
       if (e.target.id !== "cph") return;
       clearTimeout(tm);
