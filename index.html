@@ -386,7 +386,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114133237"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114143607"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -2560,7 +2560,8 @@ function rateOf(w){const m=allocOf(w);const man=+S.alloc?.['rate_'+w];if(man>0)r
   R.ops.forEach(o=>{const it=S.items[o.item];if(o.ws===w&&it?.kind==='final')b+=(+o.qty||0)*basisU(it,m)});const bb=m==='sales'?b/100:b;
   if(!pay)return{v:null,m,src:'nopay',pay,b:bb};if(!(bb>0))return{v:null,m,src:'noprod',pay,b:bb};return{v:pay/bb,m,src:'auto',pay,b:bb,month:R.month}}
 function ohRate(){const R=S.rates;if(!R)return 0;const oh=S.chg.filter(c=>c.month===R.month&&!(c.cat==='salaries'&&WS.some(w=>w.id===c.ws))).reduce((s,c)=>s+(+c.amount||0),0);const val=R.ops.reduce((s,o)=>{const it=S.items[o.item];return s+(it?.kind==='final'?(+o.qty||0)*(+it.price||0):0)},0);return val>0?oh/val:0}
-function modOf(it){if(it?.kind!=='final'||!it.ws)return null;const r=rateOf(it.ws);if(!(r.v>0))return null;const u=basisU(it,r.m);return (r.m==='sales'?u/100:u)*r.v}
+/* management choice: labour can be left out of all product costs (config/prod noLabor) */
+function modOf(it){if(S.pcfg?.noLabor)return null;if(it?.kind!=='final'||!it.ws)return null;const r=rateOf(it.ws);if(!(r.v>0))return null;const u=basisU(it,r.m);return (r.m==='sales'?u/100:u)*r.v}
 function packCost(it){return (it.pack||[]).reduce((s,l)=>s+(+l.qty||0)*costOf(l.item,0),0)}
 function costCard(it,mat){if(it?.kind!=='final')return '';ensureRates();const pk=packCost(it),mod=modOf(it),r=rateOf(it.ws),prod=mat+pk+(mod||0),fg=(+it.price||0)*ohRate(),full=prod+fg,pr=+it.price||0,mg=pr-full;
   const row=(l,v,cls='',b=false)=>`<div class="prow"><span>${b?'<b>'+l+'</b>':l}</span><b class="num ${cls}">${v}</b></div>`;
