@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115213214" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115215126" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -13280,14 +13280,14 @@ function vHist() {
   const r = me.role;
   const L = (r === "ws" ? myLocs() : WS.map((w) => w.id)).filter((l) => WS.some((w) => w.id === l));
   const mine = (o) => L.includes(o.ws);
-  const f = S.hf || "all";
-  const ops = S.ops.filter((o) => mine(o) && (f !== "send" && (o.type === "production" || o.type === "ordclose") || f !== "prod" && o.type === "transfer")).sort((a, b) => b.ts - a.ts);
+  const f = S.hf || "all", hw = S.hws || "all";
+  const ops = S.ops.filter((o) => mine(o) && (hw === "all" || o.ws === hw) && (f !== "send" && (o.type === "production" || o.type === "ordclose") || f !== "prod" && o.type === "transfer")).sort((a, b) => b.ts - a.ts);
   const by = {};
   ops.forEach((o) => (by[o.date] || (by[o.date] = [])).push(o));
   const days = Object.keys(by).sort().reverse();
   const stTag2 = (o) => o.type === "transfer" ? { sent: ["⏳ كتسنى البائعة", "warn"], with_driver: ["🚚 مع السائق", "warn"], pending: ["⏳ كتسنى", "warn"], done: ["✅ توصلات", "ok"], received: ["✅ توصلات", "ok"] }[o.status] || ["✅", "ok"] : null;
   const row = (o) => {
-    var _a;
+    var _a, _b, _c;
     const t = new Date(o.ts || 0);
     const hh = String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0");
     if (o.type === "production") {
@@ -13298,14 +13298,14 @@ function vHist() {
     if (o.type === "ordclose" && o.status === "none") return prow(o.item, `❌ ${hh} · ما تصاوبش · ${ORD_RL(o.reason)}${o.note ? " · " + esc(o.note) : ""} · 👨‍🍳 ${esc(o.by || "")}`, `<b class="num neg">0 / ${fmt(o.ordered)}</b>`);
     if (o.type === "ordclose") return "";
     const st = stTag2(o);
-    return `<div class="prow"><div class="lead"><span class="em">🚚</span><div><b>${LOCI[o.pos] || ""} ${esc(LOC[o.pos] || "")}</b><span class="muted">${hh} · ${(o.lines || []).map((l) => esc(iname(l.item).split(" (")[0]) + " ×" + fmt(l.qty)).join("، ")}${((_a = o.photos) == null ? void 0 : _a.length) ? " · 📷 " + o.photos.length : ""} · 👨‍🍳 ${esc(o.by || "")}</span></div></div><span class="tag ${st[1]}">${st[0]}</span></div>`;
+    return `<div class="prow"><div class="lead"><span class="em">🚚</span><div><b>${LOCI[o.pos] || ""} ${esc(LOC[o.pos] || "")}</b><span class="muted">${hh} · ${(o.lines || []).map((l) => esc(iname(l.item).split(" (")[0]) + " ×" + fmt(l.qty)).join("، ")}${((_a = o.recv) == null ? void 0 : _a.by) ? " · 📥 " + esc(o.recv.by) : ""} · 👨‍🍳 ${esc(o.by || "")}${[...o.photos || [], ...((_b = o.recv) == null ? void 0 : _b.photos) || []].length ? "<br>" + [...(o.photos || []).map((id) => ["📷 الصورة", id]), ...(((_c = o.recv) == null ? void 0 : _c.photos) || []).map((id) => ["📥 صورة الاستلام", id])].map(([l, id]) => `<button type="button" class="btn small" style="margin:4px 4px 0 0" data-act="media" data-id="${id}">${l}</button>`).join("") : ""}</span></div></div><span class="tag ${st[1]}">${st[0]}</span></div>`;
   };
   const sum = (d) => {
     const P = by[d].filter((o) => o.type === "production").length, T = by[d].filter((o) => o.type === "transfer").length;
     return (P ? "🏭 " + P : "") + (P && T ? " · " : "") + (T ? "🚚 " + T : "");
   };
   return `<h1>🧾 التاريخ ديال الإنتاج والإرسال</h1><p class="muted" style="margin-top:0">آخر 14 يوم${r === "ws" ? " · " + L.map((l) => LOCI[l] + " " + esc(LOC[l])).join("، ") : ""}</p>
-   ${chipsHtml([{ id: "all", name: "كلشي", i: "📋" }, { id: "prod", name: "الإنتاج", i: "🏭" }, { id: "send", name: "الإرسال", i: "🚚" }], f, "histf")}
+   ${chipsHtml([{ id: "all", name: "كلشي", i: "📋" }, { id: "prod", name: "الإنتاج", i: "🏭" }, { id: "send", name: "الإرسال", i: "🚚" }], f, "histf")}${L.length > 1 ? chipsHtml([{ id: "all", name: "كاع الورشات", i: "🏭" }, ...WS.filter((w) => L.includes(w.id))], hw, "histws") : ""}
    ${days.length ? days.map((d) => `<section class="card"><h2>📅 ${dayName(d)} ${d.slice(8)}/${d.slice(5, 7)} <span class="muted" style="font-size:.85rem">${sum(d)}</span></h2>${by[d].map(row).join("")}</section>`).join("") : emptyB("🧾", "ما كاين والو فهاد 14 يوم.")}`;
 }
 function ordCount(ws) {
@@ -18200,6 +18200,10 @@ const ACT = {
     } catch (_) {
       toast("ما تبدلش", true);
     }
+  },
+  histws: (el) => {
+    S.hws = el.dataset.id;
+    render();
   },
   histf: (el) => {
     S.hf = el.dataset.id;
