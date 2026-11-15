@@ -392,7 +392,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114220824" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115075543" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2218,6 +2218,25 @@ const catIcon = (ws, cat) => {
   return (it == null ? void 0 : it.icon) || "🏷️";
 };
 const activeVouchers = (c) => ((c == null ? void 0 : c.vouchers) || []).filter((v) => v.status === "active");
+const CLUB_URL = "https://morango-ma.github.io/club.html";
+const clubTok = () => {
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const b = crypto.getRandomValues(new Uint8Array(14));
+  return [...b].map((v) => A[v % A.length]).join("");
+};
+function sheetClubQR() {
+  const src = clubQrImg(CLUB_URL, 600);
+  openSheet("📱 QR ديال الوفاء", `<div class="box" style="align-items:center;text-align:center;gap:8px"><b style="font-size:1.3rem">⭐ سجل فبرنامج الوفاء</b><img alt="QR التسجيل" src="${src}" style="width:260px;height:260px;image-rendering:pixelated;background:#fff;border-radius:14px"><span class="muted">${CLUB_URL}</span></div>
+  <p class="muted" style="margin:0">طبعو ولصقو فالكونطوار. الزبون كيسكاني، كيكتب النمرة والسمية، وكيتسجل بوحدو. ومن بعد كل وصل فيه QR ديالو: ملي كيسكانيه كتزاد ليه النقاط ديال داك الشرا.</p>
+  <a class="btn primary block" href="${src}" download="morango-qr-wafa.png">⬇️ نزل الصورة باش تطبعها</a>`);
+}
+const clubQrImg = (url, px) => {
+  try {
+    return qrCanvas(url, px || 220).toDataURL("image/png");
+  } catch (_) {
+    return "";
+  }
+};
 const phoneId = (ph) => "c" + String(ph || "").replace(/\D/g, "");
 function loyRedeemUnused(points, total) {
   const L = LOY();
@@ -7085,6 +7104,13 @@ function sheetCart() {
         t.given = r2(gv);
         t.change = r2(gv - tot);
       }
+      if (!(cu && !cu.none) && LOY().on) {
+        const qp = ptsLines(lines);
+        if (qp > 0) {
+          t.qr = clubTok();
+          t.qrPts = qp;
+        }
+      }
       if (cu == null ? void 0 : cu.none) t.noLoy = true;
       if (cu && !cu.none) {
         const L = LOY();
@@ -7127,6 +7153,8 @@ function sheetCart() {
       }
       tk.push(t);
       await db.doc("shifts/" + sh.id).update({ tickets: tk });
+      if (t.qr) db.doc("qrt/" + t.qr).set({ ts: t.ts, pts: t.qrPts, total: tot, no: String(t.no || t.n), pos: p, shift: sh.id, claimed: false }).catch(() => {
+      });
       if (bon) {
         try {
           await db.doc("bons/" + bon.id).update({ status: "paid", paidTs: Date.now(), paidBy: meName(), ticket: t.no || t.n, paidTotal: tot });
@@ -7658,6 +7686,17 @@ async function receiptBlob(sh, t, copy) {
       pair("الصرف اللي رجع", money(t.change), Math.round(F * 0.95), true);
     }
     pair("طريقة الأداء", "كاش", Math.round(F * 0.8));
+    if (t.qr && !t.client) {
+      line();
+      center("⭐ ربح " + fmt(t.qrPts) + " نقطة فبرنامج الوفاء", Math.round(F * 1), true);
+      try {
+        const qq = qrCanvas(CLUB_URL + "?t=" + t.qr, W > 400 ? 240 : 190);
+        R.push({ k: "img", im: qq, w: qq.width, h: qq.height });
+      } catch (_) {
+      }
+      center("📱 سكاني هاد الكود بالتيليفون ديالك", Math.round(F * 0.82), true);
+      center("(صالح 3 أيام)", Math.round(F * 0.72));
+    }
     if (t.client) {
       line();
       center("⭐ " + t.client.name, Math.round(F * 0.85), true);
@@ -8753,7 +8792,7 @@ async function receipt2(sh, t) {
 let LASTR = null;
 function sheetReceipt(sh, t) {
   LASTR = { sh, t };
-  openSheet("🧾 الوصل", `<div class="alert bad" id="drwr" style="cursor:default;flex-direction:column;align-items:stretch;gap:8px;text-align:center"><b style="font-size:1.25rem">🗄️ سدي لاكيس ديال الفلوس دابا!</b><span class="muted">الكاميرا كتصور حتى تسديها وتضغطي هنا.</span><button type="button" class="btn primary block" style="font-size:1.15rem" onclick="camClosed();const d=document.getElementById('drwr');if(d)d.outerHTML='<div class=alert good style=cursor:default>✅ لاكيس تسدات</div>'">✅ سديت لاكيس</button></div>` + receiptHtml(sh, t) + '<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ إعادة الطبع</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>');
+  openSheet("🧾 الوصل", `<div class="alert bad" id="drwr" style="cursor:default;flex-direction:column;align-items:stretch;gap:8px;text-align:center"><b style="font-size:1.25rem">🗄️ سدي لاكيس ديال الفلوس دابا!</b><span class="muted">الكاميرا كتصور حتى تسديها وتضغطي هنا.</span><button type="button" class="btn primary block" style="font-size:1.15rem" onclick="camClosed();const d=document.getElementById('drwr');if(d)d.outerHTML='<div class=alert good style=cursor:default>✅ لاكيس تسدات</div>'">✅ سديت لاكيس</button></div>` + (t.qr && !t.client ? `<div class="box" style="align-items:center;text-align:center;gap:6px"><b>⭐ الزبون يسكاني هاد الكود باش يربح ${fmt(t.qrPts)} نقطة</b><img alt="QR الوفاء" src="${clubQrImg(CLUB_URL + "?t=" + t.qr, 260)}" style="width:220px;height:220px;image-rendering:pixelated;background:#fff;border-radius:12px"><span class="muted">كيسجل راسو بالنمرة ديالو وكتزاد ليه النقاط بوحدها</span></div>` : "") + receiptHtml(sh, t) + '<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ إعادة الطبع</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>');
 }
 const tkKey = (t) => String(t.no || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 function sheetTickets() {
@@ -8862,6 +8901,7 @@ function vLoyalty() {
   const cl = S.clients;
   return `<h1>⭐ الوفاء</h1>${bdayCard(30)}<section class="card c2"><div class="head"><h2>${L.on ? "✅ خدام" : "⛔ موقوف"}</h2>${isAdmin() ? '<button class="btn small" data-act="loycfg">⚙️ القواعد</button>' : ""}</div>
    <p style="margin:0">🛍️ النقاط على كل منتوج: <b>${ptsRule()}</b><br>📱 كل تقييم فالطابليت = <b>${fmt(L.fbPts)} نقطة</b><br>🔒 ما كاين حتى خصم أوتوماتيكي: الخصم كيكون غير ملي المسير ولا المشرف كيصادق عليه.</p></section>
+   <button type="button" class="alert acc" style="border:0;width:100%;text-align:start" onclick="sheetClubQR()"><div class="lead"><span class="em">📱</span><div><b>QR ديال التسجيل فالوفاء</b><div class="muted">الزبون كيسكاني وكيسجل راسو بوحدو · كل وصل فيه QR باش يزيد النقاط ليه</div></div></div><b>←</b></button>
    ${!isMgr() ? '<p class="muted">باش تزيد زبون للوفاء، ضغط على «⭐ زبون الوفاء» ملي كتخلص.</p>' : `<div class="stats"><div class="stat"><span>👥 الزبناء</span><b>${cl.length}</b></div><div class="stat"><span>🎁 النقاط عند الزبناء</span><b>${fmt(cl.reduce((s, c) => s + (+c.points || 0), 0))}</b></div></div>
    <section class="card"><div class="head"><h2>👥 لائحة الزبناء (${cl.length})</h2><span class="tag ${cl.some((c) => !c.waOk) ? "warn" : "good"}">📲 واتساب مأكد: ${cl.filter((c) => c.waOk).length}/${cl.length}</span></div><div class="chips">${[["", "الكل"], ["wa", "✅ واتساب مأكد"], ["nowa", "⚠️ ما مأكدش"]].map(([v, l]) => `<button type="button" class="chip ${(S.clf || "") === v ? "on" : ""}" onclick="S.clf='${v}';render()">${l}</button>`).join("")}</div>${cl.length ? `<ul class="list">${cl.filter((c) => !S.clf || (S.clf === "wa" ? c.waOk : !c.waOk)).map((c) => `<li class="clk" data-act="clmgr" data-id="${c.id}"><div class="lead"><span class="em">${activeVouchers(c).length ? "🎁" : "⭐"}</span><div><b>${esc(c.name || "زبون")}${c.source === "kiosk" ? " · 📱" : ""} ${c.waOk ? '<span class="tag good">✅ واتساب</span>' : '<span class="tag warn">⚠️ واتساب؟</span>'}</b><div class="muted num">${esc(c.phone || "")} · ${c.visits || 0} زيارة${c.createdTs ? " · من " + new Date(c.createdTs).toLocaleDateString("fr-FR") : ""}</div></div></div><div style="text-align:end"><b class="num">${fmt(c.points)} نقطة</b><div class="muted num">${money(c.total)}</div></div></li>`).join("")}</ul>` : emptyB("⭐", "مازال ما كاين حتى زبون فالوفاء.")}</section>`}`;
 }
