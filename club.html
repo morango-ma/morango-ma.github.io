@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Morango · الوفاء</title><meta name="theme-color" content="#E02843"><link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;800&family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap">
+<style>
+:root{--bg:#FFF6F7;--surface:#fff;--ink:#3B1520;--muted:#8C6670;--line:#F2D8DE;--accent:#E02843;--soft:#FFDDE3;--good:#2B7A45;--good-soft:#D9F1DF;--bad:#B8252F;--bad-soft:#FFDCDC}
+@media (prefers-color-scheme:dark){:root{--bg:#1A1013;--surface:#26161B;--ink:#FBEFF1;--muted:#C29FA8;--line:#42272F;--soft:#4a1f29;--good-soft:#173322;--bad-soft:#3a1a1d}}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif}
+main{max-width:460px;margin:0 auto;padding:28px 16px 40px;display:flex;flex-direction:column;gap:16px;min-height:100vh}
+.brand{text-align:center}.brand b{font-family:"Baloo Bhaijaan 2",sans-serif;font-size:2rem;color:var(--accent);letter-spacing:.04em}.brand div{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 6px 18px rgba(90,20,36,.07)}
+.big{font-family:"Baloo Bhaijaan 2",sans-serif;font-size:3rem;line-height:1;color:var(--accent);text-align:center}
+h1{margin:0;font-size:1.35rem;text-align:center}p{margin:0}.muted{color:var(--muted);font-size:.92rem;text-align:center}
+label{font-weight:600;font-size:.95rem}input{width:100%;font:inherit;font-size:1.2rem;padding:14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+input:focus{outline:none;border-color:var(--accent)}input[type=tel]{direction:ltr;text-align:center;letter-spacing:.06em}
+button{font:inherit;font-weight:700;font-size:1.15rem;min-height:56px;border-radius:16px;border:0;background:var(--accent);color:#fff;cursor:pointer}button:disabled{opacity:.55}
+.link{background:none;color:var(--accent);min-height:40px;font-size:.95rem}
+.msg{padding:12px 14px;border-radius:14px;font-weight:600;text-align:center}.ok{background:var(--good-soft);color:var(--good)}.err{background:var(--bad-soft);color:var(--bad)}
+.em{font-size:3rem;text-align:center}
+</style></head><body><main id="app"><div class="brand"><b>MORANGO</b><div>مورانڭو · برنامج الوفاء ⭐</div></div><div class="card"><p class="muted">⏳ كنحملو…</p></div></main>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114220824"}</script>
+<script>
+const U=window.MORANGO_CFG.url,K=window.MORANGO_CFG.key,tok=new URLSearchParams(location.search).get('t');
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS={get(){try{return JSON.parse(localStorage.getItem('morango-club')||'{}')}catch(_){return{}}},set(o){try{localStorage.setItem('morango-club',JSON.stringify({...LS.get(),...o}))}catch(_){}}};
+async function rpc(fn,args){const r=await fetch(U+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!r.ok)throw new Error('net');return r.json()}
+const ERR={phone:'📵 النمرة ماشي صحيحة. كتبها بحال 06XXXXXXXX',name:'👤 كتب السمية ديالك',claimed:'✋ هاد الوصل ديجا تزادو النقاط ديالو',expired:'⌛ هاد الوصل فات عليه الوقت (3 أيام)',notfound:'❓ ما لقيناش هاد الوصل',bad:'❓ الرابط ماشي صحيح',net:'📶 مشكل فالأنترنت، عاود'};
+const card=h=>{document.querySelector('.card').outerHTML='<div class="card">'+h+'</div>'};
+const done=(r,title)=>{LS.set({name:r.name});card(`<div class="em">🎉</div><h1>${esc(title)}</h1>${r.earned!=null?`<div class="big" dir="ltr">+${r.earned}</div><p class="muted">نقطة تزادو ليك</p>`:''}<p class="muted">👤 ${esc(r.name)} · الرصيد ديالك: <b>${r.balance}</b> نقطة</p><p class="muted">كل منتوج كيربحك نقاط. سكاني الوصل فكل شراء، وجمع النقاط باش تاخد هدايا 🎁</p>`)};
+function form({title,sub,btn,needName,onGo}){const st=LS.get();card(`${title}${sub||''}<label for="ph">📱 النمرة ديالك (واتساب)</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 XX XX XX XX" value="${esc(st.phone||'')}">
+ <div id="nmw" ${needName?'':'hidden'}><label for="nm">👤 السمية ديالك</label><input id="nm" autocomplete="name" placeholder="السمية" value="${esc(st.name||'')}"></div><div id="m"></div><button id="go">${btn}</button>`);
+ const go=$('#go');go.onclick=async()=>{const ph=$('#ph').value,nm=$('#nm').value;$('#m').innerHTML='';go.disabled=true;try{const r=await onGo(ph,nm);if(r&&r.err==='name'){$('#nmw').hidden=false;$('#m').innerHTML='<div class="msg err">👋 أول مرة؟ كتب السمية ديالك باش نسجلوك</div>';$('#nm').focus()}else if(r&&r.err){$('#m').innerHTML='<div class="msg err">'+(ERR[r.err]||r.err)+'</div>'}}catch(e){$('#m').innerHTML='<div class="msg err">'+ERR.net+'</div>'}go.disabled=false};
+ $('#ph').addEventListener('keydown',e=>{if(e.key==='Enter')go.click()})}
+async function start(){
+ if(tok){let c;try{c=await rpc('club_check',{tok})}catch(_){return card('<div class="msg err">'+ERR.net+'</div><button onclick="location.reload()">🔄 عاود</button>')}
+  if(!c.ok)return card('<div class="em">🧾</div><div class="msg err">'+(ERR[c.err]||'')+'</div>'+joinLink());
+  if(c.claimed)return card('<div class="em">✋</div><div class="msg err">'+ERR.claimed+'</div>'+joinLink());
+  if(c.expired)return card('<div class="em">⌛</div><div class="msg err">'+ERR.expired+'</div>'+joinLink());
+  return form({title:`<div class="em">🎁</div><h1>ربح النقاط ديال هاد الوصل</h1><div class="big" dir="ltr">+${c.pts}</div><p class="muted">نقطة · وصل ${esc(c.no||'')}</p>`,btn:'⭐ زيد النقاط ليا',onGo:async(ph,nm)=>{const r=await rpc('club_claim',{tok,phone:ph,cname:nm||null});if(r.ok){LS.set({phone:ph});done(r,r.isNew?'مرحبا بك فالوفاء!':'تزادو النقاط!')}return r}})}
+ form({title:'<div class="em">⭐</div><h1>سجل فبرنامج الوفاء</h1>',sub:'<p class="muted">سجل بالنمرة ديالك، ومن بعد سكاني الكود اللي فالوصل باش تزيد النقاط ليك.</p>',btn:'✅ سجلني / شوف النقاط ديالي',needName:false,onGo:async(ph,nm)=>{const r=await rpc('club_join',{phone:ph,cname:nm||''});if(r.ok){LS.set({phone:ph});done(r,r.exists?'مرحبا بك من جديد':'مرحبا بك فالوفاء!')}return r}})}
+const joinLink=()=>'<button class="link" onclick="location.href=location.pathname">⭐ شوف النقاط ديالي</button>';
+start();
+</script></body></html>
