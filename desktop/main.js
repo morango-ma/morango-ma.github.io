@@ -34,6 +34,7 @@ app.on('before-quit', () => { try { session.defaultSession.flushStorageData(); }
 
 app.whenReady().then(async () => {
   try { await session.defaultSession.clearCache(); } catch (_) {} // always start on the latest version of the site
+  try { await session.defaultSession.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] }); } catch (_) {} // old offline copies never block an update (login is kept)
   const ok = ['media', 'notifications', 'clipboard-read', 'clipboard-sanitized-write', 'fullscreen', 'wakeLock'];
   session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(ok.includes(perm)));
   session.defaultSession.setPermissionCheckHandler((wc, perm) => ok.includes(perm));
