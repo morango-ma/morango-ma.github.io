@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115103104" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115103331" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6607,7 +6607,7 @@ function sheetRetNew() {
   const sh = openShift(p);
   if (!sh) return toast("🔓 خاص لاكيس تكون محلولة", true);
   openSheet("↩️ ريتور ديال زبون", `<div class="alert acc" style="cursor:default">📷 سكاني الـ QR ولا الكود-بار اللي فالوصل، ولا كتبي الرقم ديالو. بلا وصل ما كاينش ريتور.</div>
-   <div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>⛔ الريتور كيتقبل غير إلا كان مشكل حقيقي فالمنتوج:</b><span>• منتوج فيه عيب، فيه شي حاجة غريبة، ولا غلطة منا</span><span>• ماشي حيت الزبون بدل رأيو ولا ما عجبوش</span><span>• خاص الوصل ديال نفس النهار، صورة ديال المشكل، والزبون حاضر</span></div>
+   <div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>⛔ الريتور كيتقبل غير إلا كان مشكل حقيقي فالمنتوج:</b><span>• منتوج فيه عيب، فيه شي حاجة غريبة، ولا غلطة منا</span><span>• ماشي حيت الزبون بدل رأيو ولا ما عجبوش</span><span>• خاص الوصل ديال اليوم ولا البارح، صورة ديال المشكل، والزبون حاضر</span></div>
    <div class="field"><input id="rtno" class="big-in" placeholder="رقم الوصل (مثلا AR-2611-0042)" autocomplete="off" style="text-transform:uppercase;font-weight:800;font-size:1.3rem;text-align:center"></div><div class="btns"><button type="button" class="btn primary" id="rtcam" style="flex:1">📷 سكاني بالكاميرا</button><button type="button" class="btn" id="rtgo" style="flex:1">🔎 قلب على الوصل</button></div><div id="rtbody"></div>`, null, (f) => {
     const go = async () => {
       const no = $("#rtno", f).value;
@@ -6621,8 +6621,8 @@ function sheetRetNew() {
       const { sh: tsh, t } = R;
       const tdate = dstr(new Date(t.ts || tsh.openTs || Date.now()));
       const age = Math.floor((Date.now() - (+t.ts || 0)) / 6e4);
-      if (tdate !== today()) {
-        box.innerHTML = `<div class="alert bad" style="cursor:default">⛔ هاد الوصل ديال ${esc(tdate)}. الريتور كيتقبل غير فنفس النهار.</div>`;
+      if (tdate < daysAgo(1)) {
+        box.innerHTML = `<div class="alert bad" style="cursor:default">⛔ هاد الوصل ديال ${esc(tdate)}. الريتور كيتقبل غير بالوصل ديال اليوم ولا البارح.</div>`;
         return;
       }
       const late = age > RET_MIN;
