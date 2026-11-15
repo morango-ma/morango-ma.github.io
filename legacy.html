@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115212822" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115213214" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -9371,6 +9371,9 @@ function vPlan() {
   const W = WS.find((x2) => x2.id === w);
   const can = isMgr();
   const dates = [{ id: daysAgo(1), name: "البارح", i: "⏪" }, { id: today(), name: "اليوم", i: "☀️" }, { id: daysAgo(-1), name: "غدا", i: "⏩" }, ...[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((k) => ({ id: daysAgo(-k), name: dayName(daysAgo(-k)) + " " + daysAgo(-k).slice(8), i: planOf(w, daysAgo(-k)) ? planOf(w, daysAgo(-k)).auto ? "🤖" : "✅" : "📅" }))];
+  if (can) pastPlans(w).reverse().forEach((pp) => {
+    if (!dates.some((x2) => x2.id === pp.d)) dates.unshift({ id: pp.d, name: pp.d.slice(8) + "/" + pp.d.slice(5, 7) + " ⚠️", i: "🗓️" });
+  });
   if (!dates.some((x2) => x2.id === d)) dates.unshift({ id: d, name: d, i: "🗓️" });
   const x = dayCmp(w, d);
   const BU = BUNIT[x.m];
@@ -9380,7 +9383,7 @@ function vPlan() {
     const dd = daysAgo(i), c = dayCmp(w, dd);
     if (c.P || c.br > 0) hist.push({ dd, c });
   }
-  return `<h1>🗓️ برنامج الإنتاج اليومي</h1>${r !== "ws" ? chipsHtml(WS, w, "plws") : ""}${chipsHtml(dates, d, "pldate")}
+  return `<h1>🗓️ برنامج الإنتاج اليومي</h1>${r !== "ws" ? chipsHtml(WS, w, "plws") : ""}${chipsHtml(dates, d, "pldate")}${can && d < today() ? pastPlanBox(w, d) : ""}
    <section class="card"><div class="head"><h2>${W.i} ${esc(W.name)} · 📋 البرنامج ${d === today() ? "ديال اليوم" : d > today() ? "ديال غدا" : "ديال " + d}</h2>${can ? POS.map((ps) => `<button class="btn small" data-act="planedit" data-id="${w}" data-v="${d}" data-k="${ps.id}">${ps.i} ${hasPos(x.P, ps.id) ? "✏️ برنامج" : "➕ برنامج"} ${esc(ps.name.split(" (")[0])}</button>`).join("") : ""}${can && manFrz(w) && d >= today() ? `<button class="btn small" onclick="sheetFrzPlan('${w}','${d}')">${DP_STOCK_WS.includes(w) ? "🥣" : "🧊"} ${((_a = x.P) == null ? void 0 : _a.frz) && Object.keys(x.P.frz).some((id) => {
     var _a2;
     return ((_a2 = S.items[id]) == null ? void 0 : _a2.store) !== "frigo";
@@ -13092,6 +13095,20 @@ function pastPlans(ws) {
     if (rows.some((r) => r.dn < r.q - 1e-9)) out.push({ d: P.date, by: P.by || "", rows });
   });
   return out;
+}
+function pastPlanBox(ws, d) {
+  const P = planOf(ws, d);
+  if (!P || !Object.keys(P.frz || {}).length) return "";
+  const done = {};
+  (S.ops || []).filter((o) => o.type === "production" && o.ws === ws && o.date === d).forEach((o) => done[o.item] = (done[o.item] || 0) + (+o.qty || 0));
+  const rows = Object.entries(P.frz).filter(([id, q]) => S.items[id] && +q > 0).map(([id, q]) => ({ id, q: +q, dn: done[id] || 0 }));
+  const left = rows.filter((r) => r.dn < r.q - 1e-9).length;
+  return `<section class="card" style="gap:6px;border:2px solid var(--acc,#e02843)"><h2 style="margin:0">✅ أكد الإنتاج ديال هاد البرنامج (${esc(d)})</h2><p class="muted" style="margin:0">${left ? left + " منتوج باقي ما تأكدش. ضغط «✅ أكد» وكتب شحال تصاوب. كيتسجل بتاريخ " + esc(d) + " والمواد كينقصو من المخزون." : "✅ كلشي تأكد."}</p>
+   ${rows.map((r) => {
+    var _a;
+    const l = Math.round((r.q - r.dn) * 100) / 100;
+    return `<div class="prow"><div class="lead">${pic(r.id)}<div><b>${esc(iname(r.id))}</b><span class="muted">📋 ${fmt(r.q)} ${esc(((_a = S.items[r.id]) == null ? void 0 : _a.unit) || "")}${r.dn ? " · ✅ تأكد " + fmt(r.dn) : ""}</span></div></div>${l > 0 ? `<button type="button" class="btn small primary" data-act="pordback" data-id="${ws}" data-k="${r.id}" data-v="${l}" data-d="${d}">✅ أكد</button>` : '<span class="tag ok">✅</span>'}</div>`;
+  }).join("")}</section>`;
 }
 function pastPlansCard(ws) {
   const L = pastPlans(ws);
