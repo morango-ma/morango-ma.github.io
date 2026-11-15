@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115211631" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115212822" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2249,6 +2249,10 @@ function loyRedeemUnused(points, total) {
 }
 async function newOp(o) {
   o.ts = Date.now();
+  if (o.type === "production" && S.backDate && !o.date) {
+    o.date = S.backDate;
+    o.backDated = true;
+  }
   o.date = o.date || today();
   o.by = o.by || meName();
   o.byId = (me == null ? void 0 : me.id) || "";
@@ -4034,7 +4038,7 @@ function vProd() {
   const pr = S.pend.filter((o) => o.type === "return" && o.ws === ws);
   const canProd = me.role === "ws" || isProd() || isMgr();
   return `${canSwitch ? chipsHtml(WS, ws, "setws") : locSwitch() || `<h1>${LOCI[ws]} ${esc(LOC[ws])}</h1>`}${canProd ? invCard(ws) : ""}
-  ${ordOnly() || isMgr() || isProd() ? ordersHtml(ws) : ""}<button type="button" class="btn block" data-act="go" data-v="hist">🧾 التاريخ ديال الإنتاج والإرسال</button>${canProd ? `<div class="acts">${ordOnly() ? "" : `<button class="act c2" data-act="produce" data-k="semi"><span class="big">🥣</span><b>إنتاج ميز أون بلاس (كيتخزن)</b></button><button class="act c3" data-act="produce" data-k="pre"><span class="big">🧊</span><b>إنتاج ممفينيش (كيتخزن)</b></button><button class="act c1" data-act="produce" data-k="final"><span class="big">🧁</span><b>إنتاج مفيني (للبيع مباشرة)</b></button>`}<button class="act c4" data-act="freeze" data-id="${ws}"><span class="big">❄️</span><b>دخول للكونجيلاتور</b></button><button class="act c3" data-act="go" data-v="lots"><span class="big">🏷️</span><b>التيكيات والصلاحية</b>${(() => {
+  ${ordOnly() || isMgr() || isProd() ? ordersHtml(ws) : ""}${isMgr() ? pastPlansCard(ws) : ""}<button type="button" class="btn block" data-act="go" data-v="hist">🧾 التاريخ ديال الإنتاج والإرسال</button>${canProd ? `<div class="acts">${ordOnly() ? "" : `<button class="act c2" data-act="produce" data-k="semi"><span class="big">🥣</span><b>إنتاج ميز أون بلاس (كيتخزن)</b></button><button class="act c3" data-act="produce" data-k="pre"><span class="big">🧊</span><b>إنتاج ممفينيش (كيتخزن)</b></button><button class="act c1" data-act="produce" data-k="final"><span class="big">🧁</span><b>إنتاج مفيني (للبيع مباشرة)</b></button>`}<button class="act c4" data-act="freeze" data-id="${ws}"><span class="big">❄️</span><b>دخول للكونجيلاتور</b></button><button class="act c3" data-act="go" data-v="lots"><span class="big">🏷️</span><b>التيكيات والصلاحية</b>${(() => {
     const n = lotsActive(ws).filter((l) => ld(l) != null && ld(l) <= 2).length;
     return n ? `<span class="badge">${n}</span>` : "";
   })()}</button></div>` : ""}
@@ -5078,6 +5082,7 @@ window.__nativeBack = () => {
   return false;
 };
 function closeSheet() {
+  S.backDate = null;
   try {
     if (typeof REC !== "undefined" && (REC.rec || REC.st)) recReset();
   } catch (_) {
@@ -13077,6 +13082,28 @@ function dpTimesCard(ws) {
     return `<div class="box" style="gap:4px;${p.id === nx ? "border:2px solid var(--acc,#e02843)" : ""}"><div style="display:flex;justify-content:space-between;gap:8px"><b>⏰ ${esc(p.time || "")}${p.id === nx ? " · 👉 الجاي" : ""}</b><span class="tag ${st === "sent" ? "good" : late ? "bad" : st === "part" ? "warn" : ""}">${st === "sent" ? "✅ تصيفط" : late ? "⏰ متأخر" : st === "part" ? "🟡 جزء" : "⏳"}</span></div>${ls.map((l) => `<div style="display:flex;justify-content:space-between;font-size:.92rem"><span>${ico(l.item)} ${esc(iname(l.item).split(" (")[0])}</span><b class="num">${fmt(+s[l.item] || 0)} / ${fmt(l.qty)}</b></div>`).join("")}</div>`;
   }).join("")}</section>`;
 }
+function pastPlans(ws) {
+  const t = today();
+  const out = [];
+  Object.values(S.plans || {}).filter((P) => P && P.ws === ws && P.date && P.date < t && P.date >= daysAgo(14)).sort((a, b) => b.date.localeCompare(a.date)).forEach((P) => {
+    const done = {};
+    (S.ops || []).filter((o) => o.type === "production" && o.ws === ws && o.date === P.date).forEach((o) => done[o.item] = (done[o.item] || 0) + (+o.qty || 0));
+    const rows = Object.entries(P.frz || {}).filter(([id, q]) => S.items[id] && +q > 0).map(([id, q]) => ({ id, q: +q, dn: done[id] || 0 }));
+    if (rows.some((r) => r.dn < r.q - 1e-9)) out.push({ d: P.date, by: P.by || "", rows });
+  });
+  return out;
+}
+function pastPlansCard(ws) {
+  const L = pastPlans(ws);
+  if (!L.length) return "";
+  return `<section class="card" style="gap:6px"><h2 style="margin:0">🗓️ برامج قدام ما تأكدش الإنتاج ديالها</h2><p class="muted" style="margin:0">أكد شنو تصاوب من كل برنامج. الإنتاج كيتسجل بالتاريخ ديال البرنامج، والمواد كينقصو من المخزون.</p>
+   ${L.map((x) => `<details class="box" style="gap:4px"><summary><b>📅 ${esc(x.d)}</b> · ${x.rows.filter((r) => r.dn < r.q - 1e-9).length} منتوج باقي ما تأكدش${x.by ? " · " + esc(x.by) : ""}</summary>
+    ${x.rows.map((r) => {
+    var _a;
+    const left = Math.round((r.q - r.dn) * 100) / 100;
+    return `<div class="prow"><div class="lead">${pic(r.id)}<div><b>${esc(iname(r.id))}</b><span class="muted">📋 ${fmt(r.q)} ${esc(((_a = S.items[r.id]) == null ? void 0 : _a.unit) || "")}${r.dn ? " · ✅ تأكد " + fmt(r.dn) : ""}</span></div></div>${left > 0 ? `<button type="button" class="btn small primary" data-act="pordback" data-id="${ws}" data-k="${r.id}" data-v="${left}" data-d="${x.d}">✅ أكد</button>` : '<span class="tag ok">✅</span>'}</div>`;
+  }).join("")}</details>`).join("")}</section>`;
+}
 function ordersHtml(ws) {
   var _a;
   const O = prodOrders(ws);
@@ -18084,6 +18111,16 @@ const ACT = {
   ordsend: (el) => {
     closeSheet();
     sendQueue(el.dataset.id, el.dataset.k, num(el.dataset.v));
+  },
+  pordback: (el) => {
+    if (!isMgr()) return;
+    const it = S.items[el.dataset.k];
+    if (!it) return;
+    S.ws = el.dataset.id;
+    closeSheet();
+    S.backDate = el.dataset.d;
+    sheetProduce(it.kind === "final" ? "final" : isPre(it) ? "pre" : "semi", { item: it.id, qty: num(el.dataset.v) });
+    toast("🗓️ غادي يتسجل بتاريخ " + el.dataset.d);
   },
   pord: (el) => {
     const it = S.items[el.dataset.k];
