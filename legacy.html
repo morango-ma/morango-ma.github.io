@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115093556" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115103104" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6491,13 +6491,13 @@ function sheetBons(p) {
     });
   });
 }
-const RET_WHY = ["الزبون ما بغاهش", "غلطة فالكوموند", "بغا يبدل بمنتوج آخر"];
+const RET_WHY = ["المنتوج فيه عيب (محروق، خاسر، ماشي طري)", "فيه شي حاجة غريبة (شعرة، بلاستيك…)", "غلطة منا فالكوموند ولا فالمنتوج", "غلطة فالثمن ولا فالحساب"];
 const RET_MIN = 3;
 const RET_MODE = { cash: ["💵", "رجعنا ليه الفلوس"], exchange: ["🔄", "تبديل بمنتوج آخر"], avoir: ["🎟️", "أفوار (كريدي فالوفاء)"] };
 const retAll = () => S.retours || [];
 const retOfTicket = (no) => retAll().filter((r) => r.ticketNo === no && r.status !== "rejected");
 const retBack = (no, item) => retOfTicket(no).reduce((a, r) => a + (r.lines || []).filter((l) => l.item === item).reduce((s, l) => s + (+l.qty || 0), 0), 0);
-const canRet = (p) => me && (isMgr() || me.role === "seller" && posMode(p) === "c" && !vendRole());
+const canRet = (p) => !!me && isMgr();
 async function retFind(no) {
   no = String(no || "").trim().toUpperCase().replace(/\s+/g, "");
   if (!no) return null;
@@ -6607,7 +6607,7 @@ function sheetRetNew() {
   const sh = openShift(p);
   if (!sh) return toast("🔓 خاص لاكيس تكون محلولة", true);
   openSheet("↩️ ريتور ديال زبون", `<div class="alert acc" style="cursor:default">📷 سكاني الـ QR ولا الكود-بار اللي فالوصل، ولا كتبي الرقم ديالو. بلا وصل ما كاينش ريتور.</div>
-   <div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>⛔ ممنوع الريتور إلا:</b><span>• فاتو ${RET_MIN} دقايق على البيعة (إلا فاتو، كيتصيفط للمسير وهو اللي كيقرر)</span><span>• الزبون خرج من المحل وما بقاش كيبان ليك</span><span>• السلعة ما بقاتش سالمة (مقيسة، محلولة، ناقصة)</span></div>
+   <div class="alert bad" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>⛔ الريتور كيتقبل غير إلا كان مشكل حقيقي فالمنتوج:</b><span>• منتوج فيه عيب، فيه شي حاجة غريبة، ولا غلطة منا</span><span>• ماشي حيت الزبون بدل رأيو ولا ما عجبوش</span><span>• خاص الوصل ديال نفس النهار، صورة ديال المشكل، والزبون حاضر</span></div>
    <div class="field"><input id="rtno" class="big-in" placeholder="رقم الوصل (مثلا AR-2611-0042)" autocomplete="off" style="text-transform:uppercase;font-weight:800;font-size:1.3rem;text-align:center"></div><div class="btns"><button type="button" class="btn primary" id="rtcam" style="flex:1">📷 سكاني بالكاميرا</button><button type="button" class="btn" id="rtgo" style="flex:1">🔎 قلب على الوصل</button></div><div id="rtbody"></div>`, null, (f) => {
     const go = async () => {
       const no = $("#rtno", f).value;
@@ -6636,15 +6636,16 @@ function sheetRetNew() {
         return;
       }
       const gross = (t.lines || []).reduce((a, l) => a + l.qty * l.price, 0) || 1, rate = (+t.total || gross) / gross;
-      box.innerHTML = `${late ? `<div class="alert bad" style="cursor:default">⏰ فاتو ${age} دقايق على البيعة (الأجل ${RET_MIN} دقايق). الريتور غادي يتصيفط للمسير وهو اللي يقرر واش يتقبل.</div>` : ""}<div class="box" style="gap:4px"><b>🧾 ${esc(t.no)} · ${hm(t.ts)} · ${money(t.total)}</b><div class="muted">🛍️ ${esc(t.vend || t.by || "")}${t.client ? " · ⭐ " + esc(t.client.name) : ""}</div></div>
+      box.innerHTML = `${late ? `<div class="alert warn" style="cursor:default">⏰ فاتو ${age} دقايق على البيعة.</div>` : ""}<div class="box" style="gap:4px"><b>🧾 ${esc(t.no)} · ${hm(t.ts)} · ${money(t.total)}</b><div class="muted">🛍️ ${esc(t.vend || t.by || "")}${t.client ? " · ⭐ " + esc(t.client.name) : ""}</div></div>
        <b>شنو رجع الزبون؟</b>${rows.map((l, k) => `<div class="box" style="gap:6px">${prow(l.item, money(l.price) + " · تشرى " + fmt(l.qty) + (l.left < l.qty ? " · ترجع " + fmt(l.qty - l.left) : ""), stepper("data-rq", String(k), "", iunit(l.item)))}
 </div>`).join("")}
        <div class="field"><span class="lbl">❓ علاش رجعو؟ *</span><div class="choice" style="--cols:2" id="rtwhy">${RET_WHY.map((w) => `<button type="button" class="opt" aria-pressed="false" data-w="${esc(w)}"><span>${esc(w)}</span></button>`).join("")}</div></div>
        <div class="field"><span class="lbl">💰 كيفاش غادي ياخد حقو؟ *</span><div class="choice" style="--cols:3" id="rtmode">${Object.entries(RET_MODE).map(([k, [i, l]]) => `<button type="button" class="opt" aria-pressed="false" data-m="${k}"><span class="ico">${i}</span><span>${l}</span></button>`).join("")}</div></div>
        ${t.client ? `<div class="box">⭐ الزبون: <b>${esc(t.client.name)}</b> (من الوفاء)</div>` : `<div class="alert warn" style="cursor:default">⚠️ هاد الوصل ما فيهش زبون ديال الوفاء. كتبي السمية والتيليفون.</div><div class="two"><div class="field"><span class="lbl">👤 سمية الزبون *</span><input id="rtcn" class="big-in" autocomplete="off"></div><div class="field"><span class="lbl">📞 التيليفون *</span><input id="rtcp" class="big-in" inputmode="tel" autocomplete="off"></div></div>`}
        <label class="prow" style="gap:8px;justify-content:flex-start;font-weight:700"><input type="checkbox" id="rtok1" style="width:24px;height:24px"> 👀 الزبون باقي قدامي فالمحل</label>
-       <label class="prow" style="gap:8px;justify-content:flex-start;font-weight:700"><input type="checkbox" id="rtok2" style="width:24px;height:24px"> ✅ السلعة سالمة: ما تقاساتش، ما تحلاتش، كاملة</label>
-       ${photoField("rtph", "📷 صورة السلعة اللي رجعات *")}<p id="rttot" class="disp" style="font-size:1.4rem;font-weight:800;text-align:center;margin:0"></p>${errP}<button type="button" class="btn primary block" id="rtsend">📤 صيفط للإدارة باش توافق</button>`;
+       <div class="field"><span class="lbl">📝 شنو هو المشكل بالضبط؟ *</span><textarea id="rtdet" rows="2" placeholder="مثلا: الكرواسون محروق من التحت" style="border-radius:12px;padding:10px;border:2px solid var(--line);background:var(--bg);font:inherit"></textarea></div>
+       <label class="prow" style="gap:8px;justify-content:flex-start;font-weight:700"><input type="checkbox" id="rtok2" style="width:24px;height:24px"> 🧐 شفت المشكل بعيني وكنأكد بلي كاين</label>
+       ${photoField("rtph", "📷 صورة المشكل اللي فالسلعة *")}<p id="rttot" class="disp" style="font-size:1.4rem;font-weight:800;text-align:center;margin:0"></p>${errP}<button type="button" class="btn primary block" id="rtsend">↩️ قبل الريتور</button>`;
       const st = {}, cal = () => {
         let s = 0;
         $$("input[data-rq]", f).forEach((i) => {
@@ -6665,14 +6666,14 @@ function sheetRetNew() {
         if (g.dataset.rs) st[g.dataset.rs] = o.dataset.st;
       });
       $("#rtsend", f).onclick = async () => {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         const lines = [];
         let bad = "";
         $$("input[data-rq]", f).forEach((i) => {
           const k = +i.dataset.rq, l = rows[k];
           const q = num(i.value) || 0;
           if (q > l.left + 1e-9) bad = "⛔ " + iname(l.item) + ": ما يمكنش ترجع كثر من " + fmt(l.left);
-          if (q > 0) lines.push({ item: l.item, qty: q, price: l.price, amt: r2(q * l.price * rate), state: "resell" });
+          if (q > 0) lines.push({ item: l.item, qty: q, price: l.price, amt: r2(q * l.price * rate), state: "loss" });
         });
         const er = (m) => {
           const p0 = $(".err", f);
@@ -6689,20 +6690,24 @@ function sheetRetNew() {
         if (!t.client && cn.length < 2) return er("👤 كتبي سمية الزبون.");
         if (!t.client && cp.length < 9) return er("📞 كتبي التيليفون ديال الزبون.");
         if (!$("#rtok1", f).checked) return er("⛔ إلا الزبون خرج من المحل، الريتور ممنوع.");
-        if (!$("#rtok2", f).checked) return er("⛔ السلعة خاصها تكون سالمة باش ترجع.");
-        if (!(PH.rtph || []).length) return er("📷 صوري السلعة اللي رجعات.");
+        const det = (((_c = $("#rtdet", f)) == null ? void 0 : _c.value) || "").trim();
+        if (det.length < 4) return er("📝 كتب شنو هو المشكل بالضبط.");
+        if (!$("#rtok2", f).checked) return er("🧐 الريتور كيتقبل غير إلا كان مشكل حقيقي وشفتيه.");
+        if (!(PH.rtph || []).length) return er("📷 صور المشكل اللي فالسلعة.");
         const b = $("#rtsend", f);
         b.disabled = true;
         b.textContent = "⏳…";
         try {
           const photos = await saveMedia(PH.rtph, "retour");
           const total = r2(lines.reduce((a, l) => a + l.amt, 0));
-          await db.collection("retours").add({ pos: p, shiftId: sh.id, date: today(), ts: Date.now(), ticketNo: t.no, ticketShift: tsh.id, ticketTs: t.ts, ticketBy: t.vend || t.by || "", lines, total, why, mode, client: { name: cn, phone: cp, id: ((_c = t.client) == null ? void 0 : _c.id) || phoneId(cp) }, intact: true, present: true, lateMin: Math.max(0, Math.floor((Date.now() - (+t.ts || 0)) / 6e4) - RET_MIN) || 0, photos, status: "pending", by: meName(), byId: me.id });
+          const rd = { pos: p, shiftId: sh.id, date: today(), ts: Date.now(), ticketNo: t.no, ticketShift: tsh.id, ticketTs: t.ts, ticketBy: t.vend || t.by || "", lines, total, why, detail: det, mode, client: { name: cn, phone: cp, id: ((_d = t.client) == null ? void 0 : _d.id) || phoneId(cp) }, problem: true, present: true, lateMin: Math.max(0, Math.floor((Date.now() - (+t.ts || 0)) / 6e4) - RET_MIN) || 0, photos, status: "approved", apprBy: meName(), apprTs: Date.now(), by: meName(), byId: me.id };
+          const ref = await db.collection("retours").add(rd);
+          S.retours = [__spreadValues({ id: ref.id }, rd), ...retAll().filter((x) => x.id !== ref.id)];
           closeSheet();
-          toast("📤 الريتور تصيفط للإدارة · تسناي الموافقة قبل ما ترجعي شي حاجة");
+          setTimeout(() => sheetRetOpen(ref.id), 60);
         } catch (e) {
           b.disabled = false;
-          b.textContent = "📤 صيفط للإدارة باش توافق";
+          b.textContent = "↩️ قبل الريتور";
           er("❌ " + (e.message || e));
         }
       };
