@@ -161,6 +161,8 @@ canvas.sig{width:100%;height:140px;background:var(--paper);border:2px dashed var
 .photo-btn input{position:absolute;width:1px;height:1px;opacity:0}
 .media{display:flex;gap:6px;flex-wrap:wrap}
 .frn{font-size:.78em;font-weight:500;opacity:.72;unicode-bidi:isolate}.prod .frn{display:block;margin-top:1px}.prod .frd{display:none}
+#zoomimg{position:fixed;inset:0;z-index:9999;background:rgba(20,8,12,.78);display:flex;align-items:center;justify-content:center;padding:16px;animation:zfade .15s ease}@keyframes zfade{from{opacity:0}}#zoomimg figure{margin:0;max-width:min(560px,100%);background:var(--surface);border-radius:22px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.35)}#zoomimg img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#fff}#zoomimg figcaption{display:flex;flex-direction:column;gap:2px;padding:12px 16px;font-size:1.05rem}#zoomimg figcaption span{color:var(--muted);font-size:.9rem}
+.prod img,.thumb{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .inbox .alert{padding:7px 10px!important;min-height:0!important;font-size:.86rem;border-radius:12px}.inbox .alert .em{font-size:1.15rem!important}.inbox .alert .muted{font-size:.74rem}.inbox .alert .tag{font-size:.7rem;padding:2px 8px}
 .toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);inset-inline:16px;margin:auto;max-width:420px;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:14px;z-index:40;font-weight:600;text-align:center}
 .toast.bad{background:var(--bad);color:var(--paper)}
@@ -388,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115083157"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261115083427"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1290,6 +1292,21 @@ function sheetGoals(){if(!isMgr())return;const L=itemsArr().filter(i=>i.kind==='
    ${errP}<button class="btn primary block" type="submit">✅ حفظ</button>`,async f=>{busy(f,true);try{let n=0;for(const el of $$('input[data-goal]',f)){const id=el.dataset.goal,v=num(el.value)||0;if(v!==goalOf(S.items[id])){await db.doc('items/'+id).update({sgoal:v});n++}}closeSheet();toast('🎯 تحفظو '+n+' أهداف');render()}catch(e){fail(f,e)}},
    f=>{$('#gfind',f).addEventListener('input',e=>{const q=nrm(e.target.value);$$('[data-grow]',f).forEach(r=>{r.style.display=!q||nrm(S.items[r.dataset.grow]?.name||'').includes(q)?'':'none'})})})}
 let ALHTML='',ALN=0;
+/* long press on a product (till tile, list row…) = show its photo big */
+(()=>{let T=null,sx=0,sy=0,swallow=0;
+  const close=()=>{document.getElementById('zoomimg')?.remove()};
+  const show=id=>{const it=S.items[id],u=imgOf(id);if(!it||!u)return;close();try{navigator.vibrate?.(15)}catch(_){}
+    const d=document.createElement('div');d.id='zoomimg';d.setAttribute('role','dialog');d.setAttribute('aria-label',it.name);
+    d.innerHTML=`<figure><img src="${u}" alt="${esc(it.name)}"><figcaption><b>${esc(it.name)}</b>${it.fr&&!String(it.name).includes(it.fr)?`<span dir="ltr">${esc(it.fr)}</span>`:''}${+it.price>0?`<b class="num">${money(it.price)}</b>`:''}</figcaption></figure>`;
+    d.onclick=e=>{e.stopPropagation();close()};document.body.appendChild(d);swallow=Date.now()};
+  const idOf=el=>{const t=el?.closest?.('[data-id],[data-item]');const id=t?.dataset.id||t?.dataset.item;return id&&S.items?.[id]&&imgOf(id)?id:null};
+  document.addEventListener('pointerdown',e=>{clearTimeout(T);const id=idOf(e.target);if(!id)return;sx=e.clientX;sy=e.clientY;T=setTimeout(()=>show(id),480)},true);
+  const cancel=()=>clearTimeout(T);
+  document.addEventListener('pointermove',e=>{if(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)cancel()},true);
+  ['pointerup','pointercancel','scroll'].forEach(k=>document.addEventListener(k,cancel,true));
+  document.addEventListener('click',e=>{if(Date.now()-swallow<700&&!e.target.closest('#zoomimg')){e.preventDefault();e.stopPropagation();swallow=0}},true);
+  document.addEventListener('contextmenu',e=>{if(idOf(e.target))e.preventDefault()},true);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});})();
 function inboxBadge(){const b=document.getElementById('inboxbtn'),n=document.getElementById('inboxn');if(!b)return;b.hidden=!(ALN>0);if(n)n.textContent=ALN>99?'99+':String(ALN)}
 function posInbox(h){let A=[];try{A=alertsFor().filter(x=>!['tempin','vitshot','verif','recvpass'].some(k=>x.includes('data-act="'+k+'"')&&(h||'').includes('data-act="'+k+'"')))}catch(_){}const t=document.createElement('template');t.innerHTML=h||'';const n=[...t.content.children].length;ALHTML=(h||'')+A.join('');ALN=n+A.length;setTimeout(inboxBadge,0);return ''}
 function openInbox(){openSheet('🔔 التنبيهات ('+ALN+')',ALN?'<div data-alwrap class="inbox" style="display:flex;flex-direction:column;gap:4px">'+ALHTML+'</div>':emptyB('✨','ما كاين حتى تنبيه.'))}
