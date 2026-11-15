@@ -26,29 +26,29 @@ const LS={get(){try{return JSON.parse(localStorage.getItem('morango-club')||'{}'
 async function rpc(fn,args){const r=await fetch(U+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!r.ok)throw new Error('net');return r.json()}
 const ERR={phone:'📵 النمرة ماشي صحيحة. كتبها بحال 06XXXXXXXX',name:'👤 كتب السمية ديالك',claimed:'✋ هاد الوصل ديجا تزادو النقاط ديالو',expired:'⌛ هاد الوصل فات عليه الوقت (3 أيام)',notfound:'❓ ما لقيناش هاد الوصل',bad:'❓ الرابط ماشي صحيح',net:'📶 مشكل فالأنترنت، عاود'};
 const card=h=>{document.querySelector('.card').outerHTML='<div class="card">'+h+'</div>'};
-const done=(r,title)=>{LS.set({name:r.name,...(r.key?{key:r.key}:{})});card(`<div class="em">🎉</div><h1>${esc(title)}</h1>${r.earned!=null?`<div class="big" dir="ltr">+${r.earned}</div><p class="muted">نقطة تزادو ليك</p>`:''}<p class="muted">👤 ${esc(r.name)} · الرصيد ديالك: <b>${r.balance}</b> نقطة</p><p class="muted">كل منتوج كيربحك نقاط. سكاني الوصل فكل شراء، وجمع النقاط باش تاخد هدايا 🎁</p>${LS.get().key?'<button onclick="showHist()">📜 المشتريات ديالي</button>':'<p class="muted">📜 باش تشوف المشتريات ديالك، سكاني الكود ديال الوصل الجاي.</p>'}`)};
+const done=(r,title)=>{LS.set({name:r.name,...(r.key?{key:r.key}:{})});card(`<div class="em">🎉</div><h1>${esc(title)}</h1>${r.earned!=null?`<div class="big" dir="ltr">+${r.earned}</div><p class="muted">نقطة تزادو ليك</p>`:''}<p class="muted">👤 ${esc(r.name)} · الرصيد ديالك: <b>${r.balance}</b> نقطة</p><p class="muted">كل منتوج كيربحك نقاط. سكاني الوصل فكل شراء، وجمع النقاط باش تاخد هدايا 🎁</p><button onclick="showHist()">📜 المشتريات ديالي</button>`)};
 function form({title,sub,btn,needName,onGo}){const st=LS.get();card(`${title}${sub||''}<label for="ph">📱 النمرة ديالك (واتساب)</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 XX XX XX XX" value="${esc(st.phone||'')}">
  <div id="nmw" ${needName?'':'hidden'}><label for="nm">👤 السمية ديالك</label><input id="nm" autocomplete="name" placeholder="السمية" value="${esc(st.name||'')}"></div><div id="m"></div><button id="go">${btn}</button>`);
  const go=$('#go');go.onclick=async()=>{const ph=$('#ph').value,nm=$('#nm').value;$('#m').innerHTML='';go.disabled=true;try{const r=await onGo(ph,nm);if(r&&r.err==='name'){$('#nmw').hidden=false;$('#m').innerHTML='<div class="msg err">👋 أول مرة؟ كتب السمية ديالك باش نسجلوك</div>';$('#nm').focus()}else if(r&&r.err){$('#m').innerHTML='<div class="msg err">'+(ERR[r.err]||r.err)+'</div>'}}catch(e){$('#m').innerHTML='<div class="msg err">'+ERR.net+'</div>'}go.disabled=false};
  $('#ph').addEventListener('keydown',e=>{if(e.key==='Enter')go.click()})}
 async function start(noAuto){
- if(!tok&&!noAuto&&LS.get().key&&LS.get().phone)return showHist();
+ if(!tok&&!noAuto&&LS.get().phone)return showHist();
  if(tok){let c;try{c=await rpc('club_check',{tok})}catch(_){return card('<div class="msg err">'+ERR.net+'</div><button onclick="location.reload()">🔄 عاود</button>')}
   if(!c.ok)return card('<div class="em">🧾</div><div class="msg err">'+(ERR[c.err]||'')+'</div>'+joinLink());
   if(c.claimed)return card('<div class="em">✋</div><div class="msg err">'+ERR.claimed+'</div>'+joinLink());
   if(c.expired)return card('<div class="em">⌛</div><div class="msg err">'+ERR.expired+'</div>'+joinLink());
   return form({title:`<div class="em">🎁</div><h1>ربح النقاط ديال هاد الوصل</h1><div class="big" dir="ltr">+${c.pts}</div><p class="muted">نقطة · وصل ${esc(c.no||'')}</p>`,btn:'⭐ زيد النقاط ليا',onGo:async(ph,nm)=>{const r=await rpc('club_claim',{tok,phone:ph,cname:nm||null});if(r.ok){LS.set({phone:ph,...(r.key?{key:r.key}:{})});done(r,r.isNew?'مرحبا بك فالوفاء!':'تزادو النقاط!')}return r}})}
- form({title:'<div class="em">⭐</div><h1>سجل فبرنامج الوفاء</h1>',sub:'<p class="muted">سجل بالنمرة ديالك، ومن بعد سكاني الكود اللي فالوصل باش تزيد النقاط ليك.</p>',btn:'✅ سجلني / شوف النقاط ديالي',needName:false,onGo:async(ph,nm)=>{const r=await rpc('club_join',{phone:ph,cname:nm||''});if(r.ok){if(r.key)LS.set({phone:ph,key:r.key});else if(LS.get().phone!==ph)LS.set({phone:ph,key:null});done(r,r.exists?'مرحبا بك من جديد':'مرحبا بك فالوفاء!')}return r}})}
+ form({title:'<div class="em">⭐</div><h1>سجل فبرنامج الوفاء</h1>',sub:'<p class="muted">كتب النمرة ديالك باش تشوف النقاط والمشتريات ديالك، ولا تسجل إلا كانت أول مرة. ومن بعد سكاني الكود اللي فالوصل باش تزيد النقاط.</p>',btn:'✅ سجلني / شوف النقاط ديالي',needName:false,onGo:async(ph,nm)=>{const r=await rpc('club_join',{phone:ph,cname:nm||''});if(r.ok){LS.set({phone:ph});if(r.exists)return showHist(),r;done(r,'مرحبا بك فالوفاء!')}return r}})}
 const fmtD=ts=>{const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return p(d.getDate())+'/'+p(d.getMonth()+1)+' · '+p(d.getHours())+':'+p(d.getMinutes())};
 const nf=v=>String(Math.round((+v||0)*100)/100).replace('.',',');
-async function showHist(){const st=LS.get();if(!st.phone||!st.key)return start(true);card('<p class="muted">⏳ كنحملو المشتريات ديالك…</p>');let r;try{r=await rpc('club_hist',{phone:st.phone,ckey:st.key})}catch(_){return card('<div class="msg err">'+ERR.net+'</div><button onclick="showHist()">🔄 عاود</button>')}
- if(!r.ok){LS.set({key:null});return start(true)}
+async function showHist(){const st=LS.get();if(!st.phone)return start(true);card('<p class="muted">⏳ كنحملو المشتريات ديالك…</p>');let r;try{r=await rpc('club_hist',{phone:st.phone})}catch(_){return card('<div class="msg err">'+ERR.net+'</div><button onclick="showHist()">🔄 عاود</button>')}
+ if(!r.ok){LS.set({phone:null});return start(true)}
  const H=r.hist||[];card(`<div class="em">⭐</div><h1>${esc(r.name)}</h1><div class="big" dir="ltr">${r.balance}</div><p class="muted">نقطة ديالك · ${r.visits} زيارة · ${nf(r.total)} د.م</p>
   <h2 style="margin:6px 0 0;font-size:1.05rem">📜 المشتريات ديالي (${H.length})</h2>
   ${H.length?H.map(h=>`<div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:8px"><b>🗓️ ${fmtD(h.ts)}</b><b dir="ltr">${nf(h.total)} DH</b></div>
    ${(h.lines||[]).map(l=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:.92rem"><span>${esc(l.n)} <span style="color:var(--muted)" dir="ltr">×${nf(l.q)}</span></span><span dir="ltr" style="color:var(--muted)">${nf(l.q*l.p)}</span></div>`).join('')}
    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted)"><span>🧾 ${esc(h.no||'')}</span><span>⭐ +${nf(h.pts)} نقطة</span></div></div>`).join(''):'<p class="muted">ما كاين حتى شراء مسجل.</p>'}
-  <button class="link" onclick="LS.set({key:null,phone:null});start(true)">🚪 خروج من هاد التيليفون</button>`)}
+  <button class="link" onclick="LS.set({phone:null});start(true)">🔁 نمرة أخرى</button>`)}
 const joinLink=()=>'<button class="link" onclick="location.href=location.pathname">⭐ النقاط والمشتريات ديالي</button>';
 start();
 </script></body></html>
