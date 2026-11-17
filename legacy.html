@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117131101" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117143811" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -7310,7 +7310,7 @@ function sheetCart() {
         t.given = r2(gv);
         t.change = r2(gv - tot);
       }
-      if (!(cu && !cu.none) && LOY().on) {
+      if (LOY().on) {
         const qp = ptsLines(lines);
         if (qp > 0) {
           t.qr = clubTok();
@@ -7359,7 +7359,7 @@ function sheetCart() {
       }
       tk.push(t);
       await db.doc("shifts/" + sh.id).update({ tickets: tk });
-      if (t.qr) db.doc("qrt/" + t.qr).set({ ts: t.ts, pts: t.qrPts, total: tot, no: String(t.no || t.n), pos: p, shift: sh.id, claimed: false }).catch(() => {
+      if (t.qr) db.doc("qrt/" + t.qr).set(__spreadValues({ ts: t.ts, pts: t.qrPts, total: tot, no: String(t.no || t.n), pos: p, shift: sh.id, claimed: !!(cu && !cu.none) }, cu && !cu.none ? { pre: true, client: cu.id, cname: cu.name || "", cts: t.ts } : {})).catch(() => {
       });
       if (bon) {
         try {
@@ -7757,7 +7757,7 @@ const offBase = (l) => {
   return b > (+l.price || 0) + 1e-9 ? b : 0;
 };
 async function receiptBlob(sh, t, copy) {
-  var _a, _b, _c;
+  var _a, _b, _c, _d;
   const cfg = S.cfg || {};
   const W = cfg.width === "58" ? 384 : 576;
   const P = W > 400 ? 22 : 14;
@@ -7935,7 +7935,7 @@ async function receiptBlob(sh, t, copy) {
     if (code && /^[\x20-\x7e]+$/.test(code)) {
       const bc = barcodeCanvas(code, W - 2 * P, W > 400 ? 90 : 70);
       R.push({ k: "g", h: 8 });
-      const loy = t.qr && !t.client && copy !== "shop" && copy !== "archive" && !String(copy || "").startsWith("ord") && !String(copy || "").startsWith("bon");
+      const loy = t.qr && copy !== "shop" && copy !== "archive" && !String(copy || "").startsWith("ord") && !String(copy || "").startsWith("bon");
       try {
         if (loy) {
           const cw = W - 2 * P, half = Math.floor(cw / 2), qs = W > 400 ? 200 : 150;
@@ -7955,9 +7955,9 @@ async function receiptBlob(sh, t, copy) {
           y2.textBaseline = "middle";
           y2.font = font(fs, true);
           const by = Math.max(qa.height, qb.height);
-          y2.fillText("⭐ +" + fmt(t.qrPts) + " نقطة الوفاء", half + half / 2, by + ch / 2);
+          y2.fillText(t.client ? "⭐ +" + fmt((_d = t.client.earned) != null ? _d : t.qrPts) + " تزادو ليك" : "⭐ +" + fmt(t.qrPts) + " نقطة الوفاء", half + half / 2, by + ch / 2);
           y2.font = font(Math.round(fs * 0.92), false);
-          y2.fillText("سكاني بالتيليفون ديالك", half + half / 2, by + ch * 1.5);
+          y2.fillText(t.client ? "سكاني وشوف النقاط ديالك" : "سكاني بالتيليفون ديالك", half + half / 2, by + ch * 1.5);
           y2.font = font(fs, true);
           y2.direction = "ltr";
           y2.fillText(code, half / 2, by + ch / 2);
@@ -9043,7 +9043,7 @@ async function receipt2(sh, t) {
 let LASTR = null;
 function sheetReceipt(sh, t) {
   LASTR = { sh, t };
-  openSheet("🧾 الوصل", `<div class="alert bad" id="drwr" style="cursor:default;flex-direction:column;align-items:stretch;gap:8px;text-align:center"><b style="font-size:1.25rem">🗄️ سدي لاكيس ديال الفلوس دابا!</b><span class="muted">الكاميرا كتصور حتى تسديها وتضغطي هنا.</span><button type="button" class="btn primary block" style="font-size:1.15rem" onclick="camClosed();const d=document.getElementById('drwr');if(d)d.outerHTML='<div class=alert good style=cursor:default>✅ لاكيس تسدات</div>'">✅ سديت لاكيس</button></div>` + (t.qr && !t.client ? `<div class="box" style="align-items:center;text-align:center;gap:6px"><b>⭐ الزبون يسكاني هاد الكود باش يربح ${fmt(t.qrPts)} نقطة</b><img alt="QR الوفاء" src="${clubQrImg(CLUB_URL + "?t=" + t.qr, 260)}" style="width:220px;height:220px;image-rendering:pixelated;background:#fff;border-radius:12px"><span class="muted">كيسجل راسو بالنمرة ديالو وكتزاد ليه النقاط بوحدها</span></div>` : "") + receiptHtml(sh, t) + '<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ إعادة الطبع</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>');
+  openSheet("🧾 الوصل", `<div class="alert bad" id="drwr" style="cursor:default;flex-direction:column;align-items:stretch;gap:8px;text-align:center"><b style="font-size:1.25rem">🗄️ سدي لاكيس ديال الفلوس دابا!</b><span class="muted">الكاميرا كتصور حتى تسديها وتضغطي هنا.</span><button type="button" class="btn primary block" style="font-size:1.15rem" onclick="camClosed();const d=document.getElementById('drwr');if(d)d.outerHTML='<div class=alert good style=cursor:default>✅ لاكيس تسدات</div>'">✅ سديت لاكيس</button></div>` + (t.qr ? `<div class="box" style="align-items:center;text-align:center;gap:6px"><b>${t.client ? "⭐ النقاط تزادو ل " + esc(t.client.name || "") + " · يسكاني باش يشوف الرصيد ديالو" : "⭐ الزبون يسكاني هاد الكود باش يربح " + fmt(t.qrPts) + " نقطة"}</b><img alt="QR الوفاء" src="${clubQrImg(CLUB_URL + "?t=" + t.qr, 260)}" style="width:220px;height:220px;image-rendering:pixelated;background:#fff;border-radius:12px"><span class="muted">كيسجل راسو بالنمرة ديالو وكتزاد ليه النقاط بوحدها</span></div>` : "") + receiptHtml(sh, t) + '<div class="btns"><button type="button" class="btn" data-act="printr">🖨️ إعادة الطبع</button><button type="button" class="btn primary" data-act="close">🛍️ بيع جديد</button></div>');
 }
 const tkKey = (t) => String(t.no || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 function sheetTickets() {
