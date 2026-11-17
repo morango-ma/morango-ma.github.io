@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117212645" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117214041" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -7223,7 +7223,32 @@ async function bonCloseCheck() {
     $("#bgo", f).onclick = go;
   });
 }
+function sheetCartAdd() {
+  const p = S.pos;
+  const SM = soldMap(p, daysAgo(13));
+  const prods = itemsArr().filter((i) => i.kind === "final" && +i.price > 0 && !i.noPos && i.active !== false).sort((a, b) => (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
+  openSheet("➕ زيد منتوج", `<input class="sinput" id="caq" type="search" placeholder="🔍 قلب على منتوج…" autocomplete="off" style="width:100%;height:46px;border-radius:12px;border:2px solid var(--line);padding:0 12px;margin-bottom:8px">
+   <div id="calist">${prods.map((i) => `<button type="button" class="prow clk" data-caid="${i.id}" data-cas="${esc((i.name + " " + (i.fr || "")).toLowerCase())}" style="width:100%;border:0;background:none;text-align:start"><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}${frT(i)}</b></div></div><b class="num">${money(i.price)}</b></button>`).join("")}</div>
+   <div class="btns"><button type="button" class="btn" data-act="cartback">↩️ رجع للخلاص</button></div>`, null, (f) => {
+    const q = $("#caq", f);
+    q.focus();
+    q.addEventListener("input", () => {
+      const v = q.value.trim().toLowerCase();
+      $$("[data-caid]", f).forEach((b) => b.hidden = !!v && !b.dataset.cas.includes(v));
+    });
+    f.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-caid]");
+      if (!b) return;
+      e.preventDefault();
+      const c = cartOf(p);
+      c[b.dataset.caid] = (c[b.dataset.caid] || 0) + 1;
+      toast("➕ " + iname(b.dataset.caid));
+      sheetCart();
+    });
+  });
+}
 function sheetCart() {
+  var _a;
   if (tempLocked(S.pos)) {
     sheetTemp(S.pos);
     return;
@@ -7244,9 +7269,10 @@ function sheetCart() {
   const redeemBox = cu ? (cu.vouchers || []).filter((v) => v.status === "active").map((v) => `<button type="button" class="opt" style="flex-direction:row;justify-content:center;gap:8px;padding:12px" data-act="custuse" data-id="${v.id}" aria-pressed="${cu.useV === v.id}"><span class="ico">🎁</span><span>خصم مصادق عليه: ${money(v.amount)} (−${fmt(v.pts)} نقطة)${v.note ? " · " + esc(v.note) : ""}</span></button>`).join("") : "";
   const notes = [5, 10, 20, 50, 100, 200, 500].filter((v) => v > total).slice(0, 3);
   openSheet("💵 الخلاص", `<div>${ids.map((id) => {
-    var _a;
-    return prow(id, money((_a = S.items[id]) == null ? void 0 : _a.price) + " للوحدة", cartQty(id, c[id]));
+    var _a2;
+    return prow(id, money((_a2 = S.items[id]) == null ? void 0 : _a2.price) + " للوحدة", cartQty(id, c[id]));
   }).join("")}</div>
+   <button type="button" class="btn block" data-act="cartadd" style="border:2px dashed var(--line)">➕ زيد منتوج آخر${((_a = S.bonPay) == null ? void 0 : _a[p]) ? " للبون" : ""}</button>
    ${(() => {
     const D = cartPackDefault(p).tot, E = packEditOf(p);
     const pk = itemsArr().filter((i) => i.kind === "pack");
@@ -7269,10 +7295,10 @@ function sheetCart() {
    <div class="field"><span class="lbl">💵 شحال عطاك الزبون؟ (اختياري)</span><div class="quick"><button type="button" data-act="given" data-v="${total}">بالضبط</button>${notes.map((v) => `<button type="button" data-act="given" data-v="${v}">${v}</button>`).join("")}</div>
    <input id="cgiven" name="cgiven" class="big-in" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px" type="text" inputmode="decimal" placeholder="0.00" aria-label="المبلغ اللي عطى الزبون"></div><div id="chg"></div>${errP}
    <div class="btns"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button><button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div>`, async (f) => {
-    var _a, _b, _c, _d;
+    var _a2, _b, _c, _d;
     const sh = openShift(p);
     if (!sh) return ferr("ما كاينة حتى نوبة مفتوحة.");
-    if (LOY().on && !S.cust[p] && !((_a = S.bonPay) == null ? void 0 : _a[p])) return ferr("⭐ خاص الزبون ديال الوفاء قبل الخلاص (السمية والتيليفون).");
+    if (LOY().on && !S.cust[p] && !((_a2 = S.bonPay) == null ? void 0 : _a2[p])) return ferr("⭐ خاص الزبون ديال الوفاء قبل الخلاص (السمية والتيليفون).");
     const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: unitPx(id, c[id], c), unitCost: costOf(id, 0, p) }));
     const grossT = r2(lines.reduce((s, l) => s + l.qty * l.price, 0));
     const tot = r2(grossT - useVal);
@@ -7281,8 +7307,8 @@ function sheetCart() {
     busy(f, true);
     try {
       camClip("خلاص", ((_b = (S.bons || []).find((x) => {
-        var _a2;
-        return x.id === ((_a2 = S.bonPay) == null ? void 0 : _a2[p]);
+        var _a3;
+        return x.id === ((_a3 = S.bonPay) == null ? void 0 : _a3[p]);
       })) == null ? void 0 : _b.no) || "");
     } catch (_) {
     }
@@ -7296,6 +7322,10 @@ function sheetCart() {
         t.bon = bon.no;
         t.vend = bon.by;
         t.vendId = bon.byId;
+        const bq = {};
+        (bon.lines || []).forEach((l) => bq[l.item] = (bq[l.item] || 0) + (+l.qty || 0));
+        const add = lines.map((l) => ({ item: l.item, qty: r2(l.qty - (bq[l.item] || 0)) })).filter((x) => x.qty > 0);
+        if (add.length) t.bonAdd = add;
       }
       try {
         if (window.morangoSeq) {
@@ -7363,7 +7393,7 @@ function sheetCart() {
       });
       if (bon) {
         try {
-          await db.doc("bons/" + bon.id).update({ status: "paid", paidTs: Date.now(), paidBy: meName(), ticket: t.no || t.n, paidTotal: tot });
+          await db.doc("bons/" + bon.id).update(__spreadValues({ status: "paid", paidTs: Date.now(), paidBy: meName(), ticket: t.no || t.n, paidTotal: tot }, t.bonAdd ? { tillAdd: t.bonAdd } : {}));
         } catch (_) {
         }
         delete S.bonPay[p];
@@ -19165,6 +19195,8 @@ const ACT = {
     }
     if (on) toast("⛶ شاشة كاملة · ✕ فالركن باش تخرج");
   },
+  cartadd: () => sheetCartAdd(),
+  cartback: () => sheetCart(),
   cclear: () => {
     S.cart[S.pos] = {};
     S.packEdit[S.pos] = {};
