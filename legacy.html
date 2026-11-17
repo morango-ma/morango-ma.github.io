@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117214305" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117214741" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2955,7 +2955,7 @@ function allTiles() {
   if (isAdmin() || me.role === "manager") add({ i: "🕘", l: "سجل الدخول (شكون دخل ومن أي جهاز)", a: "go", v: "logins", c: 4 });
   if (isMgr()) add({ i: "↩️", l: "الريتورات ديال الزبناء", a: "go", v: "retours", c: 4, b: retAll().filter((r) => r.status === "pending").length });
   if (isMgr()) add({ i: "📹", l: "فيديوهات لاكيس (كل مرة كتحل)", a: "go", v: "cam", c: 4 });
-  if (isMgr()) add({ i: "⭐", l: "البائعات: الوفاء وآراء الزبناء", a: "go", v: "avis", c: 4 });
+  if (isMgr()) add({ i: "📊", l: "تقرير البائعات (البيع، السلة، الوفاء، الآراء)", a: "go", v: "avis", c: 4 });
   add({ i: "🎨", l: "العرض والألوان (هاد الجهاز)", a: "disp", c: 2 });
   if ((_a = window.MorangoNative) == null ? void 0 : _a.desktop) {
     add({ i: "🗗", l: "خروج من الشاشة الكاملة", a: "fsoff", c: 2 });
@@ -6443,7 +6443,58 @@ function loyStats(L) {
   o.claimPct = o.qrKnown ? Math.round(o.qrClaim / o.qrKnown * 100) : null;
   return o;
 }
+function vendSales(L, all) {
+  const paid = L.filter((b) => b.status === "paid");
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+  const ventes = r2(sum(paid.map((b) => {
+    var _a;
+    return +((_a = b.paidTotal) != null ? _a : b.total) || 0;
+  })));
+  const pcs = sum(paid.map((b) => sum((b.lines || []).map((l) => +l.qty || 0))));
+  return {
+    n: L.length,
+    paid: paid.length,
+    ventes,
+    panier: paid.length ? r2(ventes / paid.length) : 0,
+    pcs: paid.length ? Math.round(pcs / paid.length * 10) / 10 : 0,
+    cancel: all.filter((b) => b.status === "cancel").length,
+    till: paid.filter((b) => {
+      var _a;
+      return (_a = b.tillAdd) == null ? void 0 : _a.length;
+    }).length,
+    tillV: r2(sum(paid.filter((b) => {
+      var _a;
+      return (_a = b.tillAdd) == null ? void 0 : _a.length;
+    }).map((b) => sum(b.tillAdd.map((x) => {
+      var _a;
+      return (+x.qty || 0) * (+((_a = S.items[x.item]) == null ? void 0 : _a.price) || 0);
+    })))))
+  };
+}
+function vendObs(n, s, o, y, T) {
+  const out = [];
+  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+  if (T.top === n && T.k > 1) out.push(["good", "🏆 هي اللي بيعات أكثر فهاد المدة (" + money(s.ventes) + ")."]);
+  if (T.k > 1 && s.paid >= 10) {
+    if (s.panier < T.panier * 0.95) out.push(["bad", "🛒 السلة ديالها صغيرة: " + money(s.panier) + " فالمعدل، والمعدل ديال البائعات " + money(T.panier) + ". خاصها تقترح منتوج آخر وتفكر الزبون بعرض الفيينوازري."]);
+    else if (s.panier > T.panier * 1.05) out.push(["good", "🛒 السلة ديالها كبر من المعدل (" + money(s.panier) + " مقابل " + money(T.panier) + ")."]);
+    if (s.pcs > T.pcs * 1.1) out.push(["good", "🥐 كتبيع حبات أكثر فكل كوموند (" + fmt(s.pcs) + " مقابل " + fmt(T.pcs) + ")."]);
+  }
+  if (s.cancel && pct(s.cancel, s.n + s.cancel) >= 5) out.push(["bad", "❌ " + s.cancel + " كوموند تلغات (" + pct(s.cancel, s.n + s.cancel) + "%). شوف علاش."]);
+  if (s.till) out.push(["warn", "➕ الكيسيير زادت منتوجات ف " + s.till + " كوموند ديالها (" + money(s.tillV) + "): بيع كان ممكن تديرو هي."]);
+  if (y.n >= 5 && y.custPct < 60) out.push(["bad", "⭐ ما كتقيدش الزبناء مزيان: " + y.custPct + "% بس. الهدف 80% ولا كثر."]);
+  else if (y.n >= 5 && y.custPct >= 80) out.push(["good", "⭐ كتقيد الزبناء مزيان (" + y.custPct + "%)."]);
+  if (y.qrCalm) out.push(["bad", "📱 صيفطات " + y.qrCalm + " زبون للـQR وما كانش الزحام."]);
+  if (o.n >= 5 && pct(o.fast, o.n) >= 30) out.push(["bad", "⚡ " + pct(o.fast, o.n) + "% من الآراء جات فأقل من 2.5 ثانية: غالباً هي اللي كتجاوب ماشي الزبون."]);
+  if (o.early) out.push(["bad", "⛔ ضغطات " + o.early + " مرة على الرأي قبل ما يجاوب الزبون (ما تحسباتش)."]);
+  if (o.none) out.push(["warn", "⏳ " + o.none + " كوموند بلا ما تسول الزبون على رأيه."]);
+  if (o.bad) out.push(["bad", "😞 " + o.bad + " زبون ما عجبوش الخدمة. شوف الملاحظات تحت."]);
+  if (o.n >= 10 && o.ok + o.bad === 0 && !o.fast) out.push(["warn", "🤔 كاع الآراء «😍». مزيان، ولكن تأكد بلي الزبون هو اللي كيجاوب."]);
+  if (!out.some((x) => x[0] !== "good")) out.push(["good", "✅ خدمة مزيانة، ما كاين حتى ملاحظة."]);
+  return out;
+}
 function vAvis() {
+  var _a;
   if (!isMgr()) return emptyB("🔒", "ما عندكش الحق.");
   const P = S.avP || "7";
   const from = P === "1" ? today() : daysAgo(+P - 1);
@@ -6464,26 +6515,34 @@ function vAvis() {
       S.qrtBusy = 0;
     });
   }
+  const BA = (S.bons || []).filter((b) => b.date >= from);
   const by = {};
   B.forEach((b) => {
     const k = b.by || "—";
     (by[k] = by[k] || []).push(b);
   });
-  const rows = Object.entries(by).map(([n, L]) => ({ n, o: avisStats(L), L })).sort((a, b) => b.o.n - a.o.n);
+  const rows = Object.entries(by).map(([n, L]) => ({ n, o: avisStats(L), L, s: vendSales(L, BA.filter((b) => (b.by || "—") === n)), y: loyStats(L) })).sort((a, b) => b.s.ventes - a.s.ventes);
+  const TP = rows.reduce((a, r) => a + r.s.paid, 0), TV = rows.reduce((a, r) => a + r.s.ventes, 0), TPc = rows.reduce((a, r) => a + r.s.pcs * r.s.paid, 0);
+  const T = { k: rows.length, top: (_a = rows[0]) == null ? void 0 : _a.n, panier: TP ? r2(TV / TP) : 0, pcs: TP ? Math.round(TPc / TP * 10) / 10 : 0 };
+  const OBC = { good: "#16a34a", warn: "#ca8a04", bad: "#dc2626" };
   const bar = (o) => `<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line)">${[["good", "#16a34a"], ["ok", "#eab308"], ["bad", "#dc2626"], ["refused", "#94a3b8"], ["none", "#cbd5e1"]].map(([k, c]) => o[k] ? `<span style="width:${o[k] / o.n * 100}%;background:${c}"></span>` : "").join("")}</div>`;
   const bads = B.filter((b) => {
-    var _a;
-    return ((_a = b.avis) == null ? void 0 : _a.r) === "bad";
+    var _a2;
+    return ((_a2 = b.avis) == null ? void 0 : _a2.r) === "bad";
   }).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 30);
-  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">⭐ البائعات: الوفاء وآراء الزبناء</h2></div>
+  return `<section class="card" style="gap:8px"><div class="head"><h2 style="margin:0">📊 تقرير البائعات</h2></div>
    <div class="chips">${[["1", "اليوم"], ["7", "7 أيام"], ["14", "14 يوم"]].map(([v, l]) => `<button type="button" class="chip ${P === v ? "on" : ""}" onclick="S.avP='${v}';render()">${l}</button>`).join("")}</div>
    <p class="muted" style="margin:0">⭐ الوفاء: كل زبون خاصو يتقيد عند البائعة. الـQR (يمشي لاكيس ويسكاني) غير فاش كيكون الزحام. «QR بلا زحام» = البائعة صيفطات الزبون للـQR وما كانش الزحام.</p>
    <p class="muted" style="margin:0">كل كوموند ديال البائعة خاصها يكون فيها الرأي ديال الزبون. «ما تسولش» = البائعة ما خلاتش الزبون يجاوب. «⚡ سريع بزاف» = الجواب جا فأقل من 2.5 ثانية من بعد الكوموند، يعني غالباً البائعة اللي جاوبات.</p></section>
-   ${rows.length ? rows.map(({ n, o, L }) => `<section class="card" style="gap:6px"><div class="head"><h2 style="margin:0">👤 ${esc(n)}</h2><span class="tag ${o.score == null ? "" : o.score >= 80 ? "good" : o.score >= 60 ? "warn" : "bad"}">${o.score == null ? "—" : o.score + "/100"}</span></div>${bar(o)}
+   ${rows.length > 1 ? `<section class="card" style="gap:6px"><h2 style="margin:0">🏁 المقارنة</h2><div style="overflow-x:auto"><table><thead><tr><th>البائعة</th><th>البيع</th><th>الكوموندات</th><th>السلة</th><th>حبات/سلة</th><th>قيدات</th><th>⚡ آراء سريعة</th></tr></thead><tbody>${rows.map((r) => `<tr><td><b>${esc(r.n)}</b></td><td class="n">${money(r.s.ventes)}</td><td class="n">${r.s.paid}</td><td class="n ${r.s.panier < T.panier * 0.95 ? "neg" : ""}">${money(r.s.panier)}</td><td class="n">${fmt(r.s.pcs)}</td><td class="n ${r.y.custPct < 60 ? "neg" : ""}">${r.y.custPct}%</td><td class="n ${r.o.n && r.o.fast / r.o.n >= 0.3 ? "neg" : ""}">${r.o.n ? Math.round(r.o.fast / r.o.n * 100) : 0}%</td></tr>`).join("")}<tr class="t"><td>المعدل</td><td class="n">${money(TV)}</td><td class="n">${TP}</td><td class="n">${money(T.panier)}</td><td class="n">${fmt(T.pcs)}</td><td></td><td></td></tr></tbody></table></div></section>` : ""}
+   ${rows.length ? rows.map(({ n, o, L, s, y }) => `<section class="card" style="gap:6px"><div class="head"><h2 style="margin:0">👤 ${esc(n)}</h2><span class="tag ${o.score == null ? "" : o.score >= 80 ? "good" : o.score >= 60 ? "warn" : "bad"}">${o.score == null ? "—" : o.score + "/100"}</span></div>
+     <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:.95rem"><span>💰 البيع: <b>${money(s.ventes)}</b></span><span>🧾 ${s.paid} كوموند تخلصات</span><span>🛒 السلة: <b>${money(s.panier)}</b></span><span>🥐 ${fmt(s.pcs)} حبة/سلة</span>${s.cancel ? `<span class="neg">❌ ${s.cancel} ملغية</span>` : ""}${s.till ? `<span>➕ زيادة فلاكيس: ${s.till}</span>` : ""}</div>
+     <div style="display:flex;flex-direction:column;gap:4px;background:var(--bg);border-radius:12px;padding:8px 10px"><b style="font-size:.9rem">🧠 الملاحظات</b>${vendObs(n, s, o, y, T).map(([k, t]) => `<div style="font-size:.9rem;border-inline-start:4px solid ${OBC[k]};padding-inline-start:8px">${esc(t)}</div>`).join("")}</div>
+     ${bar(o)}
      <div class="muted" style="display:flex;flex-wrap:wrap;gap:10px;font-size:.9rem"><span>🧾 ${o.n} كوموند</span><span>✅ جاوبو: <b>${o.pct}%</b></span><span>😍 ${o.good}</span><span>😐 ${o.ok}</span><span>😞 ${o.bad}</span><span>🙅 ${o.refused}</span><span class="${o.none ? "neg" : ""}">⏳ ما تسولش: ${o.none}</span>${o.fast ? `<span class="neg">⚡ جواب سريع بزاف (أقل من 2.5 ثانية): ${o.fast}</span>` : ""}${o.early ? `<span class="neg">⛔ ضغطات قبل الوقت (ما تحسباتش): ${o.early}</span>` : ""}</div>
      ${(() => {
-    const y = loyStats(L);
-    return `<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:.9rem;border-top:1px dashed var(--line);padding-top:6px"><span>⭐ قيدات: <b class="${y.custPct < 60 ? "neg" : ""}">${y.cust}/${y.n} (${y.custPct}%)</b></span><span>📱 QR: ${y.qr}</span><span class="${y.qrCalm ? "neg" : ""}">⚠️ QR بلا زحام: <b>${y.qrCalm}</b></span><span>📲 سكانيو الـQR: ${y.claimPct == null ? "—" : y.qrClaim + "/" + y.qrKnown + " (" + y.claimPct + "%)"}</span></div>` + (() => {
+    const y2 = loyStats(L);
+    return `<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:.9rem;border-top:1px dashed var(--line);padding-top:6px"><span>⭐ قيدات: <b class="${y2.custPct < 60 ? "neg" : ""}">${y2.cust}/${y2.n} (${y2.custPct}%)</b></span><span>📱 QR: ${y2.qr}</span><span class="${y2.qrCalm ? "neg" : ""}">⚠️ QR بلا زحام: <b>${y2.qrCalm}</b></span><span>📲 سكانيو الـQR: ${y2.claimPct == null ? "—" : y2.qrClaim + "/" + y2.qrKnown + " (" + y2.claimPct + "%)"}</span></div>` + (() => {
       const W = {};
       L.filter((b) => b.qrWhy).forEach((b) => W[b.qrWhy] = (W[b.qrWhy] || 0) + 1);
       const e = Object.entries(W);
@@ -6492,8 +6551,8 @@ function vAvis() {
   })()}</section>`).join("") : `<section class="card">${emptyB("⭐", "ما كاين حتى كوموند فهاد المدة.")}</section>`}
    ${(() => {
     const rf = B.filter((b) => {
-      var _a;
-      return ((_a = b.avis) == null ? void 0 : _a.r) === "refused";
+      var _a2;
+      return ((_a2 = b.avis) == null ? void 0 : _a2.r) === "refused";
     }).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 50);
     return rf.length ? `<section class="card" style="gap:6px"><h2 style="margin:0">🙅 الزبناء اللي ما بغاوش يجاوبو (${rf.length})</h2><p class="muted" style="margin:0">راقبو هاد الكوموندات: واش بصح الزبون ما بغاش ولا البائعة ما سولاتوش.</p>${rf.map((b) => `<div class="prow"><span>👤 ${esc(b.by || "")} · ${esc(b.name || "")} · ${money(b.total)}</span><span class="muted">${esc(b.date || "")} ${hm(b.ts)} · ${esc(b.no || "")}</span></div>`).join("")}</section>` : "";
   })()}
