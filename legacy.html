@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117220208" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117232033" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2560,7 +2560,7 @@ async function boot() {
     }, err);
     db.collection("charges").orderBy("month", "desc").limit(500).onSnapshot((q) => {
       S.chg = q.docs.map((d) => __spreadValues({ id: d.id }, d.data()));
-      if (S.view === "report" || S.view === "charges") render();
+      if (S.view === "report" || S.view === "charges" || S.view === "gas") render();
     }, err);
     db.collection("stockouts").where("date", ">=", daysAgo(30)).onSnapshot((q) => {
       S.outs = q.docs.map((d) => __spreadValues({ id: d.id }, d.data())).sort((a, b) => b.outTs - a.outTs);
@@ -2675,7 +2675,7 @@ async function boot() {
     }, err);
     db.doc("config/alloc").onSnapshot((d) => {
       S.alloc = d.exists ? d.data() : {};
-      if (S.view === "report" || S.view === "charges") render();
+      if (S.view === "report" || S.view === "charges" || S.view === "gas") render();
     }, err);
     db.doc("config/loyalty").onSnapshot((d) => {
       S.loy = d.exists ? d.data() : null;
@@ -3117,7 +3117,7 @@ function draw() {
     if (!(S.kf.step === "msg" && $("#ktext") || S.kf.step === "cand" && $("#cname") || S.kf.step === "idle" && $(".attract"))) $("#main").innerHTML = vKiosk();
     return;
   }
-  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, avis: vAvis, cam: vCam, retours: vRetours, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
+  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, gas: vGas, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, avis: vAvis, cam: vCam, retours: vRetours, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
   const y = window.scrollY;
   $("#main").innerHTML = V();
   window.scrollTo(0, y);
@@ -4538,7 +4538,7 @@ function vMore(arr) {
   }
   if (isMgr() || r === "driver") T.unshift({ i: "🚚", l: "مصاريف سيارة التوصيل", v: "vehicle", c: 2 });
   if (isMgr()) T.unshift({ i: "🔄", l: "تحويل المواد بين الورشات", a: "xfhome", c: 6, b: xfList().filter((o) => o.status === "sent").length });
-  if (r === "admin") T.unshift({ i: "💰", l: "الأثمنة والهامش الصافي", v: "pricing", c: 4 }, { i: "🎯", l: "الأهداف وتتبع البيع", v: "objectifs", c: 5 }, { i: "📅", l: "النوبات والأدوار ديال البائعات", v: "roster", c: 2 }, { i: "📈", l: "الأرباح حسب الورشة", v: "report", c: 5 }, { i: "💼", l: "المصاريف", v: "charges", c: 1 });
+  if (r === "admin") T.unshift({ i: "💰", l: "الأثمنة والهامش الصافي", v: "pricing", c: 4 }, { i: "🎯", l: "الأهداف وتتبع البيع", v: "objectifs", c: 5 }, { i: "📅", l: "النوبات والأدوار ديال البائعات", v: "roster", c: 2 }, { i: "📈", l: "الأرباح حسب الورشة", v: "report", c: 5 }, { i: "💼", l: "المصاريف", v: "charges", c: 1 }, { i: "🔥", l: "الغاز (البوطات والفواتير)", v: "gas", c: 1 });
   if (r === "admin") T.push({ i: "👥", l: "الفريق", v: "team", c: 5 });
   if (isMgr() && window.morangoDev) T.unshift({ i: "📱", l: "الأجهزة وكود الدخول", v: "devices", c: 6 });
   if (isAdmin()) T.push({ i: "💾", l: "النسخ الاحتياطية", a: "backup", c: 2 });
@@ -10977,6 +10977,83 @@ function vCharges() {
    ${payrollHtml(m)}<h2 style="margin:6px 4px 0">💼 المصاريف الأخرى</h2>
    ${byCat.length ? byCat.map((g) => `<section class="card"><div class="head"><h2>${g.i} ${g.l}</h2><b class="num">${money(g.items.reduce((s, c) => s + (+c.amount || 0), 0))}</b></div><ul class="list">${g.items.map((c) => `<li class="clk" data-act="charge" data-id="${c.id}"><div><b>${c.cat === "salaries" ? c.ws ? LOCI[c.ws] + " " + esc(LOC[c.ws]) : "🏢 عامة (الإدارة ونقاط البيع)" : esc(c.note || g.l)}</b><div class="muted">${c.cat === "salaries" && c.note ? esc(c.note) + " · " : ""}${c.cat === "salaries" && WS.some((w) => w.id === c.ws) ? "مباشرة على الورشة" : c.cat === "salaries" && c.ws === "prod" ? "🧹 قسم الإنتاج · كتتقسم على الورشات" : c.cat === "salaries" && c.ws === "com" ? "🛍️ القسم التجاري · كتوزع حسب رقم المعاملات" : "كتوزع حسب رقم المعاملات"}</div></div><b class="num">${money(c.amount)}</b></li>`).join("")}</ul></section>`).join("") : `<section class="card">${emptyB("💼", "ما تدخل حتى مصروف آخر لهاد الشهر.")}</section>`}
    <p class="muted">👥 أجور الورشات كتدخل مباشرة على الورشة ديالها. 💧⚡🔥🏠📣🛡️🏛️ المصاريف العامة (وحتى الأجور العامة) كتتوزع أوتوماتيكياً على الورشات وعلى كل منتوج حسب الحصة ديالو من رقم المعاملات.</p>`;
+}
+function vGas() {
+  if (!isMgr()) return emptyB("🔒", "ما عندكش الحق.");
+  const cur = ym(today());
+  const m = S.chm || cur;
+  const ms = [addMonths(cur, -2), addMonths(cur, -1), cur].map((x) => ({ id: x, name: mLabel(x) }));
+  const L = S.chg.filter((c) => c.cat === "gas" && c.month === m).sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.ts || 0) - (a.ts || 0));
+  const real = L.filter((c) => c.gas);
+  const approx = L.filter((c) => !c.gas);
+  const tot = real.reduce((s, c) => s + (+c.amount || 0), 0), nb = real.reduce((s, c) => s + (+c.qty || 0), 0);
+  const byW = {};
+  real.forEach((c) => {
+    const k = c.gws || "";
+    byW[k] = (byW[k] || 0) + (+c.amount || 0);
+  });
+  return `<h1>🔥 الغاز</h1>${chipsHtml(ms, m, "chmonth")}
+   <button class="act c1" data-act="newgas" style="min-height:84px"><span class="big">➕</span><b>زيد شرية ديال الغاز</b></button>
+   <div class="stats"><div class="stat"><span>💰 المجموع ديال ${esc(mLabel(m))}</span><b>${money(tot)}</b></div><div class="stat"><span>🔥 البوطات</span><b>${fmt(nb)}</b></div>${nb ? `<div class="stat"><span>💵 ثمن البوطة</span><b>${money(tot / nb)}</b></div>` : ""}</div>
+   ${Object.keys(byW).length ? `<section class="card"><h2 style="margin:0">🏭 حسب الأتولي</h2>${Object.entries(byW).sort((a, b) => b[1] - a[1]).map(([w, v]) => `<div class="prow"><span>${w ? LOCI[w] + " " + esc(LOC[w]) : "🏢 عام (كاع الأتولي)"}</span><b class="num">${money(v)}</b></div>`).join("")}</section>` : ""}
+   <section class="card"><div class="head"><h2>🧾 الشريات</h2><span class="tag">${real.length}</span></div>${real.length ? `<ul class="list">${real.map((c) => {
+    var _a;
+    return `<li class="clk" data-act="gasedit" data-id="${c.id}"><div><b>${esc(c.date || "")} · ${fmt(c.qty)} بوطة × ${money(c.unit)}</b><div class="muted">${c.gws ? LOCI[c.gws] + " " + esc(LOC[c.gws]) : "🏢 عام"}${c.sup ? " · " + esc(c.sup) : ""}${c.note ? " · " + esc(c.note) : ""}${((_a = c.photos) == null ? void 0 : _a.length) ? " · 📷" : ""} · ${esc(c.by || "")}</div></div><b class="num">${money(c.amount)}</b></li>`;
+  }).join("")}</ul>` : emptyB("🔥", "ما تدخلات حتى شرية ديال الغاز فهاد الشهر.")}</section>
+   ${approx.length ? `<section class="card" style="gap:6px"><h2 style="margin:0">⚠️ مبلغ تقريبي</h2>${approx.map((c) => `<div class="prow"><span>${esc(c.note || "الغاز")}</span><b class="num">${money(c.amount)}</b></div>`).join("")}<p class="muted" style="margin:0">هاد المبلغ تدخل بالتقريب فالمصاريف. ملي تدخل كاع الشريات ديال الشهر، حيدو باش ما يتحسبش الغاز جوج مرات.</p>${isAdmin() ? approx.map((c) => `<button type="button" class="btn small danger" data-act="gasdelapprox" data-id="${c.id}">🗑️ حيد المبلغ التقريبي (${money(c.amount)})</button>`).join("") : ""}</section>` : ""}
+   <p class="muted">كل شرية كتدخل فالمصاريف (🔥 الغاز) ديال الشهر، وكتتوزع على المنتوجات بحال المصاريف الأخرى.</p>`;
+}
+function sheetGas(id) {
+  var _a, _b;
+  if (!isMgr()) return;
+  const c = id ? __spreadValues({}, S.chg.find((x) => x.id === id)) : {};
+  const last = S.chg.filter((x) => x.gas && +x.unit > 0).sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
+  let armed = false;
+  openSheet(id ? "✏️ شرية الغاز" : "🔥 شرية ديال الغاز", `${inp("gdate", "📅 النهار", c.date || today(), "date")}
+   ${moneyIn("gqty", "🔥 شحال من بوطة", c.qty ? fmt(c.qty) : "")}${moneyIn("gunit", "💵 ثمن البوطة (د.م)", c.unit ? fmt(c.unit) : last ? fmt(last.unit) : "")}<div id="gtot" class="muted"></div>
+   ${choice("gws", "لأشمن أتولي؟", [...WS.map((x) => ({ v: x.id, l: x.name, i: x.i })), { v: "", l: "عام (كاع الأتولي)", i: "🏢" }], (_a = c.gws) != null ? _a : "", 3)}
+   ${inp("gsup", "🏪 المورد", c.sup || (last == null ? void 0 : last.sup) || "Tissir Gaz", "text", 'autocomplete="off"')}${inp("gnote", "📝 ملاحظة (اختياري)", c.note || "", "text", 'autocomplete="off"')}
+   ${id ? "" : photoField("gph", "📷 صورة الفاتورة (اختياري)")}${id && ((_b = c.photos) == null ? void 0 : _b.length) ? `<div class="media">${mediaBtns(c.photos, "الفاتورة", "🧾")}</div>` : ""}${errP}
+   <button class="btn primary block" type="submit">✅ حفظ</button>${id ? '<button type="button" class="btn danger block" id="gdel">🗑️ حذف</button>' : ""}`, async (f) => {
+    const q = num(f.gqty.value), u = num(f.gunit.value);
+    if (!(q > 0)) return ferr("دخل شحال من بوطة.");
+    if (!(u > 0)) return ferr("دخل ثمن البوطة.");
+    const date = f.gdate.value || today();
+    busy(f, true);
+    try {
+      const d = { cat: "gas", gas: true, ws: "", gws: f.gws.value || "", qty: q, unit: u, amount: r2(q * u), date, month: date.slice(0, 7), sup: f.gsup.value.trim(), note: f.gnote.value.trim(), by: c.by || meName(), ts: c.ts || Date.now() };
+      if (!id) d.photos = await saveMedia(PH.gph, "charge");
+      else d.photos = c.photos || [];
+      await (id ? db.doc("charges/" + id).set(d) : db.collection("charges").add(d));
+      S.chm = d.month;
+      closeSheet();
+      toast("✅ تسجلات شرية الغاز");
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => {
+    const upd = () => {
+      const t = num(f.gqty.value) * num(f.gunit.value);
+      $("#gtot", f).innerHTML = t > 0 ? "💰 المجموع: <b>" + money(t) + "</b>" : "";
+    };
+    f.addEventListener("input", upd);
+    upd();
+    const del = $("#gdel", f);
+    if (del) del.onclick = async () => {
+      if (!armed) {
+        armed = true;
+        del.textContent = "متأكد؟ ضغط مرة أخرى للحذف";
+        return;
+      }
+      try {
+        await db.doc("charges/" + id).delete();
+        closeSheet();
+        toast("🗑️ تحذف");
+      } catch (_) {
+        ferr("ما تحذفش.");
+      }
+    };
+  });
 }
 function sheetCharge(id) {
   var _a;
@@ -18605,6 +18682,18 @@ const ACT = {
   payroll: (el) => sheetPayroll(el.dataset.id),
   alloc: (el) => sheetAlloc(el.dataset.id),
   newcharge: () => sheetCharge(),
+  newgas: () => sheetGas(),
+  gasedit: (el) => sheetGas(el.dataset.id),
+  gasdelapprox: async (el) => {
+    if (!isAdmin()) return;
+    if (!confirm("نحيدو المبلغ التقريبي ديال الغاز؟")) return;
+    try {
+      await db.doc("charges/" + el.dataset.id).delete();
+      toast("🗑️ تحيد");
+    } catch (_) {
+      toast("ما تحيدش", true);
+    }
+  },
   charge: (el) => sheetCharge(el.dataset.id),
   repper: (el) => {
     S.rep.per = el.dataset.id;
