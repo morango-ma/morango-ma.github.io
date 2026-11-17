@@ -394,7 +394,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261116224202" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117115718" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -7666,6 +7666,12 @@ function barcodeCanvas(txt, maxW, h) {
   });
   return cv;
 }
+const offBase = (l) => {
+  const it = S.items[l.item] || {};
+  if (!it.offer || !it.offer.g) return 0;
+  const b = +it.price || 0;
+  return b > (+l.price || 0) + 1e-9 ? b : 0;
+};
 async function receiptBlob(sh, t, copy) {
   var _a, _b, _c;
   const cfg = S.cfg || {};
@@ -7795,12 +7801,33 @@ async function receiptBlob(sh, t, copy) {
         center("— " + nm + " —", Math.round(F * 0.82), true);
         L.forEach((l) => {
           pair(iname(l.item), money(l.qty * l.price).replace(" د.م", ""), F, true);
-          R.push({ k: "p", r: rQtyU(l) + " × " + money(l.price) + " (" + (unitLbl(l.item) === "كيلو" ? "ثمن الكيلو" : "ثمن الحبة") + ")", l: "", sz: Math.round(F * 0.78), b: false, mut: true });
+          const ob = offBase(l);
+          R.push({ k: "p", r: rQtyU(l) + " × " + money(l.price) + " (" + (unitLbl(l.item) === "كيلو" ? "ثمن الكيلو" : "ثمن الحبة") + (ob ? " فعوض " + money(ob).replace(" د.م", "") : "") + ")", l: "", sz: Math.round(F * 0.78), b: false, mut: true });
         });
-        if (ord.length > 1) pair("مجموع " + nm, money(L.reduce((a, l) => a + l.qty * l.price, 0)).replace(" د.م", ""), Math.round(F * 0.78));
+        {
+          const gs = L.reduce((a, l) => {
+            const ob = offBase(l);
+            return a + (ob ? (ob - l.price) * l.qty : 0);
+          }, 0), gt = L.reduce((a, l) => a + l.qty * l.price, 0);
+          if (ord.length > 1) pair("مجموع " + nm, money(gt).replace(" د.م", ""), Math.round(F * 0.78), gs > 1e-3);
+          if (gs > 1e-3) pair("🎁 خلصتي " + money(gt) + " فعوض " + money(gt + gs), "", Math.round(F * 0.82), true);
+        }
       });
     }
     line();
+    {
+      const sv = t.lines.reduce((a, l) => {
+        const ob = offBase(l);
+        return a + (ob ? (ob - l.price) * l.qty : 0);
+      }, 0);
+      if (sv > 1e-3) {
+        center("🎁 عرض " + OFFER_N.vien + " · اقتاصدتي " + money(sv), Math.round(F * 1.05), true);
+        center("😋 استافد منهم وزيد خود شي حاجة زوينة", Math.round(F * 0.85), false);
+        const nv = offerCount("vien", Object.fromEntries(t.lines.map((l) => [l.item, l.qty]))), tv = OFFER_T.vien;
+        if (nv < tv[1]) center("💡 خود " + fmt(tv[1]) + " حبات ولا كثر من الفيينوازري وتاخد أرخص ثمن", Math.round(F * 0.78), false);
+        gap(4);
+      }
+    }
     if (t.discount) pair("خصم الوفاء", "-" + money(t.discount), Math.round(F * 0.85));
     pair("المجموع", money(t.total), Math.round(F * 1.35), true);
     if (t.given != null) {
