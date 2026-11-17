@@ -390,7 +390,7 @@ body{background:radial-gradient(1200px 520px at 100% -10%,color-mix(in srgb,var(
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117210146"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261117212645"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -2083,8 +2083,8 @@ async function receiptBlob(sh,t,copy){
   const R=[];const center=(txt,sz,b)=>wrap(txt,sz,b,W-2*P).forEach(l=>R.push({k:'c',t:l,sz,b}));
   const pair=(r,l,sz,b)=>{x.font=font(sz,b);const lw=x.measureText(l).width;const rl=wrap(r,sz,b,W-2*P-lw-12);rl.forEach((t2,i)=>R.push({k:'p',r:t2,l:i===rl.length-1?l:'',sz,b}))};
   const line=()=>R.push({k:'l'}),gap=h=>R.push({k:'g',h});
-  let LG=null;try{LG=await receiptLogo()}catch(_){}if(LG){const lw=Math.round(W*.32);R.push({k:'img',im:LG,w:lw,h:Math.round(lw*LG.height/LG.width)});gap(6)}
-  center(cfg.title||'MORANGO',Math.round(F*1.45),true);if(cfg.address)center(cfg.address,Math.round(F*.8));if(cfg.phone)center('☎ '+cfg.phone,Math.round(F*.8));
+  let LG=null;try{LG=await receiptLogo()}catch(_){}if(LG){const lw=Math.round(W*.42);R.push({k:'img',im:LG,w:lw,h:Math.round(lw*LG.height/LG.width)});gap(6)}
+  if(!LG||cfg.title)center(cfg.title||'MORANGO',Math.round(F*1.45),true);if(cfg.address)center(cfg.address,Math.round(F*.8));if(cfg.phone)center('☎ '+cfg.phone,Math.round(F*.8));
   center(LOC[sh.pos],Math.round(F*.85));if(copy==='ordc'||copy==='ordl'){const o=t,rest=ordRest(o);gap(6);line();center(copy==='ordc'?'📝 بون الكوموند':'🎉 بون التسليم · وصل الخلاص',Math.round(F*1.2),true);center('#'+o.num,Math.round(F*1.6),true);line();
    pair('👤 '+o.client,'',Math.round(F*.95),true);(o.phones||[]).forEach(p=>pair('📞 '+p.n+(p.wa?' (واتساب)':''),'',Math.round(F*.8)));wrap('🏠 '+(o.address||''),Math.round(F*.8),false,W-2*P).forEach(l=>R.push({k:'p',r:l,l:'',sz:Math.round(F*.8),b:false}));pair('📅 التسليم',(o.due||'')+' '+(o.dueTime||''),Math.round(F*.85),true);line();
    (o.lines||[]).forEach(l=>{pair(lnName(l),l.price!=null?money(l.qty*l.price).replace(' د.م',''):'',F,true);R.push({k:'p',r:fmt(l.qty)+' × '+(l.price!=null?money(l.price):'')+(l.kind==='sp'?' · طلبية خاصة':''),l:'',sz:Math.round(F*.78),b:false,mut:true});if(l.note)wrap('📝 '+l.note,Math.round(F*.75),false,W-2*P).forEach(z=>R.push({k:'p',r:z,l:'',sz:Math.round(F*.75),b:false,mut:true}))});
