@@ -402,7 +402,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261118205617" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261118205639" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4089,9 +4089,8 @@ function vSend() {
 }
 const openShift = (p) => S.shifts.find((x) => x.pos === p && x.status === "open");
 const cartOf = (p) => S.cart[p] || (S.cart[p] = {});
-const OFFER_T = { vien: [3, 5], sale: [10, 20] };
-const OFFER_N = { vien: "الفيينوازري", sale: "التريتور" };
-const eveOn = (it) => !!(it && it.eve && +it.eve.p > 0 && (/* @__PURE__ */ new Date()).getHours() >= (+it.eve.h || 19));
+const OFFER_T = { vien: [3, 5] };
+const OFFER_N = { vien: "الفيينوازري" };
 const offerCount = (g, cart) => cart ? Object.entries(cart).reduce((n, [i, x]) => {
   var _a, _b;
   return n + (((_b = (_a = S.items[i]) == null ? void 0 : _a.offer) == null ? void 0 : _b.g) === g ? +x || 0 : 0);
@@ -4106,13 +4105,11 @@ const offerTier = (id, cart) => {
 };
 const unitPx = (id, q, cart) => {
   const it = S.items[id] || {};
-  const ev = cart && eveOn(it) ? +it.eve.p : Infinity;
   if (it.offer && it.offer.g && cart) {
     const b = +it.price || 0, k = offerTier(id, cart);
     const v = k === 2 ? +it.offer.p3 || +it.offer.p2 || b : k === 1 ? +it.offer.p2 || b : b;
-    return Math.min(b, v, ev);
+    return Math.min(b, v);
   }
-  if (ev < Infinity) return Math.min(+it.price || 0, ev);
   const p1 = +it.price || 0, p2 = +it.price2 || 0, p3 = +it.price3 || 0;
   q = +q || 0;
   if (q >= 3 - 1e-9 && (p3 > 0 || p2 > 0)) return p3 > 0 ? p3 : p2;
@@ -4494,7 +4491,7 @@ function ticketPanel(p) {
   return `<aside class="ticket" aria-label="الوصل الحالي"><div class="th"><h2>🧾 الزبون الحالي</h2>${ids.length ? '<button class="link" data-act="cclear">🗑️ فرغ</button>' : ""}</div>
   <div class="tl">${ids.length ? ids.map((id) => {
     var _a2, _b2;
-    return prow(id, money(unitPx(id, c[id], c)) + (unitPx(id, c[id], c) !== (+((_a2 = S.items[id]) == null ? void 0 : _a2.price) || 0) ? ' <span class="tag good" style="font-size:.72rem">🏷️ ' + (((_b2 = S.items[id]) == null ? void 0 : _b2.offer) ? "عرض" : eveOn(S.items[id]) ? "عرض العشية" : "ثمن الكمية") + "</span>" : ""), cartQty(id, c[id]));
+    return prow(id, money(unitPx(id, c[id], c)) + (unitPx(id, c[id], c) !== (+((_a2 = S.items[id]) == null ? void 0 : _a2.price) || 0) ? ' <span class="tag good" style="font-size:.72rem">🏷️ ' + (((_b2 = S.items[id]) == null ? void 0 : _b2.offer) ? "عرض" : "ثمن الكمية") + "</span>" : ""), cartQty(id, c[id]));
   }).join("") : emptyB("👆", "ضغط على المنتوجات باش تزيدهم.")}</div>
   <div class="tf">${offerHint(c)}${custChip(p)}<div class="tot"><span>المجموع</span><span class="num ctot">${money(cartTotal(p))}</span></div><div class="muted">${fmt(n)} قطعة</div>
   ${((_a = S.bonPay) == null ? void 0 : _a[p]) ? '<div class="muted">📝 كتخلصي البون ' + esc(((_b = (S.bons || []).find((b) => b.id === S.bonPay[p])) == null ? void 0 : _b.no) || "") + "</div>" : ""}<button class="btn primary block paybtn" data-act="cart" ${ids.length ? "" : "disabled"}>${posMode(p) === "v" ? "📝 خرج البون" : "💵 خلص"}</button></div></aside>`;
@@ -7895,7 +7892,7 @@ function barcodeCanvas(txt, maxW, h) {
 }
 const offBase = (l) => {
   const it = S.items[l.item] || {};
-  if (!(it.offer && it.offer.g) && !it.eve) return 0;
+  if (!it.offer || !it.offer.g) return 0;
   const b = +it.price || 0;
   return b > (+l.price || 0) + 1e-9 ? b : 0;
 };
@@ -8048,14 +8045,10 @@ async function receiptBlob(sh, t, copy) {
         return a + (ob ? (ob - l.price) * l.qty : 0);
       }, 0);
       if (sv > 1e-3) {
-        const gn = [...new Set(t.lines.filter((l) => offBase(l)).map((l) => {
-          const it = S.items[l.item] || {};
-          return it.offer && it.offer.g ? OFFER_N[it.offer.g] : "العشية";
-        }))].filter(Boolean);
-        center("🎁 عرض " + gn.join(" و ") + " · اقتاصدتي " + money(sv), Math.round(F * 1.05), true);
+        center("🎁 عرض " + OFFER_N.vien + " · اقتاصدتي " + money(sv), Math.round(F * 1.05), true);
         center("😋 استافد منهم وزيد خود شي حاجة زوينة", Math.round(F * 0.85), false);
         const nv = offerCount("vien", Object.fromEntries(t.lines.map((l) => [l.item, l.qty]))), tv = OFFER_T.vien;
-        if (nv > 0 && nv < tv[1]) center("💡 خود " + fmt(tv[1]) + " حبات ولا كثر من الفيينوازري وتاخد أرخص ثمن", Math.round(F * 0.78), false);
+        if (nv < tv[1]) center("💡 خود " + fmt(tv[1]) + " حبات ولا كثر من الفيينوازري وتاخد أرخص ثمن", Math.round(F * 0.78), false);
         gap(4);
       }
     }
