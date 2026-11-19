@@ -402,7 +402,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261119141202" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261119204310" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -978,7 +978,26 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     await qCount();
     setTimeout(flush, 4e3);
   }
-  async function sendOp(op) {
+  async function bonSetGuard(op) {
+    const { data, error } = await sb.from("docs").select("data").eq("col", "bons").eq("id", op.id).maybeSingle();
+    if (error) return { error };
+    if (!data) return null;
+    const cur = data.data || {};
+    if (cur.status && cur.status !== "open" && op.d && op.d.status === "open") {
+      const pa = {};
+      if (op.d.avis && (!cur.avis || cur.avis.r === "none")) pa.avis = op.d.avis;
+      return Object.keys(pa).length ? sb.rpc("doc_merge", { p_col: "bons", p_id: op.id, p_patch: pa }) : {};
+    }
+    const d = __spreadValues({}, op.d);
+    if (cur.status && cur.status !== "open") delete d.status;
+    if (cur.avis && cur.avis.r && cur.avis.r !== "none" && (!d.avis || d.avis.r === "none")) delete d.avis;
+    return sb.rpc("doc_merge", { p_col: "bons", p_id: op.id, p_patch: d });
+  }
+  async function sendOp(op, queued) {
+    if (queued && op.k === "set" && op.c === "bons") {
+      const g = await bonSetGuard(op);
+      if (g) return g;
+    }
     if (op.k === "set") return sb.rpc("doc_set", { p_col: op.c, p_id: op.id, p_data: op.d });
     if (op.k === "merge") return sb.rpc("doc_merge", { p_col: op.c, p_id: op.id, p_patch: op.d });
     if (op.k === "del") return sb.from("docs").delete().eq("col", op.c).eq("id", op.id);
@@ -1000,7 +1019,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
         if (!first) break;
         let r;
         try {
-          r = await sendOp(first.op);
+          r = await sendOp(first.op, true);
         } catch (e) {
           r = { error: e };
         }
@@ -6576,12 +6595,127 @@ function vAvis() {
   })()}
    ${bads.length ? `<section class="card" style="gap:6px"><h2 style="margin:0">😞 الآراء السلبية</h2>${bads.map((b) => `<div class="prow"><span>${esc(b.by || "")} · ${esc(b.avis.why || "")}</span><span class="muted">${esc(b.date || "")} ${hm(b.ts)} · ${esc(b.no || "")}</span></div>`).join("")}</section>` : ""}`;
 }
+let QRG = null;
+const qrgLoad = () => QRG || (QRG = new Promise((res, rej) => {
+  if (window.morangoQR) return res(window.morangoQR);
+  const sc = document.createElement("script");
+  sc.src = "qrgen.js";
+  sc.onload = () => res(window.morangoQR);
+  sc.onerror = (e) => {
+    QRG = null;
+    rej(e);
+  };
+  document.head.appendChild(sc);
+}));
+setTimeout(() => {
+  qrgLoad().catch(() => {
+  });
+  if (window.jsQR == null) jsqrLoad().catch(() => {
+  });
+}, 6e3);
+const netDown = () => {
+  try {
+    const o = window.morangoOffline && window.morangoOffline();
+    return !!(o && (o.offline || o.queue)) || navigator.onLine === false;
+  } catch (_) {
+    return false;
+  }
+};
+const asciiJ = (o) => JSON.stringify(o).replace(/[\u007f-\uffff]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+const BQ = "MGB1:";
+function bonQrText(b) {
+  const o = { id: b.id, p: b.pos, sh: b.shiftId, d: b.date, sq: b.seq, no: b.no, nm: b.name, by: b.by, bi: b.byId, ts: b.ts, l: (b.lines || []).map((l) => [l.item, +l.qty, +l.price]) };
+  if (b.pack && Object.keys(b.pack).length) o.pk = b.pack;
+  if (b.cust) o.c = [b.cust.id, b.cust.name || ""];
+  if (b.noLoy) o.nl = 1;
+  if (b.qrRush != null) o.qr = b.qrRush ? 1 : 0;
+  if (b.qrWhy) o.qw = b.qrWhy;
+  if (b.avis && b.avis.r && b.avis.r !== "none") o.av = b.avis;
+  if (b.editTs) o.et = b.editTs;
+  return BQ + asciiJ(o);
+}
+function bonFromQrText(t) {
+  var _a, _b;
+  t = String(t || "").trim();
+  if (!t.startsWith(BQ)) return null;
+  let o;
+  try {
+    o = JSON.parse(t.slice(BQ.length));
+  } catch (_) {
+    return null;
+  }
+  if (!o || !o.id || !Array.isArray(o.l) || !o.l.length) return null;
+  const lines = o.l.map((a) => ({ item: String(a[0]), qty: +a[1] || 0, price: +a[2] || 0 })).filter((l) => l.qty > 0);
+  const b = { pos: o.p, shiftId: o.sh, date: o.d || today(), seq: o.sq, no: o.no, name: o.nm || "", lines, total: r2(lines.reduce((a, l) => a + l.qty * l.price, 0)), by: o.by || ((_b = (_a = S.users) == null ? void 0 : _a[o.bi]) == null ? void 0 : _b.name) || "", byId: o.bi, ts: +o.ts || Date.now(), status: "open", pack: o.pk || {}, avis: o.av || { r: "none", ts: +o.ts || Date.now() }, viaQr: true };
+  if (o.c) b.cust = { id: o.c[0], name: o.c[1] };
+  if (o.nl) b.noLoy = true;
+  if (o.qr != null) b.qrRush = !!o.qr;
+  if (o.qw) b.qrWhy = o.qw;
+  if (o.et) b.editTs = +o.et;
+  return { id: String(o.id), b };
+}
+async function bonQrBox(el, b) {
+  try {
+    const Q = await qrgLoad();
+    const t = bonQrText(b);
+    el.innerHTML = Q.svg(t, t.length > 500 ? "L" : "M");
+  } catch (e) {
+    el.innerHTML = '<div class="muted">❌ الـQR ما خرجش. عطي الورقة ولا قولي لاكيس السمية والمنتوجات.</div>';
+  }
+}
+async function bonScan() {
+  if (vendRole() || vendOnly()) return;
+  scanCode(async (c) => {
+    const R = bonFromQrText(c);
+    if (!R) return toast("❌ هاد الكود ماشي ديال بون (QR ديال الكوموند)", true);
+    const { id, b } = R;
+    const unk = b.lines.filter((l) => !S.items[l.item]);
+    if (unk.length) return toast("❌ فالبون منتوج ما كايناش فهاد الجهاز (" + unk.length + "). حدثي التطبيق.", true);
+    if (b.pos && b.pos !== S.pos) return toast("⚠️ هاد البون ديال " + (LOC[b.pos] || b.pos) + "، ماشي ديال هاد لاكيس.", true);
+    let cur = (S.bons || []).find((x) => x.id === id);
+    if (!cur) {
+      try {
+        const g = await db.doc("bons/" + id).get();
+        if (g.exists) cur = __spreadValues({ id }, g.data());
+      } catch (_) {
+      }
+    }
+    if (cur && cur.status && cur.status !== "open") return toast("هاد البون " + (cur.status === "paid" ? "تخلص من قبل" : "ما بقاش مفتوح") + " · " + (cur.no || ""), true);
+    if (!cur) {
+      try {
+        await db.doc("bons/" + id).set(b);
+      } catch (e) {
+        return toast("❌ " + (e.message || e), true);
+      }
+      cur = __spreadValues({ id }, b);
+    }
+    const L = S.bons = S.bons || [];
+    const k = L.findIndex((x) => x.id === id);
+    if (k >= 0) L[k] = __spreadValues(__spreadValues({}, L[k]), cur);
+    else L.unshift(cur);
+    toast("📷 البون ديال " + (cur.name || cur.no) + " دخل · " + money(cur.total));
+    bonPay(id);
+  });
+}
 async function bonShow(b) {
   openSheet("✅ تصيفطات لاكيس", `<div class="receipt" style="text-align:center"><div class="muted">سمية الزبون</div><div class="disp" style="font-size:2.2rem;font-weight:800">👤 ${esc(b.name || "—")}</div><div class="muted">${esc(b.no)}</div></div>
    <div style="text-align:center;border:3px solid var(--acc,#e02843);border-radius:18px;padding:12px"><div style="font-weight:700">💰 خاصو يخلص · À payer</div><div class="disp num" style="font-size:3rem;font-weight:900;line-height:1.1">${money(b.total)}</div></div>
    <p style="margin:0;font-weight:600">🗣️ قولي للزبون: «المجموع ديالك هو <b>${money(b.total)}</b>. سير لاكيس، قول ليهم سميتك (<b>${esc(b.name || "")}</b>)، خلص وخود السلعة ديالك». 📦 حطي السلعة ديالو فلاكيس.</p>
+   ${b.status === "open" ? `<details id="bqrw" ${netDown() ? "open" : ""} style="border:2px dashed var(--line);border-radius:14px;padding:8px"><summary style="font-weight:700;cursor:pointer">${netDown() ? "📴 ما كاينش الأنترنيت: وري هاد الـQR للاكيس" : "📱 QR ديال البون (إلا مشا الأنترنيت)"}</summary><p class="muted" style="margin:6px 0">لاكيس كتسكاني هاد الكود من «🧾 البونات ← 📷 سكاني QR» والبون كيدخل عندها بلا أنترنيت.</p><div id="bqr" style="max-width:340px;margin:0 auto">⏳</div></details>` : ""}
    ${b.status === "open" && b.byId === (me == null ? void 0 : me.id) ? `<button type="button" class="btn block" data-act="bonedit" data-id="${b.id}">✏️ بدل البون (قبل ما يخلص)</button>` : ""}
-   <button type="button" class="btn primary block" data-act="close">🛍️ زبون جديد</button>`);
+   <button type="button" class="btn primary block" data-act="close">🛍️ زبون جديد</button>`, null, (f) => {
+    const w = $("#bqrw", f), x = $("#bqr", f);
+    if (!w || !x) return;
+    const go = () => {
+      if (x.dataset.ok) return;
+      x.dataset.ok = 1;
+      bonQrBox(x, b);
+    };
+    if (w.open) go();
+    w.addEventListener("toggle", () => {
+      if (w.open) go();
+    });
+  });
 }
 function sheetBonNew() {
   var _a;
@@ -6706,10 +6840,15 @@ async function bonPay(id) {
 function sheetBons(p) {
   p = p || S.pos;
   const L = bonsOf(p, "open");
-  openSheet("🧾 البونات اللي كتسنا الخلاص · " + LOC[p], `<div class="field"><input id="bq" class="big-in" placeholder="🔎 كتب سمية الزبون (ولا رقم البون)" autocomplete="off" inputmode="text" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px"></div>
+  openSheet("🧾 البونات اللي كتسنا الخلاص · " + LOC[p], `${vendRole() || vendOnly() ? "" : `<button type="button" class="btn ${netDown() ? "primary" : ""} block" id="bscan">📷 سكاني QR ديال البون${netDown() ? " (ما كاينش الأنترنيت)" : ""}</button>`}<div class="field"><input id="bq" class="big-in" placeholder="🔎 كتب سمية الزبون (ولا رقم البون)" autocomplete="off" inputmode="text" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px"></div>
    <div id="bl">${L.length ? L.map((b) => `<div data-bno="${esc(b.no)}" data-bnm="${esc(nrm(b.name || ""))}" style="display:flex;gap:6px;align-items:stretch"><button type="button" class="alert ${b.nudge ? "warn" : ""}" style="border:0;flex:1;min-width:0;text-align:start" data-act="bonpay" data-id="${b.id}"><div class="lead"><span class="em">👤</span><div><b style="font-size:1.15rem">${esc(b.name || b.no)} · ${money(b.total)}</b><div class="muted">${esc(b.no)} · 🛍️ ${esc(b.by)} · قبل ${bonAge(b)} د · ${b.lines.length} منتوج${b.cust ? " · ⭐ " + esc(b.cust.name) : ""}${b.nudge ? " · 🔔 البائعة كتسول" : ""}</div></div></div><b>💵 خلص</b></button>${isMgr() ? `<button type="button" class="btn small" style="color:#e11d48;flex:0 0 auto" title="لغي البون" onclick="sheetBonCancel('${b.id}')">🚫<br>لغي</button>` : ""}</div>`).join("") : emptyB("🧾", "ما كاين حتى بون كيتسنى.")}</div>`, null, (f) => {
+    const bs = $("#bscan", f);
+    if (bs) bs.onclick = () => {
+      closeSheet();
+      bonScan();
+    };
     const q = $("#bq", f);
-    q.focus();
+    if (!netDown()) q.focus();
     q.addEventListener("input", () => {
       const v = q.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
       const qn = nrm(q.value.trim());
