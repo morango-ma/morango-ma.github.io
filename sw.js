@@ -2,8 +2,8 @@
    - the page itself: network first, last good copy when offline
    - supabase library, fonts, icons: cache first
    - version.json and the database are never cached here */
-const C='morango-shell-v2';
-self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(['./','icon-192.png','icon-512.png','manifest.webmanifest']).catch(()=>{})))});
+const C='morango-shell-v3';
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(['./','icon-192.png','icon-512.png','manifest.webmanifest','jsqr.js','qrgen.js']).catch(()=>{})))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);
   if(u.hostname.endsWith('supabase.co')||u.pathname.endsWith('version.json'))return;
