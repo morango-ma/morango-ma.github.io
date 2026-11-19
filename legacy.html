@@ -402,7 +402,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261118205639" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261119141202" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3126,7 +3126,7 @@ function draw() {
     if (!(S.kf.step === "msg" && $("#ktext") || S.kf.step === "cand" && $("#cname") || S.kf.step === "idle" && $(".attract"))) $("#main").innerHTML = vKiosk();
     return;
   }
-  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, gas: vGas, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, avis: vAvis, cam: vCam, retours: vRetours, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
+  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, gas: vGas, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, avis: vAvis, live: vLive, cam: vCam, retours: vRetours, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
   const y = window.scrollY;
   $("#main").innerHTML = V();
   window.scrollTo(0, y);
@@ -4548,6 +4548,7 @@ function vMore(arr) {
   if (isMgr() || r === "driver") T.unshift({ i: "🚚", l: "مصاريف سيارة التوصيل", v: "vehicle", c: 2 });
   if (isMgr()) T.unshift({ i: "🔄", l: "تحويل المواد بين الورشات", a: "xfhome", c: 6, b: xfList().filter((o) => o.status === "sent").length });
   if (r === "admin") T.unshift({ i: "💰", l: "الأثمنة والهامش الصافي", v: "pricing", c: 4 }, { i: "🎯", l: "الأهداف وتتبع البيع", v: "objectifs", c: 5 }, { i: "📅", l: "النوبات والأدوار ديال البائعات", v: "roster", c: 2 }, { i: "📈", l: "الأرباح حسب الورشة", v: "report", c: 5 }, { i: "💼", l: "المصاريف", v: "charges", c: 1 }, { i: "🔥", l: "الغاز (البوطات والفواتير)", v: "gas", c: 1 });
+  if (r === "admin" || r === "manager") T.unshift({ i: "🧠", l: "المساعد live (التحليل والتنبيهات)", v: "live", c: 3 });
   if (r === "admin") T.push({ i: "👥", l: "الفريق", v: "team", c: 5 });
   if (isMgr() && window.morangoDev) T.unshift({ i: "📱", l: "الأجهزة وكود الدخول", v: "devices", c: 6 });
   if (isAdmin()) T.push({ i: "💾", l: "النسخ الاحتياطية", a: "backup", c: 2 });
@@ -11005,6 +11006,175 @@ function vCharges() {
    ${payrollHtml(m)}<h2 style="margin:6px 4px 0">💼 المصاريف الأخرى</h2>
    ${byCat.length ? byCat.map((g) => `<section class="card"><div class="head"><h2>${g.i} ${g.l}</h2><b class="num">${money(g.items.reduce((s, c) => s + (+c.amount || 0), 0))}</b></div><ul class="list">${g.items.map((c) => `<li class="clk" data-act="charge" data-id="${c.id}"><div><b>${c.cat === "salaries" ? c.ws ? LOCI[c.ws] + " " + esc(LOC[c.ws]) : "🏢 عامة (الإدارة ونقاط البيع)" : esc(c.note || g.l)}</b><div class="muted">${c.cat === "salaries" && c.note ? esc(c.note) + " · " : ""}${c.cat === "salaries" && WS.some((w) => w.id === c.ws) ? "مباشرة على الورشة" : c.cat === "salaries" && c.ws === "prod" ? "🧹 قسم الإنتاج · كتتقسم على الورشات" : c.cat === "salaries" && c.ws === "com" ? "🛍️ القسم التجاري · كتوزع حسب رقم المعاملات" : "كتوزع حسب رقم المعاملات"}</div></div><b class="num">${money(c.amount)}</b></li>`).join("")}</ul></section>`).join("") : `<section class="card">${emptyB("💼", "ما تدخل حتى مصروف آخر لهاد الشهر.")}</section>`}
    <p class="muted">👥 أجور الورشات كتدخل مباشرة على الورشة ديالها. 💧⚡🔥🏠📣🛡️🏛️ المصاريف العامة (وحتى الأجور العامة) كتتوزع أوتوماتيكياً على الورشات وعلى كل منتوج حسب الحصة ديالو من رقم المعاملات.</p>`;
+}
+const HOLI = ["2026-11-06", "2026-11-18", "2027-01-01", "2027-01-11", "2027-01-14", "2027-05-01", "2027-07-30", "2027-08-14", "2027-08-20", "2027-08-21"];
+function liveTk(day, upTo) {
+  const t0 = (/* @__PURE__ */ new Date(day + "T00:00:00")).getTime(), t1 = t0 + 864e5;
+  const out = [];
+  (S.shifts || []).forEach((sh) => (sh.tickets || []).forEach((t) => {
+    if (!t || t.void || !(t.ts >= t0 && t.ts < t1)) return;
+    if (upTo != null) {
+      const d = new Date(t.ts);
+      if (d.getHours() * 60 + d.getMinutes() > upTo) return;
+    }
+    out.push(t);
+  }));
+  return out;
+}
+function liveAgg(T) {
+  let ca = 0, cost = 0, n = T.length, v = { q: 0, ca: 0, rem: 0, cost: 0, tk: 0 };
+  const by = {};
+  T.forEach((t) => {
+    let hasV = false;
+    (t.lines || []).forEach((l) => {
+      var _a;
+      const it = S.items[l.item] || {}, q = +l.qty || 0, p = +l.price || 0, c = +l.unitCost || 0;
+      ca += q * p;
+      cost += q * c;
+      const b = by[l.item] = by[l.item] || { q: 0, ca: 0, cost: 0, zero: 0 };
+      b.q += q;
+      b.ca += q * p;
+      b.cost += q * c;
+      if (!c) b.zero += q;
+      if (((_a = it.offer) == null ? void 0 : _a.g) === "vien") {
+        hasV = true;
+        v.q += q;
+        v.ca += q * p;
+        v.cost += q * c;
+        v.rem += q * Math.max(0, (+it.price || 0) - p);
+      }
+    });
+    if (hasV) v.tk++;
+  });
+  return { n, ca, cost, m: ca - cost, v, by };
+}
+function vLive() {
+  if (!isMgr()) return emptyB("🔒", "ما عندكش الحق.");
+  if (!window.__liveT) {
+    window.__liveT = setInterval(() => {
+      if (S.view === "live") render();
+      else {
+        clearInterval(window.__liveT);
+        window.__liveT = 0;
+      }
+    }, 6e4);
+  }
+  const now = /* @__PURE__ */ new Date(), mins = now.getHours() * 60 + now.getMinutes(), d0 = today(), dY = daysAgo(1);
+  const wk = (d) => {
+    const g = (/* @__PURE__ */ new Date(d + "T12:00:00")).getDay();
+    return g === 0 || g === 6;
+  };
+  const has = (d) => liveTk(d, null).length > 0;
+  let dW = daysAgo(7);
+  if (!has(dW) || HOLI.includes(dW)) {
+    for (let k = 1; k <= 13; k++) {
+      const d = daysAgo(k);
+      if (has(d) && !HOLI.includes(d) && wk(d) === wk(d0)) {
+        dW = d;
+        break;
+      }
+    }
+  }
+  const dWl = dW === daysAgo(7) ? "نفس النهار السيمانة اللي فاتت" : "آخر نهار بحالو (" + dW.slice(5).split("-").reverse().join("/") + ")";
+  const A = liveAgg(liveTk(d0, mins)), W = liveAgg(liveTk(dW, mins)), Y = liveAgg(liveTk(dY, mins));
+  const pct = (a, b) => b ? Math.round((a - b) / b * 100) : null;
+  const dl = (a, b) => {
+    const p = pct(a, b);
+    return p == null ? '<span class="muted">—</span>' : `<span class="tag ${p >= 0 ? "good" : "bad"}">${p > 0 ? "+" : ""}${p}%</span>`;
+  };
+  const hol = (d) => HOLI.includes(d) ? ' <span class="tag">🎉 عطلة</span>' : "";
+  const mp = (x) => x.ca ? Math.round(x.m / x.ca * 100) : 0;
+  const row = (lab, a, w, y) => `<tr><td>${lab}</td><td class="num"><b>${a}</b></td><td class="num">${w}</td><td class="num">${y}</td></tr>`;
+  const kp = `<section class="card"><div class="head"><h2>📊 اليوم حتى ل ${pad(now.getHours())}:${pad(now.getMinutes())}</h2><span class="tag good">🟢 live</span></div>
+   <div style="overflow-x:auto"><table class="tbl" style="width:100%;border-collapse:collapse"><tr class="muted"><td></td><td class="num">اليوم</td><td class="num">${dWl}${hol(dW)}</td><td class="num">البارح${hol(dY)}</td></tr>
+   ${row("🧾 التيكيات", A.n, W.n + " " + dl(A.n, W.n), Y.n + " " + dl(A.n, Y.n))}
+   ${row("💰 البيع", money(A.ca), money(W.ca) + " " + dl(A.ca, W.ca), money(Y.ca) + " " + dl(A.ca, Y.ca))}
+   ${row("📈 الهامش", money(A.m) + " · " + mp(A) + "%", money(W.m) + " " + dl(A.m, W.m), money(Y.m) + " " + dl(A.m, Y.m))}
+   ${row("🛒 السلة", money(A.n ? A.ca / A.n : 0), money(W.n ? W.ca / W.n : 0), money(Y.n ? Y.ca / Y.n : 0))}</table></div></section>`;
+  const hb = (T) => {
+    const h = {};
+    T.forEach((t) => {
+      const k = new Date(t.ts).getHours();
+      h[k] = (h[k] || 0) + (+t.total || 0);
+    });
+    return h;
+  };
+  const HA = hb(liveTk(d0, mins)), HW2 = hb(liveTk(dW, null));
+  const hrs2 = [];
+  for (let k = 6; k <= 23; k++) if (HA[k] || HW2[k]) hrs2.push(k);
+  const mx = Math.max(1, ...hrs2.map((k) => Math.max(HA[k] || 0, HW2[k] || 0)));
+  const bars = hrs2.length ? `<section class="card"><h2 style="margin:0">⏱️ البيع ساعة بساعة</h2><div class="muted">🟥 اليوم · ⬜ ${dWl} (النهار كامل)</div>${hrs2.map((k) => `<div style="display:flex;align-items:center;gap:8px;font-size:.85rem"><span style="width:34px">${pad(k)}h</span><div style="flex:1;display:flex;flex-direction:column;gap:2px"><div style="height:8px;border-radius:4px;background:var(--accent);width:${(HA[k] || 0) / mx * 100}%"></div><div style="height:6px;border-radius:4px;background:var(--line);width:${(HW2[k] || 0) / mx * 100}%"></div></div><span class="num" style="width:70px;text-align:left">${Math.round(HA[k] || 0)}</span></div>`).join("")}</section>` : "";
+  const V = (x) => x.v;
+  const vrow = (lab, f) => `<tr><td>${lab}</td><td class="num"><b>${f(A)}</b></td><td class="num">${f(W)}</td></tr>`;
+  const vien = `<section class="card"><h2 style="margin:0">🥐 عرض الفيينوازري</h2><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><tr class="muted"><td></td><td class="num">اليوم</td><td class="num">${dWl}${hol(dW)}</td></tr>
+   ${vrow("الحبات", (x) => fmt(V(x).q))}${vrow("البيع", (x) => money(V(x).ca))}${vrow("🎁 التخفيض", (x) => money(V(x).rem))}${vrow("الهامش", (x) => money(V(x).ca - V(x).cost) + (V(x).ca ? " · " + Math.round((V(x).ca - V(x).cost) / V(x).ca * 100) + "%" : ""))}${vrow("تيكيات فيها فيينوازري", (x) => V(x).tk + (x.n ? " (" + Math.round(V(x).tk / x.n * 100) + "%)" : ""))}${vrow("حبات فكل تيكي", (x) => V(x).tk ? (V(x).q / V(x).tk).toFixed(1) : "—")}</table></div></section>`;
+  const AL = [];
+  const add = (lv, txt, act) => AL.push({ lv, txt, act });
+  Object.entries(A.by).forEach(([id, b]) => {
+    const it = S.items[id] || {};
+    if (b.zero) add("warn", `💸 ${esc(iname(id))}: ${fmt(b.zero)} حبة تباعت بلا تكلفة (unitCost 0) — شوف الفيش تكنيك`);
+    else if (b.q >= 3 && b.ca > 0 && (b.ca - b.cost) / b.ca < 0.4) add("warn", `📉 ${esc(iname(id))}: الهامش ${Math.round((b.ca - b.cost) / b.ca * 100)}% فقط (${fmt(b.q)} حبة)`);
+  });
+  {
+    const z = Object.values(S.items || {}).filter((it) => it.kind === "final" && it.active !== false && !(+it.price > 0) && !it.noSale);
+    if (z.length) add("warn", `🏷️ ${z.length} منتوج مفعّل بلا ثمن البيع: ${z.slice(0, 8).map((it) => esc(it.fr || it.name)).join("، ")}${z.length > 8 ? "…" : ""}`);
+  }
+  const P = (S.ops || []).filter((o) => o.type === "purchase").sort((a, b) => a.ts - b.ts);
+  const last = {};
+  P.forEach((o) => (o.lines || []).forEach((l) => {
+    const p = +l.price || 0, prev = last[l.item];
+    if (o.date === d0 && l.item) {
+      if (!p) add("bad", `🧾 شرية ${esc(iname(l.item))} (${esc(o.by || "")}) بلا ثمن`);
+      else if (prev && Math.abs(p - prev.p) / prev.p > 0.4) add("bad", `🧾 ${esc(iname(l.item))}: ${money(p)} للوحدة، والمرة اللي فاتت ${money(prev.p)} (${prev.d}) — واش الثمن ديال الوحدة ولا المجموع؟ · ${esc(o.by || "")}`);
+    }
+    if (p) last[l.item] = { p, d: o.date };
+  }));
+  const B = (S.bons || []).filter((b) => b.date === d0);
+  B.filter((b) => b.status === "open" && Date.now() - (b.ts || 0) > 10 * 6e4).forEach((b) => add("bad", `⏳ بون ${esc(b.no || "")} ديال ${esc(b.by || "")} كيتسنى ${Math.round((Date.now() - b.ts) / 6e4)} دقيقة فالكاشة`));
+  const canc = B.filter((b) => b.status === "cancel");
+  if (canc.length) add(canc.length >= 3 ? "bad" : "warn", `🗑️ ${canc.length} بون تلغاو اليوم: ${[...new Set(canc.map((b) => b.by || "—"))].map(esc).join("، ")}`);
+  const bad = B.filter((b) => {
+    var _a;
+    return ((_a = b.avis) == null ? void 0 : _a.r) === "bad";
+  });
+  if (bad.length) add("bad", `😞 ${bad.length} زبون ما عجبوش السيرفيس: ${[...new Set(bad.map((b) => b.by || "—"))].map(esc).join("، ")}`);
+  const noAv = B.filter((b) => {
+    var _a;
+    return ["none", "closed", "refused"].includes((_a = b.avis) == null ? void 0 : _a.r);
+  });
+  if (B.length >= 5 && noAv.length / B.length > 0.4) add("warn", `🙅 ${Math.round(noAv.length / B.length * 100)}% ديال البونات بلا تقييم ديال الزبون`);
+  const vd = [];
+  (S.shifts || []).forEach((sh) => (sh.tickets || []).forEach((t) => {
+    if ((t == null ? void 0 : t.void) && dstr(new Date(t.ts)) === d0) vd.push(t);
+  }));
+  if (vd.length) add(vd.length >= 3 ? "bad" : "warn", `❌ ${vd.length} تيكي تلغاو اليوم`);
+  (S.outs || []).filter((o) => o.date === d0).forEach((o) => add(o.status === "open" ? "bad" : "warn", `🚫 ${esc(iname(o.item))} سالا${o.outTs ? " مع " + pad(new Date(o.outTs).getHours()) + ":" + pad(new Date(o.outTs).getMinutes()) : ""}${o.status === "open" ? " · مازال ما تعمّرش" : ""}`));
+  if (W.ca && A.ca < W.ca * 0.8 && mins > 9 * 60) add("warn", `📉 البيع ناقص ${Math.abs(pct(A.ca, W.ca))}% على ${dWl}`);
+  if (W.ca && A.ca > W.ca * 1.2) add("good", `🚀 البيع زايد ${pct(A.ca, W.ca)}% على ${dWl} — شوف السطوك ديال الحوايج اللي كيتباعو بزاف`);
+  const ord = { bad: 0, warn: 1, good: 2 };
+  AL.sort((a, b) => ord[a.lv] - ord[b.lv]);
+  const alerts = `<section class="card"><div class="head"><h2>⚠️ ردو البال</h2><span class="tag ${AL.some((a) => a.lv === "bad") ? "bad" : AL.length ? "" : "good"}">${AL.length || "✓"}</span></div>${AL.length ? AL.map((a) => `<div class="alert ${a.lv === "bad" ? "bad" : ""}" style="${a.lv === "good" ? "background:var(--good-soft)" : ""};cursor:default">${a.txt}</div>`).join("") : '<div class="muted">✅ كلشي مزيان دابا.</div>'}</section>`;
+  const top = Object.entries(A.by).sort((a, b) => b[1].ca - b[1].cost - (a[1].ca - a[1].cost)).slice(0, 8);
+  const tp = top.length ? `<section class="card"><h2 style="margin:0">🏆 أكثر منتوجات كتربح اليوم</h2>${top.map(([id, b]) => {
+    const w = W.by[id];
+    return `<div class="prow"><span>${esc(iname(id))} <span class="muted">· ${fmt(b.q)} حبة${w ? " (فات: " + fmt(w.q) + ")" : ""}</span></span><b class="num">${money(b.ca - b.cost)}</b></div>`;
+  }).join("")}</section>` : "";
+  const vb = {};
+  B.forEach((b) => {
+    var _a, _b;
+    const k = b.by || "—";
+    const o = vb[k] = vb[k] || { n: 0, paid: 0, ca: 0, good: 0, bad: 0, canc: 0 };
+    o.n++;
+    if (b.status === "paid") {
+      o.paid++;
+      o.ca += +b.total || 0;
+    }
+    if (b.status === "cancel") o.canc++;
+    if (((_a = b.avis) == null ? void 0 : _a.r) === "good") o.good++;
+    if (((_b = b.avis) == null ? void 0 : _b.r) === "bad") o.bad++;
+  });
+  const vs = Object.keys(vb).length ? `<section class="card"><h2 style="margin:0">👩‍🍳 البائعات اليوم</h2>${Object.entries(vb).sort((a, b) => b[1].ca - a[1].ca).map(([n, o]) => `<div class="prow"><span>${esc(n)} <span class="muted">· ${o.paid}/${o.n} بون${o.canc ? " · 🗑️" + o.canc : ""} · 😍${o.good}${o.bad ? " · 😞" + o.bad : ""}</span></span><b class="num">${money(o.ca)}</b></div>`).join("")}</section>` : "";
+  return `<h1>🧠 المساعد · live</h1><p class="muted" style="margin:0">كيتحسب من البيانات ديال دابا، وكيتبدل مع كل تيكي، بون ولا شرية. كيقارن مع نفس الوقت فنفس النهار السيمانة اللي فاتت (ولا آخر نهار بحالو ماشي عطلة).</p>${alerts}${kp}${vien}${bars}${tp}${vs}`;
 }
 function vGas() {
   if (!isMgr()) return emptyB("🔒", "ما عندكش الحق.");
