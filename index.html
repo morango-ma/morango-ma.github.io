@@ -398,7 +398,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261120105737"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261120191427"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1131,7 +1131,7 @@ function homeTiles(arr){
   if(r==='admin'||r==='manager')T.unshift({i:'🗓️',l:'برنامج الإنتاج (أوامر الإنتاج)',a:'go',v:'plan',c:3},{i:'📥',l:'طلبات الشراء',a:'go',v:'preqs',b:S.preqs.filter(x=>['pending','approved','partial'].includes(x.status)).length,c:2});
   if(r==='buyer'||r==='prod')T.push({i:'📥',l:'طلبات الشراء',a:'go',v:'preqs',b:S.preqs.filter(x=>['pending','approved','partial'].includes(x.status)).length,c:2},{i:'🛒',l:'شراء مباشر',a:'newpurchase',c:1},{i:'⚠️',l:'المخزون الناقص',a:'go',v:'prod',b:lowList().length,c:6},{i:'📋',l:'المشتريات',a:'go',v:'purchases',c:5});
   if(r==='manager')T.push({i:'🛒',l:'شراء جديد',a:'newpurchase',c:2},{i:'⚠️',l:'المخزون الناقص',a:'go',v:'prod',b:lowList().length,c:6});
-  if(r==='admin'||r==='manager')T.push({i:'🛍️',l:'نقاط البيع',a:'go',v:'pos',c:1},{i:'🧁',l:'الإنتاج',a:'go',v:'prod',c:2},{i:'🚚',l:'الإرسال',a:'go',v:'send',b:pendT.length,c:4},{i:'📝',l:'الطلبيات',a:'go',v:'orders',b:act.length,c:3});
+  if(r==='admin'||r==='manager')T.push({i:'🛍️',l:'نقاط البيع',a:'go',v:'pos',c:1},{i:'🧁',l:'الإنتاج',a:'go',v:'prod',c:2},{i:'🚚',l:'الإرسال',a:'go',v:'send',b:pendT.length,c:4},{i:'📝',l:'طلبية جديدة',a:'neworder',c:2},{i:'📝',l:'الطلبيات',a:'go',v:'orders',b:act.length,c:3});
   if(r==='admin')T.push({i:'📈',l:'الأرباح حسب الورشة',a:'go',v:'report',c:5},{i:'📒',l:'الكتالوج والوصفات',a:'go',v:'catalog',c:6});
   {const k=T.findIndex(t=>t.a==='porders');if(k>0)T.unshift(...T.splice(k,1))}
   if(arr)return T;
@@ -1357,7 +1357,7 @@ function vOrders(){
   let list=S.orders;if(me.role==='ws')list=list.filter(o=>o.ws===me.loc||(o.wss||[]).includes(me.loc));if(me.role==='seller')list=list.filter(o=>o.pos===me.loc);
   if(S.ofilter==='active')list=list.filter(o=>o.status!=='delivered'&&o.status!=='cancel');else if(S.ofilter!=='all')list=list.filter(o=>o.status===S.ofilter);
   if(S.ofilter!=='delivered'&&S.ofilter!=='all')list=[...list].sort((a,b)=>((a.due||'')+(a.dueTime||'')).localeCompare((b.due||'')+(b.dueTime||'')));
-  return `${me.role==='seller'?'<button class="act c2" data-act="neworder" style="min-height:90px"><span class="big">📝</span><b>طلبية جديدة</b></button>':''}${chipsHtml(F,S.ofilter,'ofilter')}
+  return `${me.role==='seller'||isMgr()?'<button class="act c2" data-act="neworder" style="min-height:90px"><span class="big">📝</span><b>طلبية جديدة</b></button>':''}${chipsHtml(F,S.ofilter,'ofilter')}
   <section class="card">${list.length?`<ul class="list">${list.map(orderRow).join('')}</ul>`:emptyB('📭','ما كاينة حتى طلبية هنا.')}</section>`;
 }
 
@@ -4608,7 +4608,7 @@ function sheetNewOrder(keep){if(me.role!=='seller'&&!isMgr())return toast('📝 
     if(!ph.some(p=>p.wa))return ferr('💬 خاص على الأقل نمرة وحدة فيها واتساب.');if(o.addr.trim().length<4)return ferr('🏠 كتب العنوان ديال الزبون.');if(!o.lines.length)return ferr('🧺 زيد على الأقل منتوج ولا طلبية خاصة.');
     if(!o.due||o.due<today())return ferr('📅 اختار تاريخ التسليم.');
     busy(f,true);try{const lines=[];for(const l of o.lines){const photos=l.photos?.length?await saveMedia(l.photos,'order'):[];lines.push({kind:l.kind,item:l.item||null,title:l.title||'',ws:l.kind==='sp'?l.ws:(S.items[l.item]?.ws||''),qty:+l.qty||1,price:l.kind==='sp'?null:+l.price||0,note:l.note||'',photos,voice:l.voice||null})}
-      const doc={v:2,cfirst,clast,client:cfirst+' '+clast,phones:ph,phone:ph[0].n,address:o.addr.trim(),pos:S.pos||me.loc,channel:'فالمحل',lines,due:o.due,dueTime:o.time||'',advance:0,paidRest:0,ts:Date.now(),by:meName(),byId:me.id};
+      const doc={v:2,cfirst,clast,client:cfirst+' '+clast,phones:ph,phone:ph[0].n,address:o.addr.trim(),pos:S.pos||me.loc||(Object.keys(LOC).find(k=>k[0]==='p')||'p1'),channel:'فالمحل',lines,due:o.due,dueTime:o.time||'',advance:0,paidRest:0,ts:Date.now(),by:meName(),byId:me.id};
       doc.wss=ordWss(doc);doc.ws=doc.wss[0]||'w1';doc.chef=Object.fromEntries(doc.wss.map(w=>[w,{st:'wait'}]));doc.total=ordPriced(doc)?ordTotal(doc):null;doc.status=ordState(doc);doc.num=S.orders.reduce((m,x)=>Math.max(m,+x.num||0),0)+1;doc.history=[{s:'wait',by:meName(),ts:Date.now()}];
       const r=await db.collection('orders').add(doc);OD=null;closeSheet();toast('📨 الطلبية #'+doc.num+' تصيفطات للموافقة');setTimeout(()=>sheetOrder(r.id),300)}catch(e){fail(f,e)}
   },f=>{f.addEventListener('click',e=>{const a=e.target.closest('[data-oadd]'),d=e.target.closest('[data-odel]');if(a){e.preventDefault();ordReadForm(f);a.dataset.oadd==='sp'?sheetOrdSp():sheetOrdCat()}if(d){e.preventDefault();ordReadForm(f);OD.lines.splice(+d.dataset.odel,1);sheetNewOrder(true)}})})}
