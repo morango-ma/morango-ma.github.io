@@ -402,7 +402,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261120104722" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261120105737" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -9390,7 +9390,7 @@ function sheetTickets() {
   );
 }
 function sheetClient(back) {
-  openSheet("⭐ زبون الوفاء", `${fld("cph", "📱 نمرة الواتساب ديال الزبون (WhatsApp)", '<p class="muted" style="margin:0 0 6px">💬 طلب من الزبون النمرة اللي فيها الواتساب، حيت عليها كيوصلو العروض والهدايا.</p><input id="cph" name="cph" class="big-in" type="tel" inputmode="numeric" autocomplete="off" placeholder="06 00 00 00 00">')}<div id="cres"></div>${errP}<button class="btn primary block" type="submit">✅ اختار</button>${(() => {
+  openSheet("⭐ زبون الوفاء", `<button type="button" class="btn block" id="cscan">📷 سكاني الكارط ديال الزبون</button>${fld("cph", "📱 نمرة الواتساب ديال الزبون (WhatsApp)", '<p class="muted" style="margin:0 0 6px">💬 طلب من الزبون النمرة اللي فيها الواتساب، حيت عليها كيوصلو العروض والهدايا.</p><input id="cph" name="cph" class="big-in" type="tel" inputmode="numeric" autocomplete="off" placeholder="06 00 00 00 00">')}<div id="cres"></div>${errP}<button class="btn primary block" type="submit">✅ اختار</button>${(() => {
     const V = vendOnly() || vendRole();
     const ri = rushInfo(S.pos);
     if (!V || ri.rush) return `<button type="button" class="btn block" id="cnoloy" style="flex-direction:column;gap:2px"><b>📱 يمشي لاكيس وياخد الوصل ويسكاني الـQR</b><small class="muted">${V ? "🔥 كاين الزحام دابا (" + ri.open + " كوموند كتسنى فلاكيس)" : "إلا ما بغاش يعطي النمرة دابا ولا ما عندوش الوقت"}</small></button>`;
@@ -9433,6 +9433,14 @@ function sheetClient(back) {
   }, (f) => {
     let tm = 0;
     f.cph.focus();
+    const cs0 = $("#cscan", f);
+    if (cs0) cs0.onclick = () => scanCode((c) => {
+      const m = /^MORANGO-CARD:(0[5-7]\d{8})$/.exec(String(c || "").trim());
+      if (!m) return toast("❓ هادي ماشي الكارط ديال الوفاء ديال مورانڭو", true);
+      f.cph.value = m[1];
+      f.cph.dispatchEvent(new Event("input", { bubbles: true }));
+      toast("💳 الكارط تقرات · تسنى يبان الزبون وضغط ✅");
+    });
     const nq = $("#cnoloy", f);
     if (nq) nq.onclick = () => {
       const V = vendOnly() || vendRole();
