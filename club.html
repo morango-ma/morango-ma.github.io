@@ -17,7 +17,14 @@ button{font:inherit;font-weight:700;font-size:1.15rem;min-height:56px;border-rad
 .link{background:none;color:var(--accent);min-height:40px;font-size:.95rem}
 .msg{padding:12px 14px;border-radius:14px;font-weight:600;text-align:center}.ok{background:var(--good-soft);color:var(--good)}.err{background:var(--bad-soft);color:var(--bad)}
 .em{font-size:3rem;text-align:center}
+.vcard{position:relative;overflow:hidden;border-radius:22px;padding:18px;color:#fff;background:linear-gradient(135deg,#E02843 0%,#B3142F 60%,#7A0E22 100%);box-shadow:0 10px 26px rgba(122,14,34,.28);display:flex;flex-direction:column;gap:10px}
+.vcard:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08);top:-90px;left:-70px}
+.vtop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;position:relative;z-index:1}.vtop b{font-family:"Baloo Bhaijaan 2",sans-serif;font-size:1.5rem;letter-spacing:.06em}.vtop small{opacity:.85}
+.vqr{background:#fff;border-radius:16px;padding:10px;width:62%;max-width:230px;margin:2px auto 0;position:relative;z-index:1}
+.vname{font-weight:700;font-size:1.15rem;text-align:center;position:relative;z-index:1}.vpts{text-align:center;opacity:.95;position:relative;z-index:1}.vcode{font-family:monospace;letter-spacing:.12em;text-align:center;opacity:.85;direction:ltr;position:relative;z-index:1}
+.btn2{background:var(--surface);color:var(--accent);border:2px solid var(--line);min-height:48px;font-size:1rem}
 </style></head><body><main id="app"><div class="brand"><b>MORANGO</b><div>مورانڭو · برنامج الوفاء ⭐</div></div><div class="card"><p class="muted">⏳ كنحملو…</p></div></main>
+<script src="qrgen.js"></script>
 <script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261114220824"}</script>
 <script>
 const U=window.MORANGO_CFG.url,K=window.MORANGO_CFG.key,tok=new URLSearchParams(location.search).get('t');
@@ -43,12 +50,27 @@ const fmtD=ts=>{const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return
 const nf=v=>String(Math.round((+v||0)*100)/100).replace('.',',');
 async function showHist(){const st=LS.get();if(!st.phone)return start(true);card('<p class="muted">⏳ كنحملو المشتريات ديالك…</p>');let r;try{r=await rpc('club_hist',{phone:st.phone})}catch(_){return card('<div class="msg err">'+ERR.net+'</div><button onclick="showHist()">🔄 عاود</button>')}
  if(!r.ok){LS.set({phone:null});return start(true)}
- const H=r.hist||[];card(`<div class="em">⭐</div><h1>${esc(r.name)}</h1><div class="big" dir="ltr">${r.balance}</div><p class="muted">نقطة ديالك · ${r.visits} زيارة · ${nf(r.total)} د.م</p>
+ const H=r.hist||[];const ph=normPh(st.phone);card(`${vcard(r,ph)}<p class="muted">${r.visits} زيارة · ${nf(r.total)} د.م</p>
   <h2 style="margin:6px 0 0;font-size:1.05rem">📜 المشتريات ديالي (${H.length})</h2>
   ${H.length?H.map(h=>`<div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:8px"><b>🗓️ ${fmtD(h.ts)}</b><b dir="ltr">${nf(h.total)} DH</b></div>
    ${(h.lines||[]).map(l=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:.92rem"><span>${esc(l.n)} <span style="color:var(--muted)" dir="ltr">×${nf(l.q)}</span></span><span dir="ltr" style="color:var(--muted)">${nf(l.q*l.p)}</span></div>`).join('')}
    <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted)"><span>🧾 ${esc(h.no||'')}</span><span>⭐ +${nf(h.pts)} نقطة</span></div></div>`).join(''):'<p class="muted">ما كاين حتى شراء مسجل.</p>'}
   <button class="link" onclick="LS.set({phone:null});start(true)">🔁 نمرة أخرى</button>`)}
+/* 💳 virtual loyalty card: shown at the till (or to the vendeuse) to collect points without typing the phone */
+const normPh=p=>{const d=String(p||'').replace(/\D/g,'');if(/^00212[5-7]\d{8}$/.test(d))return '0'+d.slice(5);if(/^212[5-7]\d{8}$/.test(d))return '0'+d.slice(3);if(/^[5-7]\d{8}$/.test(d))return '0'+d;if(/^0[5-7]\d{8}$/.test(d))return d;return ''};
+const cardTxt=ph=>'MORANGO-CARD:'+ph;
+function vcard(r,ph){if(!ph||!window.morangoQR)return `<div class="em">⭐</div><h1>${esc(r.name)}</h1><div class="big" dir="ltr">${r.balance}</div>`;
+ return `<div class="vcard" id="vc"><div class="vtop"><div><b>MORANGO</b><br><small>💳 كارط الوفاء</small></div><small>⭐ مورانڭو</small></div>
+  <div class="vqr">${window.morangoQR.svg(cardTxt(ph))}</div><div class="vname">${esc(r.name||'')}</div><div class="vpts"><b style="font-size:1.6rem" dir="ltr">${r.balance}</b> نقطة</div><div class="vcode">${ph.replace(/(\d{2})(?=\d)/g,'$1 ')}</div></div>
+  <p class="muted">📱 وري هاد الكارط فلاكيس ولا للبائعة ملي تشري، يسكانيوها وتزاد ليك النقاط بلا ما تعطي النمرة.</p>
+  <button class="btn2" onclick="saveCard()">📥 حفظ الكارط فالتصاور</button>
+  <p class="muted" style="font-size:.82rem">💡 باش تلقاها ديما: من القائمة ديال المتصفح اختار «إضافة إلى الشاشة الرئيسية».</p>`}
+function saveCard(){try{const st=LS.get(),ph=normPh(st.phone);if(!ph)return;const M=window.morangoQR.matrix(cardTxt(ph)),n=M.length,W=1000,H=1400,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+ const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#E02843');g.addColorStop(.6,'#B3142F');g.addColorStop(1,'#7A0E22');x.fillStyle=g;x.beginPath();x.roundRect?x.roundRect(0,0,W,H,60):x.rect(0,0,W,H);x.fill();
+ x.fillStyle='#fff';x.textAlign='center';x.font='800 92px "Baloo Bhaijaan 2",sans-serif';x.fillText('MORANGO',W/2,150);x.font='600 46px "IBM Plex Sans Arabic",sans-serif';x.fillText('💳 كارط الوفاء',W/2,225);
+ const Q=640,q0=(W-Q)/2,y0=290;x.fillStyle='#fff';x.beginPath();x.roundRect?x.roundRect(q0-30,y0-30,Q+60,Q+60,40):x.rect(q0-30,y0-30,Q+60,Q+60);x.fill();const m=Q/n;x.fillStyle='#000';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(M[r][c])x.fillRect(q0+c*m,y0+r*m,Math.ceil(m),Math.ceil(m));
+ x.fillStyle='#fff';x.font='700 64px "IBM Plex Sans Arabic",sans-serif';x.fillText(st.name||'',W/2,y0+Q+150);x.font='600 46px monospace';x.fillText(ph.replace(/(\d{2})(?=\d)/g,'$1 '),W/2,y0+Q+230);x.font='600 38px "IBM Plex Sans Arabic",sans-serif';x.fillText('وري هاد الكارط فلاكيس باش تزاد ليك النقاط',W/2,H-80);
+ const a=document.createElement('a');a.download='Morango-carte-fidelite.png';a.href=cv.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove()}catch(e){alert('📸 ما قدرناش نحفظو، دير لقطة الشاشة (capture).')}}
 const joinLink=()=>'<button class="link" onclick="location.href=location.pathname">⭐ النقاط والمشتريات ديالي</button>';
 start();
 </script></body></html>
