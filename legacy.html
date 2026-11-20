@@ -402,7 +402,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261119204310" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261120104722" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2299,6 +2299,37 @@ async function newOp(o) {
   }
   return ref.id;
 }
+async function holdResolve(o, v) {
+  if (o.type !== "purchase" || !o.stockHold || o.stockDone || o.stockVoid || !o.hold) return "";
+  const lots = Object.values(S.lotm || {}).filter((l) => l.purchaseId === o.id && l.status === "hold");
+  if (v.mgr.st === "ok" && v.chef.st !== "no") {
+    await db.doc("ops/" + o.id).update({ stockHold: false, stockDone: true, stockTs: Date.now(), stockBy: meName() });
+    o.stockHold = false;
+    o.stockDone = true;
+    await moveStock(o.ws, o.hold.d || {}, o.hold.pc || {});
+    for (const [id, u] of Object.entries(o.hold.iu || {})) try {
+      await db.doc("items/" + id).update(u);
+    } catch (_) {
+    }
+    for (const l of lots) try {
+      await db.doc("lots/" + l.id).update({ status: "active", events: [...l.events || [], { ts: Date.now(), by: meName(), act: "approve" }] });
+      l.status = "active";
+    } catch (_) {
+    }
+    return "in";
+  }
+  if (v.mgr.st === "no" || v.chef.st === "no") {
+    await db.doc("ops/" + o.id).update({ stockVoid: true, stockTs: Date.now(), stockBy: meName() });
+    o.stockVoid = true;
+    for (const l of lots) try {
+      await db.doc("lots/" + l.id).update({ status: "closed", qty: 0, events: [...l.events || [], { ts: Date.now(), by: meName(), act: "refused" }] });
+      l.status = "closed";
+    } catch (_) {
+    }
+    return "void";
+  }
+  return "";
+}
 const VTYPES = { production: ["إنتاج", "👨‍🍳"], purchase: ["شراء", "🛒"], adjust: ["تصحيح المخزون", "✏️"], consuse: ["استعمال اللوازم", "🧴"], wsxfer: ["تحويل بين الورشات", "🔁"], tools: ["شراء أدوات", "🛠️"], transfer: ["إرسال للمحل", "🚚"], return: ["مرتجعات", "↩️"] };
 const chefAcc = (w) => usersArr().find((u) => u.role === "ws" && u.active !== false && (u.loc === w || (u.locs || []).includes(w)));
 const vldTodo = (o) => {
@@ -2317,6 +2348,7 @@ const vldOps = () => allOps().filter((o) => o.vld && o.ts > Date.now() - 30 * 86
 const vldTag = (o) => {
   const v = o.vld;
   if (!v) return "";
+  if (o.stockHold && !o.stockDone && !o.stockVoid && v.chef.st !== "no" && v.mgr.st !== "no") return '<span class="tag warn">⏳ كتسنى · ما دخلش للمخزون</span>';
   if (v.chef.st === "no" || v.mgr.st === "no") return '<span class="tag bad">⛔ ترفضات</span>';
   if (v.mgr.st === "ok") return '<span class="tag good">✅ تقبلات</span>';
   return '<span class="tag warn">⏳ كتسنى</span>';
@@ -2366,8 +2398,9 @@ function sheetVld(id, o0) {
         else nv = __spreadProps(__spreadValues({}, v), { mgr: __spreadValues(__spreadValues({}, v.mgr), now) });
         await db.doc("ops/" + o.id).update({ vld: nv });
         o.vld = nv;
+        const hr = await holdResolve(o, nv);
         closeSheet();
-        toast(d === "ok" ? "✅ تسجل" : "⛔ ترفضات");
+        toast(d === "ok" ? hr === "in" ? "✅ تقبل · دخل للمخزون ديال " + (LOC[o.ws] || "") : "✅ تسجل" : "⛔ ترفضات" + (hr === "void" ? " · ما دخلش للمخزون" : ""));
       } catch (er) {
         toast(er.message || String(er), true);
       }
@@ -13157,7 +13190,9 @@ function sheetPurchase(req) {
         pc[l.item] = Math.round(l.price * fk2 * 1e4) / 1e4;
         l.landed = pc[l.item];
       });
-      await moveStock(ws, d, pc);
+      const hold = (me == null ? void 0 : me.role) === "prod";
+      const iu = {};
+      if (!hold) await moveStock(ws, d, pc);
       for (const l of lines) {
         const u = {};
         if (!l.noPrice && l.price !== lastPrice(l.item)) {
@@ -13165,7 +13200,10 @@ function sheetPurchase(req) {
           u.cost = l.price;
         }
         if (l.sup && l.sup !== ((_g = S.items[l.item]) == null ? void 0 : _g.lastSup)) u.lastSup = l.sup;
-        if (Object.keys(u).length) await db.doc("items/" + l.item).update(u);
+        if (Object.keys(u).length) {
+          if (hold) iu[l.item] = __spreadValues(__spreadValues({}, iu[l.item] || {}), u);
+          else await db.doc("items/" + l.item).update(u);
+        }
       }
       const sups = [...new Set(lines.map((l) => l.sup))];
       {
@@ -13175,14 +13213,14 @@ function sheetPurchase(req) {
         } catch (_) {
         }
       }
-      const pid = await newOp({ type: "purchase", ws, buyer, supplier: sups.length === 1 ? sups[0] : sups.join(" · "), suppliers: sups, lines, sub, fees, feesTotal, total, photos, invoice, sig, req: (req == null ? void 0 : req.id) || null, rcv: "pending" });
+      const pid = await newOp(__spreadValues({ type: "purchase", ws, buyer, supplier: sups.length === 1 ? sups[0] : sups.join(" · "), suppliers: sups, lines, sub, fees, feesTotal, total, photos, invoice, sig, req: (req == null ? void 0 : req.id) || null, rcv: "pending" }, hold ? { stockHold: true, hold: { d, pc, iu } } : {}));
       const lotIds = [];
       for (const l of lines) {
         const it = S.items[l.item];
         if ((it == null ? void 0 : it.kind) !== "raw" && !l.dlc) continue;
         const ref = db.collection("lots").doc();
         const n = lotNo("L");
-        const doc = { n, type: "purchase", item: l.item, loc: ws, qty0: l.qty, qty: l.qty, unit: (it == null ? void 0 : it.unit) || "", recv: today(), date: today(), dlc: l.dlc || "", supplier: l.sup || "", lotSup: l.lotSup || "", brand: l.brand || "", photos: l.photos || [], price: l.price, purchaseId: pid, buyer, needPrint: true, status: "active", by: meName(), byId: me.id, ts: Date.now(), events: [{ ts: Date.now(), by: meName(), act: "create", qty: l.qty }] };
+        const doc = { n, type: "purchase", item: l.item, loc: ws, qty0: l.qty, qty: l.qty, unit: (it == null ? void 0 : it.unit) || "", recv: today(), date: today(), dlc: l.dlc || "", supplier: l.sup || "", lotSup: l.lotSup || "", brand: l.brand || "", photos: l.photos || [], price: l.price, purchaseId: pid, buyer, needPrint: true, status: hold ? "hold" : "active", by: meName(), byId: me.id, ts: Date.now(), events: [{ ts: Date.now(), by: meName(), act: "create", qty: l.qty }] };
         await ref.set(doc);
         S.lotm = __spreadProps(__spreadValues({}, S.lotm || {}), { [ref.id]: __spreadValues({ id: ref.id }, doc) });
         lotIds.push(ref.id);
@@ -13214,7 +13252,7 @@ function sheetPurchase(req) {
         afterLots();
       } else {
         closeSheet();
-        toast("🛒 دخل لمخزون " + LOC[ws]);
+        toast(hold ? "🛒 تسجل · ⏳ ما غاديش يدخل للمخزون حتى تصادق عليه الإدارة" : "🛒 دخل لمخزون " + LOC[ws]);
         afterLots();
       }
     } catch (e) {
