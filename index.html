@@ -398,7 +398,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261121060945"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261121101917"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -617,6 +617,14 @@ const fmt=n=>{n=r2(n);return Number.isInteger(n)?String(n):String(+n.toFixed(2))
 const fmtq=n=>String(Math.round((+n||0)*1e8)/1e8);
 const money=n=>(Math.round((+n||0)*100)/100).toFixed(2)+' د.م';
 const pad=n=>String(n).padStart(2,'0');
+/* share an order's voice note (WhatsApp…): system share sheet when the device has it, else saved to Download/Morango */
+const AUDM={};let AUDN=0;
+async function shareAudio(k){const d=AUDM[k];if(!d)return;try{const m=/^data:([^;,]+)/.exec(d);const mime=(m&&m[1])||'audio/webm';const ext=/mp4|m4a|aac/.test(mime)?'m4a':/ogg/.test(mime)?'ogg':/mpeg|mp3/.test(mime)?'mp3':/wav/.test(mime)?'wav':'webm';
+  const blob=await (await fetch(d)).blob();const name='Morango-commande-'+new Date().toISOString().slice(0,16).replace(/[-:T]/g,'')+'.'+ext;const fl=new File([blob],name,{type:mime});
+  if(navigator.canShare&&navigator.canShare({files:[fl]})){try{await navigator.share({files:[fl],title:'Morango · طلبية'});return}catch(e){if(e&&e.name==='AbortError')return}}
+  if(window.MorangoNative&&window.MorangoNative.saveFile){const b64=d.split(',')[1]||'';const out=window.MorangoNative.saveFile(name,mime,b64);if(String(out).startsWith('ok')){toast('📥 تحفظ فـ Download/Morango · فواتساب: 📎 ← Document ← Morango');return}throw new Error(out)}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();toast('📥 تحفظ الأوديو · صيفطو من واتساب')}catch(e){toast('ما قدرناش نبارطاجيو الأوديو: '+(e.message||e),true)}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ashare]');if(!b)return;e.preventDefault();e.stopPropagation();shareAudio(b.dataset.ashare)},true);
 const dstr=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const today=()=>dstr(new Date());
 const daysAgo=k=>{const d=new Date();d.setDate(d.getDate()-k);return dstr(d)};
@@ -4588,7 +4596,7 @@ function ordState(o){if(['new','production','ready','transit','delivered','cance
 const ordTodo=o=>{if(o.v!==2)return [];const T=[];const ch=o.chef||{};if(o.status==='wait'){(o.wss||[]).forEach(w=>{if(!ch[w]||ch[w].st==='wait'){if(isChefOf(w))T.push('chef:'+w)}});if(!ordPriced(o)&&isMgr())T.push('price')}
   if(o.status==='topay'&&o.advReq?.st==='wait'&&isMgr())T.push('adv');return T};
 const voiceBox=()=>`<div class="box" style="gap:8px"><b>🎤 سجل بالصوت (اختياري)</b><div class="btns" style="margin:0"><button type="button" class="btn primary" id="recb">🎤 بدا التسجيل</button><span id="rect" class="num" style="align-self:center"></span></div><div id="recout"></div><input type="file" id="recf" accept="audio/*" capture hidden></div>`;
-const audioOf=v=>v&&v.data?`<audio controls src="${v.data}" style="width:100%"></audio>`:'';
+const audioOf=v=>{if(!v||!v.data)return '';const k='a'+(++AUDN);AUDM[k]=v.data;return `<audio controls src="${v.data}" style="width:100%"></audio><button type="button" class="btn small" data-ashare="${k}" style="align-self:flex-start">📲 بارطاجي الأوديو (واتساب)</button>`};
 
 function ordReadForm(f){if(!OD||!f)return;['cfirst','clast','p1','p2','addr','time'].forEach(k=>{const e=f['o_'+k];if(e)OD[k]=e.value});OD.w1=!!f.o_w1?.checked;OD.w2=!!f.o_w2?.checked;const d=f.o_due2?.value||f.o_due?.value;if(d)OD.due=d}
 function sheetNewOrder(keep){if(me.role!=='seller'&&!isMgr())return toast('📝 الطلبيات كتسجلهم البائعات مع الزبون فالمحل',true);
