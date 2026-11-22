@@ -402,7 +402,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261122104758" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261122110509" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6801,7 +6801,14 @@ function sheetBonNew() {
   var _a;
   const p = S.pos, c = cartOf(p);
   const ids = Object.keys(c).filter((id) => c[id] > 0);
-  if (!ids.length) return closeSheet();
+  if (!ids.length) {
+    if (S.bonMode) delete S.bonMode[p];
+    return closeSheet();
+  }
+  if (!((me == null ? void 0 : me.role) === "seller" && posMode(p) === "v")) {
+    S.bonMode = S.bonMode || {};
+    S.bonMode[p] = 1;
+  }
   const sh = openShift(p);
   if (!sh) return;
   const total = r2(cartTotal(p));
@@ -6813,7 +6820,7 @@ function sheetBonNew() {
    <div class="receipt"><div class="tot"><span>المجموع</span><span>${money(total)}</span></div></div>
    ${fld("bname", "👤 سمية الزبون *", `<input id="bname" name="bname" class="big-in" autocomplete="off" maxlength="40" value="${esc((ED == null ? void 0 : ED.name) || ((_a = S.cust[p]) == null ? void 0 : _a.name) || "")}" placeholder="سولي الزبون على سميتو" style="font-size:1.3rem;font-weight:700">`)}
    ${vendRole() || (me == null ? void 0 : me.role) === "seller" && posMode(p) === "v" ? '<p class="muted" style="margin:0">🛍️ نتي «فوندوز»: ما كتشديش الفلوس وما كتعطيش للزبون حتى ورقة. سولي على سميتو وكتبيها هنا. الزبون كيمشي لاكيس، كيقول سميتو، كيخلص وكياخد السلعة.</p>' : '<p class="muted" style="margin:0">📤 البون كيمشي لـ«🧾 البونات» فلاكيس ديال ' + esc(LOC[p] || "") + "، وأي كاسيير آخر يقدر يخلصو. سجل سمية الزبون باش يعرفوه.</p>"}${errP}
-   <div class="btns">${ED ? `<button type="button" class="btn" onclick="delete S.bonEdit['${p}'];S.cart['${p}']={};closeSheet();render()">↩️ لغي التبديل</button>` : '<button type="button" class="btn" data-act="cclear">🗑️ فرغ</button>'}<button class="btn primary paybtn" type="submit">${ED ? "✅ حفظ التبديل" : "📝 صيفط الكوموند لاكيس"}</button></div>`, async (f) => {
+   <div class="btns">${ED ? `<button type="button" class="btn" onclick="delete S.bonEdit['${p}'];S.cart['${p}']={};closeSheet();render()">↩️ لغي التبديل</button>` : '<button type="button" class="btn" data-act="cclear">🗑️ فرغ</button>'}<button class="btn primary paybtn" type="submit">${ED ? "✅ حفظ التبديل" : "📝 صيفط الكوموند لاكيس"}</button></div>${(S.bonMode || {})[p] && !ED ? '<button type="button" class="btn block" onclick="delete S.bonMode[S.pos];sheetCart()">💰 لا، غادي نخلصو أنا</button>' : ""}`, async (f) => {
     const bname = f.bname.value.trim().replace(/\s+/g, " ");
     if (bname.length < 2) {
       f.bname.focus();
@@ -6875,6 +6882,7 @@ function sheetBonNew() {
       const ref = await db.collection("bons").add(b);
       b.id = ref.id;
       (S.bons = S.bons || []).push(b);
+      if (S.bonMode) delete S.bonMode[p];
       S.cart[p] = {};
       S.packEdit[p] = {};
       delete S.cust[p];
@@ -7580,6 +7588,7 @@ function sheetCart() {
     return;
   }
   if ((me == null ? void 0 : me.role) === "seller" && posMode(S.pos) === "v") return sheetBonNew();
+  if ((S.bonMode || {})[S.pos] && Object.values(cartOf(S.pos)).some((q) => q > 0) && !(S.bonPay || {})[S.pos]) return sheetBonNew();
   const p = S.pos, c = cartOf(p);
   const ids = Object.keys(c).filter((id) => c[id] > 0);
   if (!ids.length) return closeSheet();
@@ -19813,6 +19822,7 @@ const ACT = {
     sheetCartAdd();
   },
   cclear: () => {
+    if (S.bonMode) delete S.bonMode[S.pos];
     S.cart[S.pos] = {};
     S.packEdit[S.pos] = {};
     if (S.bonPay) delete S.bonPay[S.pos];
