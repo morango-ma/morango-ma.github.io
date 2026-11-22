@@ -88,7 +88,15 @@ main{padding-inline:16px;padding-block:8px calc(var(--nav) + 96px);max-width:760
 .btn.block{width:100%}
 .btn:disabled{opacity:.55;cursor:wait}
 .btns{display:flex;gap:8px;flex-wrap:wrap}
-.paybar{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom,0px));z-index:3;background:var(--surface);margin:0 -16px;padding:10px 16px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 14px rgba(0,0,0,.08)}.paybar .paybtn{flex:1}
+.paybar{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom,0px));z-index:3;background:var(--surface);margin:0 -16px;padding:10px 16px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 14px rgba(0,0,0,.08)}.paybar .paybtn{flex:2}.paybar{flex-wrap:nowrap}
+#sf:has(.cartl){gap:8px!important}.cartl{max-height:34vh;overflow-y:auto}.cartl .prow:first-child{border-top:0}
+#sf:has(.cartl) .receipt{padding:6px 12px}#sf:has(.cartl) .receipt .tot{margin-top:0}
+.pkd{padding:8px 12px}.pkd summary{cursor:pointer;list-style:none;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pkd summary::-webkit-details-marker{display:none}.pkd[open] summary{margin-bottom:6px}
+.quick.cgv{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.4fr);gap:6px}.quick.cgv button{padding:8px 2px}
+.cc1,.cc2{display:flex;flex-direction:column;gap:8px;min-width:0}.paybar{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}.paybar .btn{min-width:0;width:100%;padding:8px;line-height:1.15;min-height:44px}.paybar .paybtn{grid-column:1/-1;order:-1;min-height:56px;font-size:1.15rem}.paybar{padding-top:8px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));bottom:calc(-24px - env(safe-area-inset-bottom,0px) + 14px)}
+#sf:has(.cc1) .alert{padding:6px 10px!important}
+@media (min-width:900px){#sheet .panel:has(.cc1){max-width:1000px}#sf:has(.cc1){display:grid!important;grid-template-columns:1fr 1fr;gap:16px!important;align-items:start}.cc1 .cartl{max-height:calc(100vh - 230px)}#sf:has(.cc1) .cc2 .paybar{position:static;margin:0;padding:0;box-shadow:none;background:none}}
+#sf:has(.cartl) [data-act=cartadd]{padding:6px;min-height:0}
 .btns .btn{flex:1 1 140px}
 .link{background:none;border:0;color:var(--accent);padding:0;cursor:pointer;font-weight:700;font-size:.88rem}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -403,7 +411,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261122212408" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261122212801" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -7600,7 +7608,7 @@ function sheetCart() {
   const total = r2(gross - useVal);
   const redeemBox = cu ? (cu.vouchers || []).filter((v) => v.status === "active").map((v) => `<button type="button" class="opt" style="flex-direction:row;justify-content:center;gap:8px;padding:12px" data-act="custuse" data-id="${v.id}" aria-pressed="${cu.useV === v.id}"><span class="ico">🎁</span><span>خصم مصادق عليه: ${money(v.amount)} (−${fmt(v.pts)} نقطة)${v.note ? " · " + esc(v.note) : ""}</span></button>`).join("") : "";
   const notes = [5, 10, 20, 50, 100, 200, 500].filter((v) => v > total).slice(0, 3);
-  openSheet("💵 الخلاص", `<div>${ids.map((id) => {
+  openSheet("💵 الخلاص", `<div class="cc1"><div class="cartl">${ids.map((id) => {
     var _a2;
     return prow(id, money((_a2 = S.items[id]) == null ? void 0 : _a2.price) + " للوحدة", cartQty(id, c[id]));
   }).join("")}</div>
@@ -7610,13 +7618,16 @@ function sheetCart() {
     const pk = itemsArr().filter((i) => i.kind === "pack");
     if (!pk.length) return "";
     const ids2 = [.../* @__PURE__ */ new Set([...Object.keys(D), ...Object.keys(E)])].filter((id) => S.items[id]);
-    return `<div class="box"><div class="head"><h3>📦 التغليف اللي غادي يخرج</h3><span class="muted">بدلي إلا خصك</span></div>${ids2.length ? ids2.map((id) => {
+    const pv = (id) => E[id] != null ? E[id] : D[id] || 0;
+    const sm = ids2.filter((id) => pv(id) > 0).map((id) => esc(iname(id)) + " ×" + fmt(pv(id))).join(" · ") || "بلا تغليف";
+    const short = ids2.some((id) => stockOf(p, id) < pv(id));
+    return `<details class="box pkd"${short ? " open" : ""}><summary><b>📦 التغليف:</b> <span class="muted">${sm}</span>${short ? ' <span class="neg">· ما كافيش</span>' : ""} <span class="link">بدل ▾</span></summary>${ids2.length ? ids2.map((id) => {
       const v = E[id] != null ? E[id] : D[id] || 0;
       const have = stockOf(p, id);
       return prow(id, "كاين " + fmt(have) + (have < v ? ' · <span class="neg">ما كافيش</span>' : "") + (E[id] != null && D[id] != null && +E[id] !== D[id] ? ' · <span class="muted">العادي ' + fmt(D[id]) + "</span>" : ""), `<input class="qty" style="width:74px;height:44px" data-pk="${id}" type="text" inputmode="decimal" value="${fmt(v)}" aria-label="${esc(iname(id))}" onfocus="this.select()">`);
     }).join("") : '<p class="muted" style="margin:0">هاد المنتوجات ما عندهمش تغليف محدد.</p>'}
-      <select data-pkadd="1" aria-label="زيد تغليف" style="height:42px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:0 8px;font-weight:600"><option value="">➕ زيد تغليف (كيس، علبة...)</option>${pk.filter((i) => !ids2.includes(i.id)).map((i) => `<option value="${i.id}">${i.icon || "📦"} ${esc(i.name)}${frT(i)}</option>`).join("")}</select></div>`;
-  })()}
+      <select data-pkadd="1" aria-label="زيد تغليف" style="height:42px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:0 8px;font-weight:600"><option value="">➕ زيد تغليف (كيس، علبة...)</option>${pk.filter((i) => !ids2.includes(i.id)).map((i) => `<option value="${i.id}">${i.icon || "📦"} ${esc(i.name)}${frT(i)}</option>`).join("")}</select></details>`;
+  })()}</div><div class="cc2">
    ${custChip(p)}${redeemBox}${(() => {
     const X = (S.exch || {})[p];
     if (!X) return "";
@@ -7624,9 +7635,8 @@ function sheetCart() {
     return `<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>🔄 تبديل (ريتور ${esc(X.no)}): الزبون عندو ${money(X.amt)}</b><span style="font-size:1.15rem;font-weight:800">${d > 9e-3 ? "💵 خاصو يزيد: " + money(d) : d < -9e-3 ? "↩️ رجعي ليه: " + money(-d) : "✅ نفس الثمن، ما كاين فرق"}</span><span class="muted" style="font-size:.85rem">${money(X.amt)} ترجعو ليه فلاكيس. دوزي الشرية الجديدة عادي.</span><button type="button" class="btn small" onclick="delete S.exch['${p}'];sheetCart()">✖️ ما بقاش التبديل</button></div>`;
   })()}
    <div class="receipt"><div class="tot"><span>المجموع</span><span>${money(total)}</span></div>${useVal ? `<div class="muted num">قبل الخصم ${money(gross)} · خصم الوفاء −${money(useVal)}</div>` : ""}</div>
-   <div class="field"><span class="lbl">💵 شحال عطاك الزبون؟ (اختياري)</span><div class="quick"><button type="button" data-act="given" data-v="${total}">بالضبط</button>${notes.map((v) => `<button type="button" data-act="given" data-v="${v}">${v}</button>`).join("")}</div>
-   <input id="cgiven" name="cgiven" class="big-in" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px" type="text" inputmode="decimal" placeholder="0.00" aria-label="المبلغ اللي عطى الزبون"></div><div id="chg"></div>${errP}
-   ${(S.bonPay || {})[S.pos] ? "" : '<button type="button" class="btn block" onclick="sheetBonNew()">📝 صيفط البون لكاسيير آخر يخلصو</button>'}<div class="btns paybar"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button><button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div>`, async (f) => {
+   <div class="quick cgv"><button type="button" data-act="given" data-v="${total}">بالضبط</button>${notes.map((v) => `<button type="button" data-act="given" data-v="${v}">${v}</button>`).join("")}<input id="cgiven" name="cgiven" class="big-in" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:6px;min-width:0" type="text" inputmode="decimal" placeholder="💵 عطاك؟" aria-label="المبلغ اللي عطى الزبون (اختياري)"></div><div id="chg"></div>${errP}
+   <div class="btns paybar"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button>${(S.bonPay || {})[S.pos] ? "" : '<button type="button" class="btn" onclick="sheetBonNew()">📝 البون لكاسيير آخر</button>'}<button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div></div>`, async (f) => {
     var _a2, _b, _c, _d;
     const sh = openShift(p);
     if (!sh) return ferr("ما كاينة حتى نوبة مفتوحة.");
