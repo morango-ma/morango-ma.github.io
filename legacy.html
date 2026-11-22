@@ -88,6 +88,7 @@ main{padding-inline:16px;padding-block:8px calc(var(--nav) + 96px);max-width:760
 .btn.block{width:100%}
 .btn:disabled{opacity:.55;cursor:wait}
 .btns{display:flex;gap:8px;flex-wrap:wrap}
+.paybar{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom,0px));z-index:3;background:var(--surface);margin:0 -16px;padding:10px 16px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 14px rgba(0,0,0,.08)}.paybar .paybtn{flex:1}
 .btns .btn{flex:1 1 140px}
 .link{background:none;border:0;color:var(--accent);padding:0;cursor:pointer;font-weight:700;font-size:.88rem}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -402,7 +403,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261122203146" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261122212408" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -7625,7 +7626,7 @@ function sheetCart() {
    <div class="receipt"><div class="tot"><span>المجموع</span><span>${money(total)}</span></div>${useVal ? `<div class="muted num">قبل الخصم ${money(gross)} · خصم الوفاء −${money(useVal)}</div>` : ""}</div>
    <div class="field"><span class="lbl">💵 شحال عطاك الزبون؟ (اختياري)</span><div class="quick"><button type="button" data-act="given" data-v="${total}">بالضبط</button>${notes.map((v) => `<button type="button" data-act="given" data-v="${v}">${v}</button>`).join("")}</div>
    <input id="cgiven" name="cgiven" class="big-in" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px" type="text" inputmode="decimal" placeholder="0.00" aria-label="المبلغ اللي عطى الزبون"></div><div id="chg"></div>${errP}
-   ${(S.bonPay || {})[S.pos] ? "" : '<button type="button" class="btn block" onclick="sheetBonNew()">📝 صيفط البون لكاسيير آخر يخلصو</button>'}<div class="btns"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button><button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div>`, async (f) => {
+   ${(S.bonPay || {})[S.pos] ? "" : '<button type="button" class="btn block" onclick="sheetBonNew()">📝 صيفط البون لكاسيير آخر يخلصو</button>'}<div class="btns paybar"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button><button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div>`, async (f) => {
     var _a2, _b, _c, _d;
     const sh = openShift(p);
     if (!sh) return ferr("ما كاينة حتى نوبة مفتوحة.");
