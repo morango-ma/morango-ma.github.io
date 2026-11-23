@@ -413,7 +413,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123124618" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123141327" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -12144,6 +12144,10 @@ function sheetClose0() {
   const packs = itemsArr().filter((i) => i.kind === "pack" && (m[i.id] || 0) !== 0).map((i) => i.id);
   const TKs = sh.tickets || [];
   const night = sh.team === "مسائية";
+  if (!night) {
+    ids.length = 0;
+    packs.length = 0;
+  }
   const nexts = [...usersArr().filter((u) => u.role === "seller" && u.name !== sh.seller).map((u) => ({ v: u.name, l: u.name, i: "🛍️" })), { v: "-", l: "سد نهائي ديال النهار", i: "🔚" }];
   const GRP = [];
   ids.forEach((id) => {
@@ -12158,12 +12162,12 @@ function sheetClose0() {
     g.ids.push(id);
   });
   const STP = (n, last) => `<div class="btns" style="margin-top:6px">${n > 1 ? `<button type="button" class="btn" data-stp="-1">→ رجع</button>` : ""}${last ? `<button class="btn primary" type="submit">🔒 سد النوبة</button>` : `<button type="button" class="btn primary" data-stp="1">التالي ←</button>`}</div>`;
-  openSheet(night ? "🌙 إغلاق النوبة · جرد الليل" : "🔒 إغلاق النوبة · جرد التسليم", `<div data-step="1" style="display:flex;flex-direction:column;gap:10px">${night ? `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🌙</span><div><b>جرد الليل إجباري</b><div class="muted">حسبي كل منتوج باقي فالمحل بيدك. كلشي اللي حسبتي غادي يتسجل <b>مرتجع (retour)</b> ويرجع للورشة ديالو، والمحل غادي يبقى خاوي لغدا.</div></div></div></div>` : `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🤝</span><div><b>جرد التسليم بين الصباح والعشية (Inventaire inter-passation) إجباري</b><div class="muted">حسبي كل منتوج، التغليف والفلوس بيدك مع البائعة اللي غادي تستلم من بعدك. إلا كان كلشي صحيح، الصندوق كيتسد. إلا كان شي فرق، الصندوق ما كيتسدش والإدارة كتوصلها نوتيفيكاسيون.</div></div></div></div>
+  openSheet(night ? "🌙 إغلاق النوبة · جرد الليل" : "🔒 إغلاق النوبة · التسليم", `<div data-step="1" style="display:flex;flex-direction:column;gap:10px">${night ? `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🌙</span><div><b>جرد الليل إجباري</b><div class="muted">حسبي كل منتوج باقي فالمحل بيدك. كلشي اللي حسبتي غادي يتسجل <b>مرتجع (retour)</b> ويرجع للورشة ديالو، والمحل غادي يبقى خاوي لغدا.</div></div></div></div>` : `<div class="alert warn" style="cursor:default"><div class="lead"><span class="em">🤝</span><div><b>التسليم بين الصباح والعشية</b><div class="muted">حسبي الفلوس بيدك مع البائعة اللي غادي تستلم من بعدك. إلا كان الحساب صحيح، الصندوق كيتسد. إلا كان شي فرق، الصندوق ما كيتسدش والإدارة كتوصلها نوتيفيكاسيون.</div></div></div></div>
    ${choice("cnext", "🤝 شكون غادي تستلم المحل من بعدك؟", nexts, isMgr() ? "-" : ((_a = nexts[0]) == null ? void 0 : _a.v) || "-", 3)}`}${TKs.length ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📋</span><div><b>🧾 ${TKs.length} وصل فهاد النوبة</b><div class="muted">${TKs[0].no ? "من " + esc(rNo(TKs[0])) + " حتى " + esc(rNo(TKs[TKs.length - 1])) : ""} · المجموع ${money(sumTickets(sh))}</div></div></div></div>` : ""}
-   <h3 style="margin:0">🧺 الخطوة 1: جرد السلعة</h3>${ids.length ? GRP.map((g) => `<div data-grp="${g.id}" style="border:1px solid var(--line,#eee);border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;gap:6px"><b>${g.i} ${esc(g.name)}</b>${g.ids.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("")}${photoField("nret_" + g.id, night ? "📷 صورة " + g.name + " اللي راجعة (retour)" : "📷 صورة الفيترينة ديال " + g.name + " (التسليم)")}</div>`).join("") : emptyB("🧺", "ما كاين حتى منتوج.")}
+   ${night ? '<h3 style="margin:0">🧺 الخطوة 1: جرد السلعة</h3>' : ""}${!night ? "" : ids.length ? GRP.map((g) => `<div data-grp="${g.id}" style="border:1px solid var(--line,#eee);border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;gap:6px"><b>${g.i} ${esc(g.name)}</b>${g.ids.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("")}${photoField("nret_" + g.id, night ? "📷 صورة " + g.name + " اللي راجعة (retour)" : "📷 صورة الفيترينة ديال " + g.name + " (التسليم)")}</div>`).join("") : emptyB("🧺", "ما كاين حتى منتوج.")}
    ${STP(1, false)}</div>
    <div data-step="2" hidden style="display:flex;flex-direction:column;gap:10px">${packs.length ? `<h3 style="margin:0">📦 الخطوة 2: جرد التغليف واللوازم</h3><div>${packs.map((id) => prow(id, "", stepper("data-cnt", id, "", iunit(id)))).join("")}</div>` : ""}${STP(2, false)}</div>
-   <div data-step="3" hidden style="display:flex;flex-direction:column;gap:10px"><h3 style="margin:0">💵 الخطوة ${packs.length ? 3 : 2}: حساب الفلوس</h3>
+   <div data-step="3" hidden style="display:flex;flex-direction:column;gap:10px"><h3 style="margin:0">💵 ${night ? "الخطوة " + (packs.length ? 3 : 2) + ": " : ""}حساب الفلوس</h3>
    <div class="lbl" style="font-weight:700">💵 الفلوس اللي فالصندوق: كتبي شحال من درهم كاين من كل نوع، والتطبيق كيحسب القطع</div>${cashCountHtml("cc")}
    ${moneyIn("ccash", "💵 الفلوس اللي فالصندوق دابا (مع fond de caisse)")}
    ${mgrs.length ? choice("cmgr", "📊 المسير اللي استلم الفلوس", mgrs, mgrs[0].v, 3) : inp("cmgr", "المسير اللي استلم الفلوس")}${sigField("csig", "توقيع المسير (استلم الصندوق)")}
@@ -12326,7 +12330,7 @@ function sheetRecvPass(id) {
   const nav = (n, last) => `<div class="btns" style="margin-top:6px">${n > 1 ? '<button type="button" class="btn" data-rs="-1">→ رجع</button>' : ""}${last ? '<button class="btn primary" type="submit">✅ أكدي الاستلام ← fond de caisse</button>' : '<button type="button" class="btn primary" data-rs="1">التالي ←</button>'}</div>`;
   openSheet("🤝 الاستلام من " + x.seller, `<p class="muted" style="margin:0">${esc(x.seller)} سدات النوبة ديال ${esc(x.team)} ${hm(c.ts)}. حسبي معاها السلعة والتغليف بيدك، من الحساب ديالك.</p>
    <div data-rstep="1" style="display:flex;flex-direction:column;gap:8px"><h3 style="margin:0">🧺 الخطوة 1: حسبي السلعة</h3>${Object.keys(ph).length ? `<div class="media">${Object.entries(ph).map(([w, l]) => mediaBtns(l, "الفيترينة · " + ((WS.find((z) => z.id === w) || {}).name || ""), "📷")).join("")}</div>` : ""}
-    ${gids.length ? gids.map((k) => prow(k, `<span class="muted">${esc(x.seller)}: ${fmt(c.counted[k])}</span>`, stepper("data-rc", k, "", iunit(k)))).join("") : emptyB("🧺", "المحل كان خاوي.")}${nav(1, !pids.length)}</div>
+    ${gids.length ? gids.map((k) => prow(k, `<span class="muted">${esc(x.seller)}: ${fmt(c.counted[k])}</span>`, stepper("data-rc", k, "", iunit(k)))).join("") : all.length || x.team === "مسائية" ? emptyB("🧺", "المحل كان خاوي.") : emptyB("🤝", "التسليم ديال النهار بلا جرد السلعة · أكدي غير الاستلام.")}${nav(1, !pids.length)}</div>
    ${pids.length ? `<div data-rstep="2" hidden style="display:none;flex-direction:column;gap:8px"><h3 style="margin:0">📦 الخطوة 2: حسبي التغليف</h3>${pids.map((k) => prow(k, `<span class="muted">${esc(x.seller)}: ${fmt(c.counted[k])}</span>`, stepper("data-rc", k, "", iunit(k)))).join("")}${nav(2, true)}</div>` : ""}
    <div id="rdiff"></div>${errP}`, async (f) => {
     const ins = $$("input[data-rc]", f);
