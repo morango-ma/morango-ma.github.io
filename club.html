@@ -50,11 +50,11 @@ const fmtD=ts=>{const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return
 const nf=v=>String(Math.round((+v||0)*100)/100).replace('.',',');
 async function showHist(){const st=LS.get();if(!st.phone)return start(true);card('<p class="muted">⏳ كنحملو المشتريات ديالك…</p>');let r;try{r=await rpc('club_hist',{phone:st.phone})}catch(_){return card('<div class="msg err">'+ERR.net+'</div><button onclick="showHist()">🔄 عاود</button>')}
  if(!r.ok){LS.set({phone:null});return start(true)}
- const H=r.hist||[];const ph=normPh(st.phone);card(`${vcard(r,ph)}<p class="muted">${r.visits} زيارة · ${nf(r.total)} د.م</p>
+ const H=r.hist||[];HIST=H;const ph=normPh(st.phone);card(`${vcard(r,ph)}<p class="muted">${r.visits} زيارة · ${nf(r.total)} د.م</p>
   <h2 style="margin:6px 0 0;font-size:1.05rem">📜 المشتريات ديالي (${H.length})</h2>
-  ${H.length?H.map(h=>`<div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:8px"><b>🗓️ ${fmtD(h.ts)}</b><b dir="ltr">${nf(h.total)} DH</b></div>
+  ${H.length?H.map((h,i)=>`<div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:8px"><b>🗓️ ${fmtD(h.ts)}</b><b dir="ltr">${nf(h.total)} DH</b></div>
    ${(h.lines||[]).map(l=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:.92rem"><span>${esc(l.n)} <span style="color:var(--muted)" dir="ltr">×${nf(l.q)}</span></span><span dir="ltr" style="color:var(--muted)">${nf(l.q*l.p)}</span></div>`).join('')}
-   <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted)"><span>🧾 ${esc(h.no||'')}</span><span>⭐ +${nf(h.pts)} نقطة</span></div></div>`).join(''):'<p class="muted">ما كاين حتى شراء مسجل.</p>'}
+   <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted)"><span>🧾 ${esc(h.no||'')}</span><span>⭐ +${nf(h.pts)} نقطة</span></div><button class="link" style="align-self:flex-start;padding:4px 0" onclick="dlRcpt(${i})">⬇️ تحميل الوصل</button></div>`).join(''):'<p class="muted">ما كاين حتى شراء مسجل.</p>'}
   <button class="link" onclick="LS.set({phone:null});start(true)">🔁 نمرة أخرى</button>`)}
 /* 💳 virtual loyalty card: shown at the till (or to the vendeuse) to collect points without typing the phone */
 const normPh=p=>{const d=String(p||'').replace(/\D/g,'');if(/^00212[5-7]\d{8}$/.test(d))return '0'+d.slice(5);if(/^212[5-7]\d{8}$/.test(d))return '0'+d.slice(3);if(/^[5-7]\d{8}$/.test(d))return '0'+d;if(/^0[5-7]\d{8}$/.test(d))return d;return ''};
@@ -71,6 +71,19 @@ function saveCard(){try{const st=LS.get(),ph=normPh(st.phone);if(!ph)return;cons
  const Q=640,q0=(W-Q)/2,y0=290;x.fillStyle='#fff';x.beginPath();x.roundRect?x.roundRect(q0-30,y0-30,Q+60,Q+60,40):x.rect(q0-30,y0-30,Q+60,Q+60);x.fill();const m=Q/n;x.fillStyle='#000';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(M[r][c])x.fillRect(q0+c*m,y0+r*m,Math.ceil(m),Math.ceil(m));
  x.fillStyle='#fff';x.font='700 64px "IBM Plex Sans Arabic",sans-serif';x.fillText(st.name||'',W/2,y0+Q+150);x.font='600 46px monospace';x.fillText(ph.replace(/(\d{2})(?=\d)/g,'$1 '),W/2,y0+Q+230);x.font='600 38px "IBM Plex Sans Arabic",sans-serif';x.fillText('وري هاد الكارط فلاكيس باش تزاد ليك النقاط',W/2,H-80);
  const a=document.createElement('a');a.download='Morango-carte-fidelite.png';a.href=cv.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove()}catch(e){alert('📸 ما قدرناش نحفظو، دير لقطة الشاشة (capture).')}}
+let HIST=[];const POSN={p1:'ميموزا · Mimoza',p2:'روان · Rawan'};
+/* ⬇️ one purchase as a receipt image the client can keep or share */
+async function dlRcpt(i){const h=HIST[i];if(!h)return;try{const L=h.lines||[],W=640,F='"IBM Plex Sans Arabic",sans-serif',H=420+L.length*64+(h.disc?50:0),cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+ x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#E02843';x.fillRect(0,0,W,12);x.textAlign='center';x.fillStyle='#3B1520';x.font='800 56px "Baloo Bhaijaan 2",sans-serif';x.fillText('MORANGO',W/2,90);
+ x.font='600 26px '+F;x.fillStyle='#8C6670';x.fillText((POSN[h.pos]||'')+' · '+fmtD(h.ts),W/2,132);x.fillText('وصل رقم '+(h.no||''),W/2,168);
+ const line=y=>{x.strokeStyle='#F2D8DE';x.setLineDash([8,6]);x.beginPath();x.moveTo(30,y);x.lineTo(W-30,y);x.stroke();x.setLineDash([])};line(192);
+ let y=240;x.direction='rtl';L.forEach(l=>{x.textAlign='right';x.fillStyle='#3B1520';x.font='600 28px '+F;let n=String(l.n||'');while(x.measureText(n).width>W-230&&n.length>4)n=n.slice(0,-2);if(n!==String(l.n||''))n+='…';x.fillText(n,W-30,y);x.font='500 22px '+F;x.fillStyle='#8C6670';x.fillText(nf(l.q)+' × '+nf(l.p)+' د.م',W-30,y+28);x.textAlign='left';x.direction='ltr';x.fillStyle='#3B1520';x.font='700 28px '+F;x.fillText(nf(l.q*l.p)+' DH',30,y+12);x.direction='rtl';y+=64});
+ line(y-14);y+=26;if(h.disc){x.textAlign='right';x.font='600 26px '+F;x.fillStyle='#8C6670';x.fillText('خصم الوفاء',W-30,y);x.textAlign='left';x.direction='ltr';x.fillText('-'+nf(h.disc)+' DH',30,y);x.direction='rtl';y+=50}
+ x.textAlign='right';x.fillStyle='#3B1520';x.font='800 38px '+F;x.fillText('المجموع',W-30,y+10);x.textAlign='left';x.direction='ltr';x.fillText(nf(h.total)+' DH',30,y+10);x.direction='rtl';
+ x.textAlign='center';x.font='600 26px '+F;x.fillStyle='#E02843';x.fillText('⭐ +'+nf(h.pts)+' نقطة',W/2,y+70);x.fillStyle='#8C6670';x.font='500 22px '+F;x.fillText('شكراً على الزيارة 💛',W/2,H-30);
+ const name='Morango-recu-'+(h.no||i)+'.png';const blob=await new Promise(r=>cv.toBlob(r,'image/png'));const file=new File([blob],name,{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'Morango'});return}catch(e){if(e&&e.name==='AbortError')return}}
+ const a=document.createElement('a');a.download=name;a.href=URL.createObjectURL(blob);document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),8000)}catch(e){alert('📸 ما قدرناش نحفظو الوصل، دير لقطة الشاشة (capture).')}}
 const joinLink=()=>'<button class="link" onclick="location.href=location.pathname">⭐ النقاط والمشتريات ديالي</button>';
 start();
 </script></body></html>
