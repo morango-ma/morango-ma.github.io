@@ -413,7 +413,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123141327" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123151258" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -2657,6 +2657,23 @@ async function boot() {
       }
       if (S.view === "pos" || S.view === "home") render();
     }, err);
+    db.collection("drawercmd").where("status", "==", "pending").onSnapshot((q) => {
+      q.docs.forEach(async (d) => {
+        var _a2;
+        const c = d.data();
+        if (!c || c.pos !== S.pos || !HW().kind || Date.now() - (+c.ts || 0) > 12e4 || ((_a2 = window.__drw) == null ? void 0 : _a2[d.id])) return;
+        (window.__drw = window.__drw || {})[d.id] = 1;
+        try {
+          await db.doc("drawercmd/" + d.id).update({ status: "done", doneTs: Date.now(), doneBy: meName() });
+          await hwDrawer();
+          toast("💵 لاكيس تحلات بطلب " + (c.by || "المسير"));
+          db.collection("drawerev").add({ pos: S.pos, date: today(), ts: Date.now(), reason: "عن بعد · " + (c.by || ""), ref: "", by: meName(), hasCam: false }).catch(() => {
+          });
+        } catch (_) {
+        }
+      });
+    }, () => {
+    });
     db.collection("shifts").where("date", ">=", daysAgo(14)).onSnapshot((s) => {
       S.shifts = s.docs.map((d) => __spreadValues({ id: d.id }, d.data())).sort((a, b) => b.openTs - a.openTs);
       render();
@@ -4254,7 +4271,7 @@ function vPos() {
   const p = S.pos, sh = openShift(p), m = stockMap(p);
   const canSwitch = me.role !== "seller";
   const pend = S.pend.filter((o) => o.type === "transfer" && o.pos === p);
-  const head = canSwitch ? chipsHtml(POS, p, "setpos") : "";
+  const head = canSwitch ? chipsHtml(POS, p, "setpos") + (isMgr() ? `<button type="button" class="btn small" data-act="rdrawer" data-pos="${p}">💵 حل لاكيس ديال ${esc(LOC[p] || p)} عن بعد</button>` : "") : "";
   const recv = pend.length ? `<section class="card"><div class="head"><h2>📦 سلعة خاصها تستلم</h2><span class="tag acc">${pend.length}</span></div><ul class="list">${pend.map((o) => `<li><div class="lead"><span class="em">${LOCI[o.ws]}</span><div><b>من ${esc(LOC[o.ws])}</b><div class="muted">${hm(o.ts)} · ${o.lines.length} منتوج${o.driver ? " · مع " + esc(o.driver) : ""}</div></div></div><button class="btn primary small" data-act="receive" data-id="${o.id}">استلام</button></li>`).join("")}</ul></section>` : "";
   const rows = itemsArr().filter((i) => i.kind === "final" && (m[i.id] || 0) !== 0);
   const stockCard = `<section class="card"><div class="head"><h2>🧺 المخزون فالمحل</h2><button class="link" data-act="returnpos">↩️ إرجاع غير المباع</button></div>${rows.length ? rows.map((i) => `<div class="prow ${isMgr() ? "clk" : ""}" ${isMgr() ? `data-act="adjust" data-loc="${p}" data-id="${i.id}"` : ""}><div class="lead"><span class="em">${ico(i.id)}</span><div><b>${esc(i.name)}${frT(i)}</b></div></div><b class="num ${m[i.id] < 0 ? "neg" : ""}">${fmt(m[i.id])}${isMgr() ? " ✏️" : ""}</b></div>`).join("") : emptyB("🧺", "المحل خاوي، كيتسنى السلعة.")}</section>`;
@@ -19635,6 +19652,23 @@ const ACT = {
   objset: () => sheetObjSet(),
   recvpass: (el) => sheetRecvPass(el.dataset.id),
   verif: (el) => sheetVerif(el.dataset.id),
+  rdrawer: async (el) => {
+    const p = el.dataset.pos;
+    if (!confirm("نحلو لاكيس ديال " + (LOC[p] || p) + " دابا؟")) return;
+    try {
+      const ref = await db.collection("drawercmd").add({ pos: p, ts: Date.now(), date: today(), by: meName(), status: "pending" });
+      toast("⏳ تصيفط الطلب · لاكيس غادي تتحل ف ثواني");
+      setTimeout(async () => {
+        try {
+          const d = (await db.doc("drawercmd/" + ref.id).get()).data();
+          toast((d == null ? void 0 : d.status) === "done" ? "✅ لاكيس تحلات (" + (d.doneBy || "") + ")" : "⚠️ ما تحلاتش: الكيس ديال " + (LOC[p] || p) + " خاصها تكون محلولة فيها التطبيق ومربوطة بالطابعة", (d == null ? void 0 : d.status) !== "done");
+        } catch (_) {
+        }
+      }, 9e3);
+    } catch (e) {
+      toast("❌ " + e.message, true);
+    }
+  },
   allrc: (el) => saveAllReceipts(el.dataset.id),
   printall: (el) => printAllTk(el.dataset.id, el),
   appupd: async () => {
