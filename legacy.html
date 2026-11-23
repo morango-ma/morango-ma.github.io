@@ -413,7 +413,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123000234" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123093317" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -8403,6 +8403,37 @@ async function receiptBlob(sh, t, copy) {
   }
   return await new Promise((res) => cv.toBlob(res, "image/png"));
 }
+let PRALL = false;
+async function printAllTk(id, btn) {
+  if (PRALL) return toast("⏳ الطبع خدام…");
+  const sh = S.shifts.find((x) => x.id === id);
+  if (!sh) return;
+  const L = (sh.tickets || []).filter((t) => !t.void).sort((a, b) => (+a.ts || 0) - (+b.ts || 0));
+  if (!L.length) return toast("ما كاين حتى وصل");
+  if (!HW().kind) {
+    toast("ما كايناش طابعة مربوطة · غادي نوجدو فيشي واحد فيه كاع الوصولات");
+    return saveAllReceipts(id);
+  }
+  if (!confirm("غادي يطبعو " + L.length + " وصل واحد بواحد. نبداو؟")) return;
+  PRALL = true;
+  const lbl = btn == null ? void 0 : btn.textContent;
+  let ok = 0;
+  try {
+    for (let i = 0; i < L.length; i++) {
+      if (btn) btn.textContent = "🖨️ " + (i + 1) + " / " + L.length + "…";
+      if (await hwPrint(sh, L[i], {})) ok++;
+      else {
+        toast("⚠️ الطابعة وقفات ف الوصل " + (i + 1), true);
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 350));
+    }
+  } finally {
+    PRALL = false;
+    if (btn) btn.textContent = lbl;
+  }
+  toast("🖨️ تطبعو " + ok + " / " + L.length + " وصل");
+}
 async function printReceipt(sh, t) {
   if (HW().kind && await hwPrint(sh, t, {})) return toast("🖨️ تطبع");
   let dl = null;
@@ -9438,7 +9469,7 @@ function sheetTickets() {
   openSheet(
     "🧾 وصولات النوبة",
     `${inp("tkq", "🔍 قلب بنمرة الوصل", "", "search", 'autocomplete="off" placeholder="مثلاً KTBT-EW3"')}<p class="muted" id="tkinfo" style="margin:0"></p>
-   ${tk.length ? `<button type="button" class="btn block" data-act="allrc" data-id="${sh.id}">📄 جميع الوصولات ديال النوبة ففيشي واحد (للطبع)</button>` : ""}
+   ${tk.length ? `<button type="button" class="btn block" data-act="printall" data-id="${sh.id}">🖨️ طبع جميع الوصولات ديال النوبة واحد بواحد (${tk.filter((t) => !t.void).length})</button><button type="button" class="btn block" data-act="allrc" data-id="${sh.id}">📄 جميع الوصولات ديال النوبة ففيشي واحد (للطبع)</button>` : ""}
    <div id="tkcur">${tk.length ? tk.map((t) => card(sh, t)).join("") : emptyB("🧾", "مازال ما تسجل حتى بيع.")}</div><div id="tkold" hidden>${older.map((o) => card(o.x, o.t)).join("")}</div>`,
     null,
     (f) => {
@@ -12466,7 +12497,7 @@ function sheetShiftResult(x) {
    <div class="alert ${Math.abs(c.cashDiff) < 0.01 ? "acc" : "bad"}"><b>💰 الصندوق: ${Math.abs(c.cashDiff) < 0.01 ? "مطابق ✅" : (c.cashDiff > 0 ? "زايد " : "ناقص ") + money(Math.abs(c.cashDiff))}</b></div>
    ${isAdmin() && c.salesCost != null ? `<div class="stats sheet-stats"><div class="stat"><span>🏷️ تكلفة اللي تباع (CMUP)</span><b>${money(c.salesCost)}</b></div><div class="stat"><span>📈 الربح الخام</span><b class="${c.sales - c.salesCost < 0 ? "neg" : "pos"}">${money(c.sales - c.salesCost)}</b></div></div>` : ""}
    ${c.verif ? `<div class="alert ${c.verif.resolution === "none" ? "acc" : "bad"}" style="cursor:default"><b>🔎 تحقق مع ${esc(c.verif.by)}: ${c.verif.resolution === "salary" ? "💸 " + money(c.verif.amount) + " كيتنقصو من الأجرة" : c.verif.resolution === "cash" ? "💵 خلصات " + money(c.verif.amount) + " كاش" : "✅ تصحح الحساب، ما بقى حتى فرق"}</b><div class="muted">الحساب الأول: الصندوق ${((_b = c.verif.first) == null ? void 0 : _b.cashDiff) ? money(c.verif.first.cashDiff) : "مطابق"} · ${(((_c = c.verif.first) == null ? void 0 : _c.stockDiff) || []).length} منتوج فيه فرق</div></div>` : ""}
-   ${(x.tickets || []).length ? `<button type="button" class="btn block" data-act="allrc" data-id="${x.id}">📄 جميع الوصولات (${(x.tickets || []).length}) ففيشي واحد</button>` : ""}
+   ${(x.tickets || []).length ? `<button type="button" class="btn block" data-act="printall" data-id="${x.id}">🖨️ طبع جميع الوصولات واحد بواحد (${(x.tickets || []).filter((t) => !t.void).length})</button><button type="button" class="btn block" data-act="allrc" data-id="${x.id}">📄 جميع الوصولات (${(x.tickets || []).length}) ففيشي واحد</button>` : ""}
    ${c.passation ? `<div class="alert ${c.passation.to || c.passation.night ? "acc" : ""}" style="cursor:default"><b>${c.passation.night ? "🌙 جرد الليل: " + ((c.passation.returned || []).length ? c.passation.returned.length + " منتوج رجع للورشات (retour)" : "المحل كان خاوي") : "🤝 جرد التسليم: " + (c.passation.to ? esc(c.passation.to) + (x.passRecv ? x.passRecv.ok ? " أكدات الاستلام ✅ " + hm(x.passRecv.ts) : " قالت كاين مشكل ⚠️ " + esc(x.passRecv.note || "") : " مازال ما أكداتش الاستلام ⏳") : "حتى واحد ما استلم")}</b>${c.passation.sig ? ` <button type="button" class="link" data-act="media" data-id="${c.passation.sig}">✍️ التوقيع</button>` : ""}</div>` : ""}
    <h3>🔍 السلعة: النظري مقابل الجرد</h3>${((_d = c.stockDiff) == null ? void 0 : _d.length) ? c.stockDiff.map((d) => prow(d.item, "نظري " + fmt(d.theo) + " · لقينا " + fmt(d.counted), `<div style="text-align:end"><b class="num ${d.d < 0 ? "neg" : "pos"}">${d.d > 0 ? "+" : ""}${fmt(d.d)}</b><div class="muted num">${money(d.val)}</div></div>`)).join("") + `<p class="muted">مجموع قيمة الفرق: ${money(c.stockDiff.reduce((s, d) => s + d.val, 0))}</p>` : '<p><span class="tag good">✅ كلشي مطابق</span></p>'}
    <p class="muted">💵 الفلوس تسلمات لـ${esc(c.handedTo)}.</p><div class="media">${mediaBtns([c.sig], "توقيع المسير", "✍️")}</div>`);
@@ -19593,6 +19624,7 @@ const ACT = {
   recvpass: (el) => sheetRecvPass(el.dataset.id),
   verif: (el) => sheetVerif(el.dataset.id),
   allrc: (el) => saveAllReceipts(el.dataset.id),
+  printall: (el) => printAllTk(el.dataset.id, el),
   appupd: async () => {
     const st = await updCheck();
     if (st === false) {
