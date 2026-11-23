@@ -413,7 +413,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123093317" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123124618" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4275,6 +4275,10 @@ function vPos() {
   const SM = soldMap(p, daysAgo(13));
   const prods = itemsArr().filter((i) => i.kind === "final" && +i.price > 0 && !i.noPos && (S.pcat === "all" || i.ws === S.pcat) && (!P2 || i.cat === P2) && (!q || (i.name + " " + (i.fr || "")).toLowerCase().includes(q.toLowerCase()))).sort((a, b) => (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
   const TOP = new Set(prods.filter((i) => SM[i.id] > 0).slice(0, 5).map((i) => i.id));
+  {
+    const IN = (id) => stockOf(p, id) > 0 ? 0 : 1;
+    prods.sort((a, b) => IN(a.id) - IN(b.id) || (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
+  }
   const VO = me.role === "seller" && posMode(p) === "v";
   const HC = helperPending(me.id);
   if (me.role === "seller" && HC.length) return `${helperConfCard(HC)}`;
@@ -7565,6 +7569,10 @@ function sheetCartAdd() {
   const C2 = pc2.some((x) => x.id === S.caCat2) ? S.caCat2 : "";
   const prods = base.filter((i) => (C1 === "all" || i.ws === C1) && (!C2 || i.cat === C2)).sort((a, b) => (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
   const TOP = new Set(prods.filter((i) => SM[i.id] > 0).slice(0, 5).map((i) => i.id));
+  {
+    const IN = (id) => stockOf(p, id) > 0 ? 0 : 1;
+    prods.sort((a, b) => IN(a.id) - IN(b.id) || (SM[b.id] || 0) - (SM[a.id] || 0) || a.name.localeCompare(b.name));
+  }
   openSheet("➕ زيد منتوج", `<div class="field"><input id="caq" placeholder="🔍 قلب على منتوج..." autocomplete="off" aria-label="قلب على منتوج"></div>
    ${chipsHtml(cats, C1, "cacat")}${pc2.length > 1 ? chipsHtml(pc2, C2, "cacat2") : ""}
    <div class="grid">${prods.map((i) => {
