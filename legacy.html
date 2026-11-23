@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123200249" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261123201426" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4221,6 +4221,19 @@ function vSend() {
 }
 const openShift = (p) => S.shifts.find((x) => x.pos === p && x.status === "open");
 const cartOf = (p) => S.cart[p] || (S.cart[p] = {});
+const TRD = () => {
+  const d = /* @__PURE__ */ new Date(), m = d.getHours() * 60 + d.getMinutes();
+  return m >= 21 * 60 + 30 ? 0.5 : m >= 20 * 60 + 30 ? 0.25 : 0;
+};
+const staffOn = (cart) => {
+  const st = (S.staff || {})[S.pos];
+  return !!(st && cart && cart === S.cart[S.pos]);
+};
+const staffUsed = (uid) => S.shifts.filter((x) => x.date === today()).reduce((a, x) => a + (x.tickets || []).filter((t) => {
+  var _a;
+  return !t.void && ((_a = t.staff) == null ? void 0 : _a.uid) === uid;
+}).reduce((b, t) => b + (+t.staff.base || 0), 0), 0);
+const STAFF_CAP = 100, STAFF_R = 0.1;
 const OFFER_T = { vien: [3, 5] };
 const OFFER_N = { vien: "الفيينوازري" };
 const offerCount = (g, cart) => cart ? Object.entries(cart).reduce((n, [i, x]) => {
@@ -4237,6 +4250,11 @@ const offerTier = (id, cart) => {
 };
 const unitPx = (id, q, cart) => {
   const it = S.items[id] || {};
+  if (cart && staffOn(cart)) return +it.price || 0;
+  if (cart && it.ws === "w3" && it.kind === "final") {
+    const r = TRD();
+    if (r > 0) return Math.round((+it.price || 0) * (1 - r) * 2) / 2;
+  }
   if (it.offer && it.offer.g && cart) {
     const b = +it.price || 0, k = offerTier(id, cart);
     const v = k === 2 ? +it.offer.p3 || +it.offer.p2 || b : k === 1 ? +it.offer.p2 || b : b;
@@ -7618,6 +7636,38 @@ function sheetCartAdd() {
     });
   });
 }
+function sheetStaffDisc() {
+  const p = S.pos;
+  const sel = usersArr().filter((u) => u.role === "seller" && u.active !== false).sort((a, b) => (a.loc === p ? 0 : 1) - (b.loc === p ? 0 : 1) || a.name.localeCompare(b.name));
+  if (!sel.length) return toast("ما كاينة حتى بائعة", true);
+  openSheet("👩‍🍳 شرية ديال بائعة (−10%)", `<p class="muted" style="margin:0">خصم 10% على أول ${STAFF_CAP} د.م ديال الشرية فالنهار لكل بائعة. خاص الموافقة ديال المسير بالكود ديالو. ما كيتجمعش مع حتى خصم آخر.</p>
+   ${choice("ssel", "👩‍🍳 شكون البائعة اللي كتشري؟", sel.map((u) => ({ v: u.id, l: u.name + " · باقي " + fmt(Math.max(0, STAFF_CAP - staffUsed(u.id))) + " د.م", i: "🛍️" })), sel[0].id, 2)}
+   <div class="lbl" style="font-weight:700">🔐 الكود ديال المسير (الموافقة)</div>${pinPad("sdpin", { onDone: async (v) => {
+    var _a, _b;
+    const uid = ((_a = $("#sheet input[name=ssel]:checked")) == null ? void 0 : _a.value) || ((_b = $("#sheet [name=ssel]")) == null ? void 0 : _b.value);
+    const u = S.users[uid];
+    if (!u) return toast("ختاري البائعة", true);
+    if (Math.max(0, STAFF_CAP - staffUsed(uid)) <= 0) {
+      toast("⚠️ " + u.name + " كملات " + STAFF_CAP + " د.م ديال اليوم · الخصم ما بقاش", true);
+      return;
+    }
+    try {
+      const r = await window.morangoPin.role(v, ["admin", "manager"]);
+      if (!(r == null ? void 0 : r.ok)) {
+        toast((r == null ? void 0 : r.error) === "locked" ? "بزاف ديال المحاولات. تسنى " + r.wait + " دقيقة" : "الكود غالط", true);
+        pinReset && pinReset("sdpin");
+        return;
+      }
+      const mg = usersArr().find((x) => x.id === r.uid) || {};
+      (S.staff = S.staff || {})[p] = { uid, name: u.name, by: r.name || mg.name || "المسير", byId: r.uid || "", ts: Date.now() };
+      S.cust[p] = { none: true };
+      toast("✅ تمت الموافقة · −10% لـ " + u.name);
+      sheetCart();
+    } catch (_) {
+      toast("ما كاينش الأنترنيت", true);
+    }
+  } })}`, null);
+}
 function sheetCart() {
   var _a;
   if (tempLocked(S.pos)) {
@@ -7634,10 +7684,18 @@ function sheetCart() {
   const ids = Object.keys(c).filter((id) => c[id] > 0);
   if (!ids.length) return closeSheet();
   const gross = r2(cartTotal(p));
-  const cu = S.cust[p];
+  const st = (S.staff || {})[p];
+  const cu = st ? null : S.cust[p];
   const vch = (cu == null ? void 0 : cu.useV) && (cu.vouchers || []).find((v) => v.id === cu.useV && v.status === "active");
   const useVal = vch ? Math.min(+vch.amount, gross) : 0;
-  const total = r2(gross - useVal);
+  const capLeft = st ? Math.max(0, r2(STAFF_CAP - staffUsed(st.uid))) : 0;
+  const sDisc = st ? r2(STAFF_R * Math.min(gross, capLeft)) : 0;
+  const total = r2(gross - useVal - sDisc);
+  const trR = st ? 0 : TRD();
+  const trOn = trR > 0 && ids.some((id) => {
+    var _a2;
+    return ((_a2 = S.items[id]) == null ? void 0 : _a2.ws) === "w3";
+  });
   const redeemBox = cu ? (cu.vouchers || []).filter((v) => v.status === "active").map((v) => `<button type="button" class="opt" style="flex-direction:row;justify-content:center;gap:8px;padding:12px" data-act="custuse" data-id="${v.id}" aria-pressed="${cu.useV === v.id}"><span class="ico">🎁</span><span>خصم مصادق عليه: ${money(v.amount)} (−${fmt(v.pts)} نقطة)${v.note ? " · " + esc(v.note) : ""}</span></button>`).join("") : "";
   const notes = [5, 10, 20, 50, 100, 200, 500].filter((v) => v > total).slice(0, 3);
   openSheet("💵 الخلاص", `<div class="cc1"><div class="cartl">${ids.map((id) => {
@@ -7660,22 +7718,24 @@ function sheetCart() {
     }).join("") : '<p class="muted" style="margin:0">هاد المنتوجات ما عندهمش تغليف محدد.</p>'}
       <select data-pkadd="1" aria-label="زيد تغليف" style="height:42px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:0 8px;font-weight:600"><option value="">➕ زيد تغليف (كيس، علبة...)</option>${pk.filter((i) => !ids2.includes(i.id)).map((i) => `<option value="${i.id}">${i.icon || "📦"} ${esc(i.name)}${frT(i)}</option>`).join("")}</select></details>`;
   })()}</div><div class="cc2">
-   ${custChip(p)}${redeemBox}${(() => {
+   ${st ? `<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>👩‍🍳 شرية ديال ${esc(st.name)} · −10%</b><span class="muted">وافق: ${esc(st.by)} · باقي ليها اليوم ${money(capLeft)} من ${money(STAFF_CAP)}${gross > capLeft ? " · الخصم غير على " + money(capLeft) : ""}</span><span style="font-weight:800">الخصم: −${money(sDisc)}</span><span class="muted" style="font-size:.8rem">ما كيتجمعش مع حتى خصم آخر (العرض، التريتور، الوفاء).</span><button type="button" class="btn small" data-act="staffoff">✖️ لغي شرية البائعة</button></div>` : custChip(p) + redeemBox + `<button type="button" class="btn small" data-act="staffdisc">👩‍🍳 شرية ديال بائعة (−10%)</button>`}${trOn ? `<div class="alert warn" style="cursor:default">🌙 تخفيض التريتور <b>−${trR * 100}%</b> (${trR === 0.5 ? "من 21:30" : "من 20:30"}) · داخل فالثمن</div>` : ""}${(() => {
     const X = (S.exch || {})[p];
     if (!X) return "";
     const d = r2(total - X.amt);
     return `<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>🔄 تبديل (ريتور ${esc(X.no)}): الزبون عندو ${money(X.amt)}</b><span style="font-size:1.15rem;font-weight:800">${d > 9e-3 ? "💵 خاصو يزيد: " + money(d) : d < -9e-3 ? "↩️ رجعي ليه: " + money(-d) : "✅ نفس الثمن، ما كاين فرق"}</span><span class="muted" style="font-size:.85rem">${money(X.amt)} ترجعو ليه فلاكيس. دوزي الشرية الجديدة عادي.</span><button type="button" class="btn small" onclick="delete S.exch['${p}'];sheetCart()">✖️ ما بقاش التبديل</button></div>`;
   })()}
-   <div class="receipt"><div class="tot"><span>المجموع</span><span>${money(total)}</span></div>${useVal ? `<div class="muted num">قبل الخصم ${money(gross)} · خصم الوفاء −${money(useVal)}</div>` : ""}</div>
+   <div class="receipt"><div class="tot"><span>المجموع</span><span>${money(total)}</span></div>${useVal ? `<div class="muted num">قبل الخصم ${money(gross)} · خصم الوفاء −${money(useVal)}</div>` : ""}${sDisc ? `<div class="muted num">قبل الخصم ${money(gross)} · خصم البائعة −${money(sDisc)}</div>` : ""}</div>
    <div class="quick cgv"><button type="button" data-act="given" data-v="${total}">بالضبط</button>${notes.map((v) => `<button type="button" data-act="given" data-v="${v}">${v}</button>`).join("")}<input id="cgiven" name="cgiven" class="big-in" style="background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:6px;min-width:0" type="text" inputmode="decimal" placeholder="💵 عطاك؟" aria-label="المبلغ اللي عطى الزبون (اختياري)"></div><div id="chg"></div>${errP}
    <div class="btns paybar"><button type="button" class="btn" data-act="cclear">🗑️ فرغ</button>${(S.bonPay || {})[S.pos] ? "" : '<button type="button" class="btn" onclick="sheetBonNew()">📝 البون لكاسيير آخر</button>'}<button class="btn primary paybtn" type="submit">✅ سجل وعطي الوصل</button></div></div>`, async (f) => {
     var _a2, _b, _c, _d;
     const sh = openShift(p);
     if (!sh) return ferr("ما كاينة حتى نوبة مفتوحة.");
-    if (LOY().on && !S.cust[p] && !((_a2 = S.bonPay) == null ? void 0 : _a2[p])) return ferr("⭐ خاص الزبون ديال الوفاء قبل الخلاص (السمية والتيليفون).");
+    if (LOY().on && !st && !S.cust[p] && !((_a2 = S.bonPay) == null ? void 0 : _a2[p])) return ferr("⭐ خاص الزبون ديال الوفاء قبل الخلاص (السمية والتيليفون).");
     const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: unitPx(id, c[id], c), unitCost: costOf(id, 0, p) }));
     const grossT = r2(lines.reduce((s, l) => s + l.qty * l.price, 0));
-    const tot = r2(grossT - useVal);
+    const capL = st ? Math.max(0, r2(STAFF_CAP - staffUsed(st.uid))) : 0;
+    const sD = st ? r2(STAFF_R * Math.min(grossT, capL)) : 0;
+    const tot = r2(grossT - useVal - sD);
     const given = num(f.cgiven.value);
     if (f.cgiven.value.trim() && !(given >= tot)) return ferr("المبلغ اللي عطى الزبون ناقص على المجموع.");
     busy(f, true);
@@ -7716,12 +7776,24 @@ function sheetCart() {
         t.given = r2(gv);
         t.change = r2(gv - tot);
       }
-      if (LOY().on) {
+      if (st) {
+        t.staff = { uid: st.uid, name: st.name, by: st.by, byId: st.byId, base: r2(Math.min(grossT, capL)), disc: sD };
+        t.gross = grossT;
+        t.noLoy = true;
+      }
+      if (LOY().on && !st) {
         const qp = ptsLines(lines);
         if (qp > 0) {
           t.qr = clubTok();
           t.qrPts = qp;
         }
+      }
+      if (!st) {
+        const tr = TRD();
+        if (tr > 0 && lines.some((l) => {
+          var _a3;
+          return ((_a3 = S.items[l.item]) == null ? void 0 : _a3.ws) === "w3";
+        })) t.trDisc = tr;
       }
       if (cu == null ? void 0 : cu.none) t.noLoy = true;
       if (cu && !cu.none) {
@@ -7780,6 +7852,7 @@ function sheetCart() {
       }
       S.cart[p] = {};
       S.packEdit[p] = {};
+      if (S.staff) delete S.staff[p];
       if ((_d = S.exch) == null ? void 0 : _d[p]) {
         t.exch = S.exch[p].no;
         delete S.exch[p];
@@ -20168,8 +20241,14 @@ const ACT = {
     S.caCat2 = el.dataset.id;
     sheetCartAdd();
   },
+  staffdisc: () => sheetStaffDisc(),
+  staffoff: () => {
+    if (S.staff) delete S.staff[S.pos];
+    sheetCart();
+  },
   cclear: () => {
     if (S.bonMode) delete S.bonMode[S.pos];
+    if (S.staff) delete S.staff[S.pos];
     S.cart[S.pos] = {};
     S.packEdit[S.pos] = {};
     if (S.bonPay) delete S.bonPay[S.pos];
