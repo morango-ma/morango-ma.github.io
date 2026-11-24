@@ -414,7 +414,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261124161352"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261124192239"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -4169,7 +4169,7 @@ async function pqDo(id,d){const r=S.posreqs.find(x=>x.id===id);if(!r)return;cons
   try{await db.doc('posreqs/'+id).update(upd);closeSheet();toast({accepted:'✅ تقبل',rejected:'❌ ترفض',reply:'💬 تصيفط الجواب',done:'🎉 تعالج'}[d])}catch(_){toast('ما تسجلش',true)}}
 /* ---------- customer feedback kiosk: rating + complaint/request/suggestion by voice or text ---------- */
 const RATES=[[1,'😡','خايب بزاف'],[2,'😕','ماشي مزيان'],[3,'😐','عادي'],[4,'🙂','مزيان'],[5,'😍','ممتاز']];
-const FBK={complaint:['شكاية','😟'],request:['طلب','📝'],suggestion:['اقتراح','💡'],rating:['غير التقييم','⭐']};
+const FBK={complaint:['شكاية','😟'],request:['طلب','📝'],suggestion:['اقتراح','💡'],rating:['غير التقييم','⭐'],remark:['ملاحظة','🗒️'],thanks:['رسالة شكر','🙏']};
 const FBS={new:['جديد','🆕','warn'],seen:['تشاف','👀','acc'],handled:['تعالج','✅','good']};
 const VOICE_MAX=1.6*1024*1024;let KTIMER=0;
 function vKiosk(){const K=S.kf;clearTimeout(KTIMER);const exit='<button class="kexit" data-act="kexit" aria-label="خروج المسؤول">⚙️</button>';
@@ -4242,6 +4242,7 @@ async function sheetFeedback(id){const f=S.fb.find(x=>x.id===id);if(!f)return;co
   if(wsH&&f.wsStatus==='new')db.doc('feedback/'+id).update({wsStatus:'seen',wsSeenBy:meName(),wsSeenTs:Date.now()}).catch(()=>{});
   openSheet(RATES[f.rating-1][1]+' '+RATES[f.rating-1][2],`<div class="muted">${dhm(f.ts)} · ${esc(LOC[f.pos]||'')}${FBA(f)?' · على: '+esc(FBA(f)):''}</div><div class="head"><b>${FBK[f.kind][1]} ${FBK[f.kind][0]}</b>${mg?`<span class="tag ${FBS[f.status][2]}">${FBS[f.status][1]} ${FBS[f.status][0]}</span>`:''}${f.wsStatus?`<span class="tag ${WFS[f.wsStatus][2]}">${WFS[f.wsStatus][1]} ${WFS[f.wsStatus][0]}</span>`:''}</div>
    ${f.voice?'<div id="fbvoice">'+emptyB('⏳','كيتحمل الميساج الصوتي...')+'</div>':''}${f.text?`<div class="receipt">${esc(f.text)}</div>`:''}
+   ${f.src==='club'?`<div class="box"><b>📱 من حساب الوفاء</b>${f.ticketNo?`<div>🧾 الوصل: <b>${esc(f.ticketNo)}</b>${f.ticketTs?' · '+dhm(f.ticketTs):''}</div>`:''}${f.rProd?`<div>🍰 المنتوجات: ${RATES[f.rProd-1][1]} ${RATES[f.rProd-1][2]}</div>`:''}${f.rServ?`<div>🛍️ الخدمة: ${RATES[f.rServ-1][1]} ${RATES[f.rServ-1][2]}</div>`:''}</div>`:''}
    ${f.clientId?`<div class="alert acc" style="cursor:default"><div><b>⭐ زبون الوفاء${S.clients.find(c=>c.id===f.clientId)?.name?' · '+esc(S.clients.find(c=>c.id===f.clientId).name):''}</b><div>${f.reward?'ربح '+fmt(f.reward)+' نقطة على هاد التقييم':''}</div></div></div>`:''}
    ${(mg||wsH)&&(f.name||f.phone)?`<div class="box"><b>👤 ${esc(f.name||'بلا سمية')}</b>${f.phone?`<div class="num" style="user-select:all;font-size:1.2rem">📞 ${esc(f.phone)}</div>`:''}</div>`:''}
    ${f.wsNote?`<div class="alert acc" style="cursor:default"><div><b>🏭 جواب الورشة · ${esc(f.wsBy||'')}</b><div>${esc(f.wsNote)}</div></div></div>`:''}
