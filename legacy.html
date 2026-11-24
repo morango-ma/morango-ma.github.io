@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261124153117" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261124161352" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3944,6 +3944,49 @@ function homeTiles(arr) {
   if (arr) return T;
   return `<div class="acts">${T.map((t) => `<button class="act c${t.c}" data-act="${t.a}"${t.v ? ` data-v="${t.v}"` : ""}${t.k ? ` data-k="${t.k}"` : ""}><span class="big">${t.i}</span><b>${t.l}</b>${t.b ? `<span class="badge">${t.b}</span>` : ""}</button>`).join("")}</div>`;
 }
+const MG_MIN = 0.5;
+let MGC = { t: 0, v: [] };
+function mgLow(force) {
+  if (!isAdmin()) return [];
+  if (!force && Date.now() - MGC.t < 6e4) return MGC.v;
+  const o = [];
+  itemsArr().forEach((it) => {
+    var _a, _b, _c, _d;
+    if (it.kind !== "final" || !((_b = (_a = it.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length)) return;
+    const ps = [+it.price, +((_c = it.offer) == null ? void 0 : _c.p2), +((_d = it.offer) == null ? void 0 : _d.p3), +it.price2, +it.price3].filter((x) => x > 0);
+    if (!ps.length) return;
+    const p = Math.min(...ps);
+    let c = 0;
+    try {
+      c = costOf(it.id);
+    } catch (_) {
+    }
+    if (!(c > 0)) return;
+    const m = (p - c) / p;
+    if (m >= MG_MIN) return;
+    const a = it.mAck;
+    if (a && c <= +a.c * 1.02 + 1e-9 && p >= +a.p - 1e-9) return;
+    o.push({ it, p, c, m });
+  });
+  MGC = { t: Date.now(), v: o.sort((a, b) => a.m - b.m) };
+  return MGC.v;
+}
+function sheetMarginRep() {
+  const L = mgLow(true);
+  openSheet("📉 الهامش تحت 50%", `<p class="muted" style="margin:0">التكلفة كتتبدل مع أثمنة الشرا. هادو المنتوجات اللي الثمن الصغير ديالهم (العرض) كيخلي هامش تحت 50%. «👌 شفتو» كيخبي التنبيه حتى تطلع التكلفة مرة أخرى.</p>${L.length ? L.map((x) => `<div class="prow"><div class="lead"><div><b>${ico(x.it.id)} ${esc(x.it.name)}</b><div class="muted">التكلفة ${money(x.c)} · أصغر ثمن ${money(x.p)} · <span class="neg">هامش ${Math.round(x.m * 100)}%</span> · باش يكون 50%: ${money(Math.ceil(x.c / MG_MIN * 2) / 2)}</div></div></div><div style="display:flex;gap:6px"><button type="button" class="btn small" data-act="itemview" data-id="${x.it.id}">✏️</button><button type="button" class="btn small" data-act="mgack" data-id="${x.it.id}">👌 شفتو</button></div></div>`).join("") : "<p>✅ كلشي فوق 50%</p>"}`);
+}
+function mgAck(id) {
+  const it = S.items[id];
+  if (!it) return;
+  const x = mgLow(true).find((y) => y.it.id === id);
+  if (!x) return;
+  db.doc("items/" + id).update({ mAck: { c: r2(x.c), p: x.p, ts: Date.now(), by: meName() } }).then(() => {
+    it.mAck = { c: r2(x.c), p: x.p };
+    MGC.t = 0;
+    toast("👌");
+    sheetMarginRep();
+  }).catch((e) => toast(e.message || "خطأ", true));
+}
 function alertsFor() {
   if (vendRole()) {
     const keep = alertsFor0().filter((h) => /data-act="(tempin|vitshot|transfer)"/.test(h));
@@ -4045,6 +4088,10 @@ function alertsFor0() {
       const hp = helperPending(me.id);
       if (hp.length) A.push(`<div class="alert bad" data-act="helpconf" data-id="${hp[0].id}"><div class="lead"><span class="em">🤝</span><div><b>أكدي الجرد ديال النوبة</b><div class="muted">${esc(hp[0].seller)} · ${hp[0].date}</div></div></div></div>`);
     }
+  }
+  if (isAdmin()) {
+    const ml = mgLow();
+    if (ml.length) A.push(`<div class="alert warn" data-act="mgrep"><div class="lead"><span class="em">📉</span><div><b>${ml.length} منتوج الهامش ديالو تحت 50%</b><div class="muted">${ml.slice(0, 3).map((x) => esc(x.it.name) + " " + Math.round(x.m * 100) + "%").join(" · ")}</div></div></div><span class="tag warn">شوف</span></div>`);
   }
   if (isMgr()) {
     const ob = (S.bons || []).filter((b) => b.status === "open" && bonAge(b) >= BON_LATE);
@@ -19930,6 +19977,8 @@ const ACT = {
     }
   },
   bonrep: () => sheetBonReport(),
+  mgrep: () => sheetMarginRep(),
+  mgack: (el) => mgAck(el.dataset.id),
   bonseen: async () => {
     try {
       for (const b of bonIssues()) await db.doc("bons/" + b.id).update({ seen: true, seenBy: meName() });
