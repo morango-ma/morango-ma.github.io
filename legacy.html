@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261124200443" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261124202454" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4283,6 +4283,32 @@ const staffUsed = (uid) => S.shifts.filter((x) => x.date === today()).reduce((a,
   return !t.void && ((_a = t.staff) == null ? void 0 : _a.uid) === uid;
 }).reduce((b, t) => b + (+t.staff.base || 0), 0), 0);
 const STAFF_CAP = 100, STAFF_R = 0.1;
+const BD_R = 0.1, BD_WIN = 7;
+const bdKey = (b) => (b.who || "") + "|" + (b.name || "") + "|" + b.d;
+const bdOff = (md) => {
+  const t = /* @__PURE__ */ new Date(today() + "T00:00:00"), y = t.getFullYear();
+  let best = null;
+  [y - 1, y, y + 1].forEach((Y) => {
+    const d = /* @__PURE__ */ new Date(Y + "-" + md + "T00:00:00");
+    if (isNaN(d)) return;
+    const n = Math.round((d - t) / 864e5);
+    if (best == null || Math.abs(n) < Math.abs(best)) best = n;
+  });
+  return best;
+};
+const isBdCake = (id) => {
+  var _a;
+  return /أونترومي|entremet/i.test(((_a = S.items[id]) == null ? void 0 : _a.cat) || "");
+};
+const bdElig = (cu) => {
+  if (!cu || cu.none) return [];
+  const y = today().slice(0, 4);
+  return (cu.bdays || []).filter((b) => {
+    var _a;
+    return /^\d\d-\d\d$/.test(b.d || "") && Date.now() - (+b.ts || 0) >= 30 * 864e5 && String((cu.bdUsed || {})[bdKey(b)] || "") !== y && Math.abs((_a = bdOff(b.d)) != null ? _a : 99) <= BD_WIN;
+  });
+};
+const bdWho = (b) => b.who === "أنا" ? "الزبون" : (b.name || "") + " (" + (b.who || "") + ")";
 const OFFER_T = { vien: [3, 5], patis: [2, 3] };
 const OFFER_N = { vien: "الفيينوازري", patis: "الحلويات" };
 const offerCount = (g, cart) => cart ? Object.entries(cart).reduce((n, [i, x]) => {
@@ -7739,7 +7765,10 @@ function sheetCart() {
   const useVal = vch ? Math.min(+vch.amount, gross) : 0;
   const capLeft = st ? Math.max(0, r2(STAFF_CAP - staffUsed(st.uid))) : 0;
   const sDisc = st ? r2(STAFF_R * Math.min(gross, capLeft)) : 0;
-  const total = r2(gross - useVal - sDisc);
+  const bdL = st ? [] : bdElig(cu);
+  const bdSel = bdL.find((b) => bdKey(b) === (S.bdOn || {})[p]);
+  const bDisc = bdSel ? r2(BD_R * ids.filter(isBdCake).reduce((a, id) => a + c[id] * unitPx(id, c[id], c), 0)) : 0;
+  const total = Math.max(0, r2(gross - useVal - sDisc - bDisc));
   const trR = st ? 0 : TRD();
   const trOn = trR > 0 && ids.some((id) => {
     var _a2;
@@ -7767,7 +7796,7 @@ function sheetCart() {
     }).join("") : '<p class="muted" style="margin:0">هاد المنتوجات ما عندهمش تغليف محدد.</p>'}
       <select data-pkadd="1" aria-label="زيد تغليف" style="height:42px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:0 8px;font-weight:600"><option value="">➕ زيد تغليف (كيس، علبة...)</option>${pk.filter((i) => !ids2.includes(i.id)).map((i) => `<option value="${i.id}">${i.icon || "📦"} ${esc(i.name)}${frT(i)}</option>`).join("")}</select></details>`;
   })()}</div><div class="cc2">
-   ${st ? `<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>👩‍🍳 شرية ديال ${esc(st.name)} · −10%</b><span class="muted">وافق: ${esc(st.by)} · باقي ليها اليوم ${money(capLeft)} من ${money(STAFF_CAP)}${gross > capLeft ? " · الخصم غير على " + money(capLeft) : ""}</span><span style="font-weight:800">الخصم: −${money(sDisc)}</span><span class="muted" style="font-size:.8rem">ما كيتجمعش مع حتى خصم آخر (العرض، التريتور، الوفاء).</span><button type="button" class="btn small" data-act="staffoff">✖️ لغي شرية البائعة</button></div>` : custChip(p) + redeemBox + `<button type="button" class="btn small" data-act="staffdisc">👩‍🍳 شرية ديال بائعة (−10%)</button>`}${trOn ? `<div class="alert warn" style="cursor:default">🌙 تخفيض التريتور <b>−${trR * 100}%</b> (${trR === 0.5 ? "من 21:30" : "من 20:30"}) · داخل فالثمن</div>` : ""}${(() => {
+   ${st ? `<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>👩‍🍳 شرية ديال ${esc(st.name)} · −10%</b><span class="muted">وافق: ${esc(st.by)} · باقي ليها اليوم ${money(capLeft)} من ${money(STAFF_CAP)}${gross > capLeft ? " · الخصم غير على " + money(capLeft) : ""}</span><span style="font-weight:800">الخصم: −${money(sDisc)}</span><span class="muted" style="font-size:.8rem">ما كيتجمعش مع حتى خصم آخر (العرض، التريتور، الوفاء).</span><button type="button" class="btn small" data-act="staffoff">✖️ لغي شرية البائعة</button></div>` : custChip(p) + (bdL.length ? ids.some(isBdCake) ? bdL.map((b) => `<button type="button" class="opt" style="flex-direction:row;justify-content:center;gap:8px;padding:12px" data-act="bdon" data-id="${esc(bdKey(b))}" aria-pressed="${bdSel && bdKey(bdSel) === bdKey(b)}"><span class="ico">🎂</span><span>عيد الميلاد ديال ${esc(bdWho(b))} · ${b.d.slice(3)}/${b.d.slice(0, 2)} · −10% على الأونترومي${bdSel && bdKey(bdSel) === bdKey(b) ? " = −" + money(bDisc) : ""}</span></button>`).join("") : `<div class="alert acc" style="cursor:default">🎂 عندو عيد ميلاد قريب (${esc(bdL.map(bdWho).join("، "))}): إلا شرا طارط (أونترومي) ياخد −10%</div>` : "") + redeemBox + `<button type="button" class="btn small" data-act="staffdisc">👩‍🍳 شرية ديال بائعة (−10%)</button>`}${trOn ? `<div class="alert warn" style="cursor:default">🌙 تخفيض التريتور <b>−${trR * 100}%</b> (${trR === 0.5 ? "من 21:30" : "من 20:30"}) · داخل فالثمن</div>` : ""}${(() => {
     const X = (S.exch || {})[p];
     if (!X) return "";
     const d = r2(total - X.amt);
@@ -7784,7 +7813,9 @@ function sheetCart() {
     const grossT = r2(lines.reduce((s, l) => s + l.qty * l.price, 0));
     const capL = st ? Math.max(0, r2(STAFF_CAP - staffUsed(st.uid))) : 0;
     const sD = st ? r2(STAFF_R * Math.min(grossT, capL)) : 0;
-    const tot = r2(grossT - useVal - sD);
+    const bdS = st ? null : bdElig(cu).find((b) => bdKey(b) === (S.bdOn || {})[p]);
+    const bD = bdS ? r2(BD_R * lines.filter((l) => isBdCake(l.item)).reduce((a, l) => a + l.qty * l.price, 0)) : 0;
+    const tot = Math.max(0, r2(grossT - useVal - sD - bD));
     const given = num(f.cgiven.value);
     if (f.cgiven.value.trim() && !(given >= tot)) return ferr("المبلغ اللي عطى الزبون ناقص على المجموع.");
     busy(f, true);
@@ -7860,7 +7891,12 @@ function sheetCart() {
           t.discount = useVal;
           t.voucher = fv.id;
         }
+        if (bD > 0) {
+          t.gross = grossT;
+          t.bday = { key: bdKey(bdS), who: bdS.who || "", name: bdS.name || "", d: bdS.d, disc: bD };
+        }
         const upd = { points: bal, total: r2((+cd.total || 0) + tot), visits: (+cd.visits || 0) + 1, lastTs: Date.now() };
+        if (t.bday) upd.bdUsed = __spreadProps(__spreadValues({}, cd.bdUsed || {}), { [t.bday.key]: today().slice(0, 4) });
         if (fv) upd.vouchers = (cd.vouchers || []).map((v) => v.id !== fv.id ? v : v.kind === "avoir" && (+v.amount || 0) - useVal > 9e-3 ? __spreadProps(__spreadValues({}, v), { amount: r2((+v.amount || 0) - useVal), uses: [...v.uses || [], { amt: useVal, ts: Date.now(), by: meName(), pos: p, ticket: t.no || t.n }] }) : __spreadProps(__spreadValues({}, v), { status: "used", usedTs: Date.now(), usedBy: meName(), pos: p, ticket: t.n }));
         t.__cli = () => cref.update(upd);
         delete S.cust[p];
@@ -7902,6 +7938,7 @@ function sheetCart() {
       S.cart[p] = {};
       S.packEdit[p] = {};
       if (S.staff) delete S.staff[p];
+      if (S.bdOn) delete S.bdOn[p];
       if ((_d = S.exch) == null ? void 0 : _d[p]) {
         t.exch = S.exch[p].no;
         delete S.exch[p];
@@ -8447,6 +8484,7 @@ async function receiptBlob(sh, t, copy) {
       }
     }
     if (t.discount) pair("خصم الوفاء", "-" + money(t.discount), Math.round(F * 0.85));
+    if (t.bday) pair("🎂 خصم عيد الميلاد (−10%)", "-" + money(t.bday.disc), Math.round(F * 0.85));
     pair("المجموع", money(t.total), Math.round(F * 1.35), true);
     if (t.given != null) {
       pair("عطى الزبون", money(t.given), Math.round(F * 0.95), true);
@@ -20300,6 +20338,11 @@ const ACT = {
     sheetCartAdd();
   },
   staffdisc: () => sheetStaffDisc(),
+  bdon: (el) => {
+    S.bdOn = S.bdOn || {};
+    S.bdOn[S.pos] = S.bdOn[S.pos] === el.dataset.id ? null : el.dataset.id;
+    sheetCart();
+  },
   staffoff: () => {
     if (S.staff) delete S.staff[S.pos];
     sheetCart();
