@@ -51,6 +51,7 @@ const nf=v=>String(Math.round((+v||0)*100)/100).replace('.',',');
 async function showHist(){const st=LS.get();if(!st.phone)return start(true);card('<p class="muted">⏳ كنحملو المشتريات ديالك…</p>');let r;try{const dp=rpc('club_fbdone',{phone:st.phone}).catch(()=>[]);r=await rpc('club_hist',{phone:st.phone});FBDONE=new Set(await dp||[])}catch(_){return card('<div class="msg err">'+ERR.net+'</div><button onclick="showHist()">🔄 عاود</button>')}
  if(!r.ok){LS.set({phone:null});return start(true)}
  const H=r.hist||[];HIST=H;const ph=normPh(st.phone);card(`${vcard(r,ph)}<p class="muted">${r.visits} زيارة · ${nf(r.total)} د.م</p>
+  <button class="btn2" onclick="bdView()">🎂 أعياد الميلاد ديال العائلة والصحاب · −10%</button>
   <button class="btn2" onclick="fbMsg()">💬 شكاية · اقتراح · ملاحظة · شكر</button>
   <h2 style="margin:6px 0 0;font-size:1.05rem">📜 المشتريات ديالي (${H.length})</h2>
   ${H.length?H.map((h,i)=>`<div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:8px"><b>🗓️ ${fmtD(h.ts)}</b><b dir="ltr">${nf(h.total)} DH</b></div>
@@ -91,6 +92,30 @@ function fbMsg(){FKS='';SEL.s=null;card(`<div class="em">💬</div><h1>قول ل
  <label for="ft">✍️ الميساج ديالك</label><textarea id="ft" rows="5" maxlength="1000" style="font:inherit;padding:12px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:inherit"></textarea>
  ${rateRow('s','⭐ شنو رأيك فمورانڭو بصفة عامة؟ (اختياري)')}
  <div id="fm"></div><button id="fgo" onclick="if(!FKS){$('#fm').innerHTML='<div class=&quot;msg err&quot;>👆 ختار نوع الرسالة</div>';return}fbSend({phone:LS.get().phone,tno:null,items:null,rserv:SEL.s,kind:FKS,msg:$('#ft').value},'شكرا! وصلات الرسالة ديالك')">📤 صيفط</button><button class="link" onclick="showHist()">← رجوع</button>`)}
+
+/* 🎂 birthdays of family & friends (same format as the shop app) → −10% on the birthday cake (7 days before → 7 days after, once a year each) */
+const BDW=['أنا','الزوج(ة)','ولد','بنت','الأم','الأب','خو/خت','صاحب(ة)','آخر'];
+const BMON=['يناير','فبراير','مارس','أبريل','ماي','يونيو','يوليوز','غشت','شتنبر','أكتوبر','نونبر','دجنبر'];
+const BERR={bname:'👤 كتب السمية',brel:'👪 ختار شكون',bdate:'📅 التاريخ ماشي صحيح',bmax:'✋ وصلتي للحد: 8 أعياد الميلاد',bme:'🙋 عيد الميلاد ديالك ديجا مسجل'};
+const bdFmt=md=>{const[m,d]=md.split('-').map(Number);return d+' '+BMON[m-1]};
+const bdLeft=md=>{const[m,d]=md.split('-').map(Number),n=new Date(),t0=new Date(n.getFullYear(),n.getMonth(),n.getDate());let x=new Date(n.getFullYear(),m-1,d);if((x-t0)/864e5<-7)x=new Date(n.getFullYear()+1,m-1,d);return Math.round((x-t0)/864e5)};
+const bdKey=b=>(b.who||'')+'|'+(b.name||'')+'|'+b.d;
+const BDQ=o=>({phone:LS.get().phone,op:'list',bname:null,bwho:null,bmonth:null,bday:null,bidx:null,...o});
+async function bdView(){card('<p class="muted">⏳ …</p>');let r;try{r=await rpc('club_bdays',BDQ({}))}catch(_){return card('<div class="msg err">'+ERR.net+'</div><button onclick="bdView()">🔄 عاود</button>')}if(!r.ok)return showHist();bdRender(r)}
+const SEL2='font:inherit;min-height:50px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:inherit;padding:0 10px';
+function bdRender(r){const yr=String(new Date().getFullYear());const L=(r.bdays||[]).map((b,i)=>({...b,i})).filter(b=>/^\d\d-\d\d$/.test(b.d||'')).sort((a,b)=>bdLeft(a.d)-bdLeft(b.d));
+ card(`<div class="em">🎂</div><h1>أعياد الميلاد</h1><p class="muted">سجل عيد الميلاد ديالك وديال العائلة والصحاب، واستافد من <b>خصم 10%</b> على طارط عيد الميلاد (أونترومي): من 7 أيام قبل حتى 7 أيام من بعد. مرة فالعام لكل عيد ميلاد.</p>
+ <p class="muted" style="font-size:.82rem">⏳ عيد الميلاد الجديد كيولي صالح للخصم من بعد 30 يوم من التسجيل.</p>
+ ${L.length?L.map(b=>{const lf=bdLeft(b.d),wait=Date.now()-(+b.ts||0)<30*864e5,used=String((r.used||{})[bdKey(b)]||'')===yr;return `<div style="border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${b.who==='أنا'?'🙋 أنا':esc(b.name)}</b> <span class="muted">${b.who==='أنا'?'':esc(b.who||'')}</span><div class="muted" style="font-size:.9rem">📅 ${bdFmt(b.d)} · ${used?'✅ استافدتي هاد العام':wait?'⏳ كيولي صالح نهار '+new Date((+b.ts||0)+30*864e5).toLocaleDateString('fr-MA'):lf===0?'🎉 اليوم!':Math.abs(lf)<=7?'🎁 الخصم خدام دابا':'باقي '+lf+' يوم'}</div></div><button class="link" style="min-height:40px" onclick="bdDel(${b.i})">🗑️</button></div>`}).join(''):'<p class="muted">ما زال ما سجلتي حتى عيد ميلاد.</p>'}
+ ${(r.bdays||[]).length<8?`<div style="border-top:2px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px"><b>➕ زيد عيد ميلاد</b>
+  <select id="br" style="${SEL2}" onchange="$('#bnw').hidden=this.value==='أنا'"><option value="">👪 ديال شكون؟</option>${BDW.map(x=>`<option>${x}</option>`).join('')}</select>
+  <div id="bnw"><input id="bn" maxlength="40" placeholder="👤 السمية" style="width:100%;box-sizing:border-box"></div>
+  <div style="display:flex;gap:8px"><select id="bd" style="flex:1;${SEL2}"><option value="">النهار</option>${Array.from({length:31},(_,i)=>`<option>${i+1}</option>`).join('')}</select><select id="bm" style="flex:2;${SEL2}"><option value="">الشهر</option>${BMON.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('')}</select></div>
+  <div id="fm"></div><button id="fgo" onclick="bdAdd()">🎂 سجل</button></div>`:''}
+ <p class="muted" style="font-size:.85rem">💡 ملي تجي تشري الطارط، وري الكارط ديال الوفاء فلاكيس، والخصم كيتطبق.</p>
+ <button class="link" onclick="showHist()">← رجوع</button>`)}
+async function bdAdd(){const go=$('#fgo'),m=$('#fm');m.innerHTML='';go.disabled=true;try{const r=await rpc('club_bdays',BDQ({op:'add',bname:$('#bn').value,bwho:$('#br').value||null,bmonth:+$('#bm').value||null,bday:+$('#bd').value||null}));if(r.ok)bdRender(r);else m.innerHTML='<div class="msg err">'+(BERR[r.err]||FERR[r.err]||r.err)+'</div>'}catch(_){m.innerHTML='<div class="msg err">'+ERR.net+'</div>'}go.disabled=false}
+async function bdDel(i){if(!confirm('نحيدو هاد عيد الميلاد؟'))return;try{const r=await rpc('club_bdays',BDQ({op:'del',bidx:i}));if(r.ok)bdRender(r)}catch(_){alert(ERR.net)}}
 let HIST=[];const POSN={p1:'ميموزا · Mimoza',p2:'روان · Rawan'};
 /* ⬇️ one purchase as a receipt image the client can keep or share */
 async function dlRcpt(i){const h=HIST[i];if(!h)return;try{const L=h.lines||[],W=640,F='"IBM Plex Sans Arabic",sans-serif',H=420+L.length*64+(h.disc?50:0),cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
