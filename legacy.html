@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125202446" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125203115" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -8400,7 +8400,7 @@ async function receiptBlob(sh, t, copy) {
     line();
     (o.lines || []).forEach((l) => {
       pair(lnName(l), l.price != null ? money(l.qty * l.price).replace(" د.م", "") : "", F, true);
-      R.push({ k: "p", r: fmt(l.qty) + " × " + (l.price != null ? money(l.price) : "") + (l.kind === "sp" ? l.ent ? " · على الطلب" : " · طلبية خاصة" : ""), l: "", sz: Math.round(F * 0.78), b: false, mut: true });
+      R.push({ k: "p", r: fmt(l.qty) + " × " + (l.price != null ? money(l.price) : "") + (l.kind === "sp" ? fixSp(l) ? " · على الطلب" : " · طلبية خاصة" : ""), l: "", sz: Math.round(F * 0.78), b: false, mut: true });
       if (l.note) wrap("📝 " + l.note, Math.round(F * 0.75), false, W - 2 * P).forEach((z) => R.push({ k: "p", r: z, l: "", sz: Math.round(F * 0.75), b: false, mut: true }));
     });
     line();
@@ -18627,16 +18627,16 @@ function sheetNewOrder(keep) {
   if (me.role !== "seller" && !isMgr()) return toast("📝 الطلبيات كتسجلهم البائعات مع الزبون فالمحل", true);
   if (!keep || !OD) OD = { cfirst: "", clast: "", p1: "", w1: true, p2: "", w2: false, addr: "", due: daysAgo(-1), time: "", lines: [] };
   const o = OD;
-  const tot = ordTotal(o), hasSp = o.lines.some((l) => l.kind === "sp" && !l.ent);
+  const tot = ordTotal(o), hasSp = o.lines.some((l) => l.kind === "sp" && !fixSp(l));
   openSheet("📝 طلبية جديدة", `<div class="box" style="gap:8px"><h3 style="margin:0">👤 الزبون</h3><div class="two">${inp("o_cfirst", "الاسم", o.cfirst, "text", 'autocomplete="off"')}${inp("o_clast", "النسب", o.clast, "text", 'autocomplete="off"')}</div>
     <div class="two">${inp("o_p1", "📞 التيليفون 1", o.p1, "tel", 'autocomplete="off"')}<label class="prow" style="gap:8px;justify-content:flex-start;align-self:end;min-height:48px"><input type="checkbox" name="o_w1" ${o.w1 ? "checked" : ""} style="width:24px;height:24px"> 💬 فيه واتساب</label></div>
     <div class="two">${inp("o_p2", "📞 التيليفون 2", o.p2, "tel", 'autocomplete="off"')}<label class="prow" style="gap:8px;justify-content:flex-start;align-self:end;min-height:48px"><input type="checkbox" name="o_w2" ${o.w2 ? "checked" : ""} style="width:24px;height:24px"> 💬 فيه واتساب</label></div>
     ${fld("o_addr", "🏠 العنوان", `<textarea id="o_addr" name="o_addr" rows="2">${esc(o.addr)}</textarea>`)}</div>
    <div class="box" style="gap:8px"><h3 style="margin:0">🧺 شنو بغا الزبون؟</h3>${o.lines.length ? o.lines.map((l, i) => {
     var _a;
-    return `<div class="prow" style="align-items:flex-start"><div class="lead" style="align-items:flex-start"><span class="em">${l.kind === "sp" ? "✨" : ico(l.item)}</span><div><b>${esc(lnName(l))} × ${fmt(l.qty)}</b><div class="muted">${l.ent ? "🎂 " + fmt(l.ent.kg) + " كغ · مع العلبة" : l.kind === "sp" ? "🏭 " + esc(LOC[l.ws] || "") + " · 💰 الثمن كيعطيه المسير" : money(l.price) + " للحبة"}${((_a = l.photos) == null ? void 0 : _a.length) ? " · 📷 " + l.photos.length : ""}${l.voice ? " · 🎤" : ""}${l.note ? " · 📝 " + esc(l.note.slice(0, 40)) : ""}</div></div></div><div style="display:flex;gap:6px;align-items:center">${l.kind === "sp" && !l.ent ? "" : `<b class="num">${money(l.qty * l.price)}</b>`}<button type="button" class="link neg" data-odel="${i}">🗑️</button></div></div>`;
+    return `<div class="prow" style="align-items:flex-start"><div class="lead" style="align-items:flex-start"><span class="em">${l.kind === "sp" ? "✨" : ico(l.item)}</span><div><b>${esc(lnName(l))} × ${fmt(l.qty)}</b><div class="muted">${l.cd ? "🎨 " + fmt(l.cd.n) + " شخص · " + l.cd.tiers.length + " طبقة" : l.ent ? "🎂 " + fmt(l.ent.kg) + " كغ · مع العلبة" : l.kind === "sp" ? "🏭 " + esc(LOC[l.ws] || "") + " · 💰 الثمن كيعطيه المسير" : money(l.price) + " للحبة"}${((_a = l.photos) == null ? void 0 : _a.length) ? " · 📷 " + l.photos.length : ""}${l.voice ? " · 🎤" : ""}${l.note ? " · 📝 " + esc(l.note.slice(0, 40)) : ""}</div></div></div><div style="display:flex;gap:6px;align-items:center">${l.kind === "sp" && !fixSp(l) ? "" : `<b class="num">${money(l.qty * l.price)}</b>`}<button type="button" class="link neg" data-odel="${i}">🗑️</button></div></div>`;
   }).join("") : '<p class="muted" style="margin:0">زيد منتوج من الكتالوج ولا طلبية خاصة.</p>'}
-    <div class="btns" style="margin:0"><button type="button" class="btn" data-oadd="cat">➕ منتوج من الكتالوج</button><button type="button" class="btn" data-oadd="ent">🎂 أونترومي بالكيلو</button><button type="button" class="btn" data-oadd="sp">✨ طلبية خاصة</button></div>
+    <div class="btns" style="margin:0"><button type="button" class="btn" data-oadd="cat">➕ منتوج من الكتالوج</button><button type="button" class="btn" data-oadd="ent">🎂 أونترومي بالكيلو</button><button type="button" class="btn" data-oadd="cd">🎨 Cake design</button><button type="button" class="btn" data-oadd="sp">✨ طلبية خاصة</button></div>
     ${o.lines.length ? `<div class="prow"><b>المجموع${hasSp ? " (بلا الطلبيات الخاصة)" : ""}</b><b class="num">${money(tot)}</b></div>` : ""}</div>
    <div class="box" style="gap:8px"><h3 style="margin:0">📅 التسليم</h3>${choice("o_due", "إمتى؟", [{ v: daysAgo(-1), l: "غدا", i: "🌅" }, { v: daysAgo(-2), l: "بعد غدا", i: "📆" }, { v: daysAgo(-3), l: "من هنا 3 أيام", i: "🗓️" }], [daysAgo(-1), daysAgo(-2), daysAgo(-3)].includes(o.due) ? o.due : "", 3)}<div class="two">${inp("o_due2", "ولا تاريخ آخر", [daysAgo(-1), daysAgo(-2), daysAgo(-3)].includes(o.due) ? "" : o.due, "date")}${inp("o_time", "⏰ الساعة", o.time, "time")}</div>
     <p class="muted" style="margin:0">⏳ الشاف ديال الورشة خاصو يوافق على التاريخ${hasSp ? "، والمسير كيعطي الثمن ديال الطلبيات الخاصة" : ""}. من بعد الزبون كيخلص تسبيق 50% على الأقل، كاش.</p></div>
@@ -18658,7 +18658,7 @@ function sheetNewOrder(keep) {
       const lines = [];
       for (const l of o2.lines) {
         const photos = ((_a = l.photos) == null ? void 0 : _a.length) ? await saveMedia(l.photos, "order") : [];
-        lines.push(__spreadProps(__spreadValues({ kind: l.kind, item: l.item || null, title: l.title || "", ws: l.kind === "sp" ? l.ws : ((_b = S.items[l.item]) == null ? void 0 : _b.ws) || "", qty: +l.qty || 1, price: l.kind === "sp" && !l.ent ? null : +l.price || 0 }, l.ent ? { ent: l.ent } : {}), { note: l.note || "", photos, voice: l.voice || null }));
+        lines.push(__spreadProps(__spreadValues(__spreadValues({ kind: l.kind, item: l.item || null, title: l.title || "", ws: l.kind === "sp" ? l.ws : ((_b = S.items[l.item]) == null ? void 0 : _b.ws) || "", qty: +l.qty || 1, price: l.kind === "sp" && !fixSp(l) ? null : +l.price || 0 }, l.ent ? { ent: l.ent } : {}), l.cd ? { cd: l.cd } : {}), { note: l.note || "", photos, voice: l.voice || null }));
       }
       const doc = { v: 2, cfirst, clast, client: cfirst + " " + clast, phones: ph, phone: ph[0].n, address: o2.addr.trim(), pos: S.pos || me.loc || (Object.keys(LOC).find((k) => k[0] === "p") || "p1"), channel: "فالمحل", lines, due: o2.due, dueTime: o2.time || "", advance: 0, paidRest: 0, ts: Date.now(), by: meName(), byId: me.id };
       doc.wss = ordWss(doc);
@@ -18682,7 +18682,7 @@ function sheetNewOrder(keep) {
       if (a) {
         e.preventDefault();
         ordReadForm(f);
-        a.dataset.oadd === "sp" ? sheetOrdSp() : a.dataset.oadd === "ent" ? sheetOrdEnt() : sheetOrdCat();
+        a.dataset.oadd === "sp" ? sheetOrdSp() : a.dataset.oadd === "ent" ? sheetOrdEnt() : a.dataset.oadd === "cd" ? sheetOrdCd() : sheetOrdCat();
       }
       if (d) {
         e.preventDefault();
@@ -18832,6 +18832,88 @@ const entFlavors = () => itemsArr().filter((i) => {
   const ck = w > 0 ? c / w : 0;
   return { id: i.id, name: String(i.name || "").replace(/^طرانش/, "أنطروميه"), fr: String(i.fr || "").replace(/^Tranche/i, "Entremet"), ck, ppk: ck > 0 ? Math.max(Math.round(ck * ENT_DISC * ENT_COEF / 10) * 10, ENT_MIN[i.id] || 0) : 0 };
 }).filter((x) => x.ppk > 0).sort((a, b) => a.name.localeCompare(b.name));
+const fixSp = (l) => !!(l && (l.ent || l.cd));
+const CD_PP = 50, CD_MIN = 10, CD_H = 10, CD_PARTS = { 10: 6, 15: 12, 20: 24, 25: 38, 30: 56 };
+const cdAutoE = (n) => n <= 20 ? 1 : n <= 45 ? 2 : 3;
+function cdTiers(n, E) {
+  const D = Object.keys(CD_PARTS).map(Number).sort((a, b) => a - b);
+  for (const b of D) {
+    const T = Array.from({ length: E }, (_, k) => b - 5 * k);
+    if (T.every((d) => CD_PARTS[d]) && T.reduce((a, d) => a + CD_PARTS[d], 0) >= n) return T;
+  }
+  return null;
+}
+const cdPrice = (n) => Math.max(+n || 0, CD_MIN) * CD_PP;
+function cdSvg(cd) {
+  const T = (cd == null ? void 0 : cd.tiers) || [];
+  if (!T.length) return "";
+  const W = 300, K = 200 / Math.max(...T), hp = CD_H * K * 0.55, ry = (d) => d * K * 0.16;
+  let y = 20 + T.reduce((a, d) => a + hp, 0) + ry(T[0]) + ry(T[T.length - 1]);
+  const H = y + 20;
+  let out = "";
+  const cx = W / 2 - 20;
+  T.forEach((d, i) => {
+    const rx = d * K / 2, r = ry(d), top = y - hp, col = i % 2 ? "#FBE6EC" : "#F5CFDB";
+    out += `<path d="M${cx - rx},${top} L${cx - rx},${y} A${rx},${r} 0 0 0 ${cx + rx},${y} L${cx + rx},${top} Z" fill="${col}" stroke="#C98A9C" stroke-width="1"/><ellipse cx="${cx}" cy="${top}" rx="${rx}" ry="${r}" fill="${col}" stroke="#C98A9C" stroke-width="1" style="filter:brightness(1.05)"/><path d="M${cx - rx},${y - 6} A${rx},${r} 0 0 0 ${cx + rx},${y - 6}" fill="none" stroke="#E02843" stroke-width="3"/>
+     <text x="${cx + rx + 8}" y="${y - hp / 2 + 4}" font-size="12" font-weight="700" fill="currentColor" direction="ltr">Ø ${d} cm</text>`;
+    y = top;
+  });
+  return `<div class="box" style="gap:6px"><b>🎨 Cake design · ${fmt(cd.n)} شخص · ${T.length} طبقة · <bdi dir="ltr">${T.length * CD_H} cm</bdi></b><svg viewBox="0 0 ${W} ${H.toFixed(0)}" style="width:100%;max-width:${W}px;align-self:center" role="img" aria-label="cake 3D">${out}</svg>
+   <div style="display:flex;flex-direction:column;gap:3px;font-size:.88rem">${T.map((d, i) => `<div style="display:flex;justify-content:space-between"><span>${i === 0 ? "⬇️ " : ""}طبقة ${i + 1}: <bdi dir="ltr">Ø ${d} × ${CD_H} cm</bdi></span><b class="num">~${CD_PARTS[d]} حصة</b></div>`).join("")}${cd.fl ? `<span class="muted">🍰 الداخل: ${esc(cd.fl)}</span>` : ""}</div></div>`;
+}
+function sheetOrdCd() {
+  recReset();
+  let fl = "";
+  let E = 0;
+  const F = entFlavors().map((x) => x.fr || x.name);
+  openSheet("🎨 Cake design", `<p class="muted" style="margin:0">💰 ${money(CD_PP)} للشخص · الحد الأدنى ${CD_MIN} أشخاص (${money(CD_PP * CD_MIN)}).</p>
+   ${fld("cd_n", "👥 شحال من شخص؟", stepper("data-cdn", "q", "15", ""))}
+   <div class="field"><span class="lbl">🎂 شحال من طبقة؟</span><div class="choice" style="--cols:4">${["auto", 1, 2, 3].map((v) => `<button type="button" class="opt" data-cde="${v}" aria-pressed="${v === "auto"}">${v === "auto" ? "🤖 أوتو" : v}</button>`).join("")}</div></div>
+   <div class="field"><span class="lbl">🍰 الداخل (الذوق)</span><div class="choice" style="--cols:2">${[...F, "وصفة خاصة (كتبها فالملاحظة)"].map((v) => `<button type="button" class="opt" data-cdf="${esc(v)}">${esc(v)}</button>`).join("")}</div></div>
+   <div id="cd_tot" class="alert acc" style="cursor:default"></div><div id="cd_3d"></div>
+   ${fld("cd_note", "📝 الثيم، الألوان، الكتابة، الشخصيات... · إجبارية", '<textarea id="cd_note" name="cd_note" rows="3"></textarea>')}${photoField("cdph", "📷 صورة النموذج · إجبارية")}${voiceBox()}
+   ${errP}<div class="btns"><button type="button" class="btn" id="cd_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
+    const n = Math.round(num($("input[data-cdn]", f).value));
+    if (!(n > 0)) return ferr("👥 دخل عدد الأشخاص.");
+    if (!fl) return ferr("🍰 اختار الداخل.");
+    if (REC.rec) return ferr("⏹️ وقف التسجيل قبل.");
+    const note = f.cd_note.value.trim();
+    if (note.length < 3) return ferr("📝 كتب الثيم والتفاصيل.");
+    if (!(PH.cdph || []).length) return ferr("📷 زيد صورة النموذج.");
+    const T = cdTiers(Math.max(n, CD_MIN), E || cdAutoE(Math.max(n, CD_MIN)));
+    if (!T) return ferr(E === 3 || !E && cdAutoE(Math.max(n, CD_MIN)) === 3 ? "⛔ كثر من 118 شخص: ديرها طلبية خاصة مع المسير." : "⛔ بزاف ديال الأشخاص لهاد عدد الطبقات. زيد طبقة.");
+    OD.lines.push({ kind: "sp", cd: { n, tiers: T, h: CD_H, fl }, title: "🎨 Cake design · " + n + " شخص · " + fl, qty: 1, price: cdPrice(n), ws: "w1", note, photos: [...PH.cdph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
+    recReset();
+    sheetNewOrder(true);
+  }, (f) => {
+    recMount(f);
+    $("#cd_back", f).onclick = () => {
+      recReset();
+      sheetNewOrder(true);
+    };
+    const upd = () => {
+      const n = Math.round(num($("input[data-cdn]", f).value)) || 0, m = Math.max(n, CD_MIN), T = n > 0 ? cdTiers(m, E || cdAutoE(m)) : null;
+      $("#cd_tot", f).innerHTML = n > 0 ? "👥 " + fmt(n) + " شخص" + (n < CD_MIN ? " (الحد الأدنى " + CD_MIN + ")" : "") + " = <b>" + money(cdPrice(n)) + "</b>" + (T ? "" : " · ⛔ زيد طبقة") : "👥 دخل عدد الأشخاص";
+      $("#cd_3d", f).innerHTML = T ? cdSvg({ n, tiers: T, fl }) : "";
+    };
+    f.addEventListener("input", upd);
+    f.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-cde]"), b = e.target.closest("[data-cdf]");
+      if (a) {
+        e.preventDefault();
+        E = a.dataset.cde === "auto" ? 0 : +a.dataset.cde;
+        $$("[data-cde]", f).forEach((x) => x.setAttribute("aria-pressed", String(x === a)));
+      }
+      if (b) {
+        e.preventDefault();
+        fl = b.dataset.cdf;
+        $$("[data-cdf]", f).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      }
+      setTimeout(upd, 0);
+    });
+    upd();
+  });
+}
 function sheetOrdEnt() {
   recReset();
   let pick = null;
@@ -18920,7 +19002,7 @@ function sheetOrder2(id) {
   const mine = me.role === "seller" || isMgr();
   const ln = (l, i) => {
     var _a, _b, _c, _d, _e, _f;
-    return `<div class="box" style="gap:6px"><div class="prow"><div class="lead"><span class="em">${l.kind === "sp" ? "✨" : ico(l.item)}</span><div><b>${esc(lnName(l))} × ${fmt(l.qty)}</b><div class="muted">${l.ent ? "🎂 أونترومي على الطلب · " + fmt(l.ent.kg) + " كغ · مع العلبة" : l.kind === "sp" ? "طلبية خاصة · " + esc(LOC[l.ws] || "") : esc(LOC[(_a = S.items[l.item]) == null ? void 0 : _a.ws] || "")}</div></div></div><b class="num">${l.price != null ? money(l.qty * l.price) : "💰 ؟"}</b></div>${((_b = l.ent) == null ? void 0 : _b.layers) ? entSvg(l.ent) : ""}${l.note ? `<div style="white-space:pre-wrap">📝 ${esc(l.note)}</div>` : ""}${audioOf(l.voice)}${((_c = l.photos) == null ? void 0 : _c.length) ? `<div class="media">${mediaBtns(l.photos, "صورة")}</div>` : ""}${((_f = (_e = (_d = o.delivery) == null ? void 0 : _d.photos) == null ? void 0 : _e[i]) == null ? void 0 : _f.length) ? `<div class="media">${mediaBtns(o.delivery.photos[i], "التسليم", "🎉")}</div>` : ""}</div>`;
+    return `<div class="box" style="gap:6px"><div class="prow"><div class="lead"><span class="em">${l.kind === "sp" ? "✨" : ico(l.item)}</span><div><b>${esc(lnName(l))} × ${fmt(l.qty)}</b><div class="muted">${l.cd ? "🎨 Cake design · " + fmt(l.cd.n) + " شخص · " + esc(l.cd.fl || "") : l.ent ? "🎂 أونترومي على الطلب · " + fmt(l.ent.kg) + " كغ · مع العلبة" : l.kind === "sp" ? "طلبية خاصة · " + esc(LOC[l.ws] || "") : esc(LOC[(_a = S.items[l.item]) == null ? void 0 : _a.ws] || "")}</div></div></div><b class="num">${l.price != null ? money(l.qty * l.price) : "💰 ؟"}</b></div>${((_b = l.ent) == null ? void 0 : _b.layers) ? entSvg(l.ent) : ""}${l.cd ? cdSvg(l.cd) : ""}${l.note ? `<div style="white-space:pre-wrap">📝 ${esc(l.note)}</div>` : ""}${audioOf(l.voice)}${((_c = l.photos) == null ? void 0 : _c.length) ? `<div class="media">${mediaBtns(l.photos, "صورة")}</div>` : ""}${((_f = (_e = (_d = o.delivery) == null ? void 0 : _d.photos) == null ? void 0 : _e[i]) == null ? void 0 : _f.length) ? `<div class="media">${mediaBtns(o.delivery.photos[i], "التسليم", "🎉")}</div>` : ""}</div>`;
   };
   const chefRow = (w) => {
     const c = ch[w] || { st: "wait" };
@@ -18931,7 +19013,7 @@ function sheetOrder2(id) {
    ${(o.lines || []).map(ln).join("")}${o.bday ? `<div class="alert acc" style="cursor:default">🎂 خصم عيد الميلاد −10% · 🎟️ ${esc(o.bday.code || "")} · <b>−${money(o.bday.disc)}</b></div>` : ""}
    <div class="stats sheet-stats"><div class="stat"><span>💰 المجموع</span><b>${o.total != null ? money(o.total) : "؟"}</b></div><div class="stat"><span>💵 التسبيق</span><b>${money(o.advance || 0)}</b></div><div class="stat"><span>⏳ الباقي</span><b>${o.total != null ? money(rest) : "؟"}</b></div></div>
    ${["wait", "refused", "topay"].includes(st) ? `<div class="box" style="gap:6px"><h3 style="margin:0">✅ الموافقات</h3>${(o.wss || []).map(chefRow).join("")}
-     ${(o.lines || []).some((l) => l.kind === "sp" && !l.ent) ? `<div class="prow"><span>💰 الثمن ديال الطلبيات الخاصة</span><span>${ordPriced(o) ? "✅ " + esc(o.pricedBy || "") : "⏳ كيتسنى المسير"}</span></div>${!ordPriced(o) && isMgr() ? `<button type="button" class="btn primary block" data-act="oprice" data-id="${o.id}">💰 عطي الثمن</button>` : ""}` : ""}
+     ${(o.lines || []).some((l) => l.kind === "sp" && !fixSp(l)) ? `<div class="prow"><span>💰 الثمن ديال الطلبيات الخاصة</span><span>${ordPriced(o) ? "✅ " + esc(o.pricedBy || "") : "⏳ كيتسنى المسير"}</span></div>${!ordPriced(o) && isMgr() ? `<button type="button" class="btn primary block" data-act="oprice" data-id="${o.id}">💰 عطي الثمن</button>` : ""}` : ""}
      ${o.advReq ? `<div class="prow"><span>💵 تسبيق أقل من 50%: ${money(o.advReq.amt)}</span><span>${o.advReq.st === "ok" ? "✅ وافق " + esc(o.advReq.by || "") : o.advReq.st === "no" ? "⛔ رفض" : "⏳ كيتسنى المسير"}</span></div>${o.advReq.st === "wait" && isMgr() ? `<div class="btns" style="margin:0"><button type="button" class="btn danger" data-act="oadvq" data-id="${o.id}" data-d="no">❌ رفض</button><button type="button" class="btn primary" data-act="oadvq" data-id="${o.id}" data-d="ok">✅ وافق</button></div>` : ""}` : ""}</div>` : ""}
    <div class="btns">${mine && o.total != null && !o.bday && !["delivered", "cancel"].includes(st) && (o.lines || []).some(ordBdLine) ? `<button type="button" class="btn" data-act="obdcode" data-id="${o.id}">🎟️ كود عيد الميلاد (−10%)</button>` : ""}${st === "topay" && mine ? `<button type="button" class="btn primary" data-act="opay" data-id="${o.id}">💵 خلص التسبيق</button>` : ""}
     ${st === "refused" && mine ? `<button type="button" class="btn primary" data-act="oredate" data-id="${o.id}">📅 بدل التاريخ وعاود صيفط</button>` : ""}
@@ -18984,10 +19066,10 @@ function sheetOrdPrice(id) {
   const L = o.lines || [];
   openSheet("💰 الثمن · طلبية #" + o.num, `${L.map((l, i) => {
     var _a;
-    return l.kind === "sp" && !l.ent ? `<div class="box" style="gap:6px"><b>✨ ${esc(l.title)} × ${fmt(l.qty)}</b>${l.note ? `<div class="muted" style="white-space:pre-wrap">${esc(l.note)}</div>` : ""}${audioOf(l.voice)}${((_a = l.photos) == null ? void 0 : _a.length) ? `<div class="media">${mediaBtns(l.photos, "صورة")}</div>` : ""}${moneyIn("opr" + i, "💰 الثمن ديال الحبة", l.price != null ? fmt(l.price) : "")}</div>` : "";
+    return l.kind === "sp" && !fixSp(l) ? `<div class="box" style="gap:6px"><b>✨ ${esc(l.title)} × ${fmt(l.qty)}</b>${l.note ? `<div class="muted" style="white-space:pre-wrap">${esc(l.note)}</div>` : ""}${audioOf(l.voice)}${((_a = l.photos) == null ? void 0 : _a.length) ? `<div class="media">${mediaBtns(l.photos, "صورة")}</div>` : ""}${moneyIn("opr" + i, "💰 الثمن ديال الحبة", l.price != null ? fmt(l.price) : "")}</div>` : "";
   }).join("")}${errP}<button class="btn primary block" type="submit">✅ حفظ الثمن</button>`, async (f) => {
     var _a;
-    const lines = L.map((l, i) => l.kind === "sp" && !l.ent ? __spreadProps(__spreadValues({}, l), { price: num(f["opr" + i].value) }) : l);
+    const lines = L.map((l, i) => l.kind === "sp" && !fixSp(l) ? __spreadProps(__spreadValues({}, l), { price: num(f["opr" + i].value) }) : l);
     if (lines.some((l) => l.kind === "sp" && !(l.price > 0))) return ferr("دخل الثمن ديال كل طلبية خاصة.");
     busy(f, true);
     try {
@@ -19038,7 +19120,7 @@ function sheetOrdPay(id) {
     }
   });
 }
-const ordBdLine = (l) => !!l.ent || l.kind !== "sp" && isBdCake(l.item);
+const ordBdLine = (l) => !!l.ent || !!l.cd || l.kind !== "sp" && isBdCake(l.item);
 const BDCE = { bad: "❓ الكود ماشي صحيح (بحال BD4UYC7)", notfound: "❓ ما كاينش هاد الكود", used: "⛔ هاد الكود تستعمل ديجا", expired: "⌛ هاد الكود فات عليه الوقت" };
 function sheetBdCode(oid) {
   const o = oid ? S.orders.find((x) => x.id === oid) : null;
