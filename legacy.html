@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125151319" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125182544" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1325,6 +1325,12 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const { error } = await sb.storage.from("cam").remove(paths);
     if (error) throw error;
   } };
+  window.morangoRpc = async (fn, args) => {
+    await ensure();
+    const { data, error } = await sb.rpc(fn, args);
+    if (error) throw error;
+    return data;
+  };
   window.morangoSeq = async (k) => {
     await ensure();
     const { data, error } = await sb.rpc("next_seq", { p_key: k });
@@ -4305,7 +4311,7 @@ const bdElig = (cu) => {
   const y = today().slice(0, 4);
   return (cu.bdays || []).filter((b) => {
     var _a;
-    return /^\d\d-\d\d$/.test(b.d || "") && Date.now() - (+b.ts || 0) >= 30 * 864e5 && String((cu.bdUsed || {})[bdKey(b)] || "") !== y && Math.abs((_a = bdOff(b.d)) != null ? _a : 99) <= BD_WIN;
+    return /^\d\d-\d\d$/.test(b.d || "") && String((cu.bdUsed || {})[bdKey(b)] || "") !== y && Math.abs((_a = bdOff(b.d)) != null ? _a : 99) <= BD_WIN;
   });
 };
 const bdWho = (b) => b.who === "أنا" ? "الزبون" : (b.name || "") + " (" + (b.who || "") + ")";
@@ -7796,7 +7802,7 @@ function sheetCart() {
     }).join("") : '<p class="muted" style="margin:0">هاد المنتوجات ما عندهمش تغليف محدد.</p>'}
       <select data-pkadd="1" aria-label="زيد تغليف" style="height:42px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);padding:0 8px;font-weight:600"><option value="">➕ زيد تغليف (كيس، علبة...)</option>${pk.filter((i) => !ids2.includes(i.id)).map((i) => `<option value="${i.id}">${i.icon || "📦"} ${esc(i.name)}${frT(i)}</option>`).join("")}</select></details>`;
   })()}</div><div class="cc2">
-   ${st ? `<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>👩‍🍳 شرية ديال ${esc(st.name)} · −10%</b><span class="muted">وافق: ${esc(st.by)} · باقي ليها اليوم ${money(capLeft)} من ${money(STAFF_CAP)}${gross > capLeft ? " · الخصم غير على " + money(capLeft) : ""}</span><span style="font-weight:800">الخصم: −${money(sDisc)}</span><span class="muted" style="font-size:.8rem">ما كيتجمعش مع حتى خصم آخر (العرض، التريتور، الوفاء).</span><button type="button" class="btn small" data-act="staffoff">✖️ لغي شرية البائعة</button></div>` : custChip(p) + (bdL.length ? ids.some(isBdCake) ? bdL.map((b) => `<button type="button" class="opt" style="flex-direction:row;justify-content:center;gap:8px;padding:12px" data-act="bdon" data-id="${esc(bdKey(b))}" aria-pressed="${bdSel && bdKey(bdSel) === bdKey(b)}"><span class="ico">🎂</span><span>عيد الميلاد ديال ${esc(bdWho(b))} · ${b.d.slice(3)}/${b.d.slice(0, 2)} · −10% على الأونترومي${bdSel && bdKey(bdSel) === bdKey(b) ? " = −" + money(bDisc) : ""}</span></button>`).join("") : `<div class="alert acc" style="cursor:default">🎂 عندو عيد ميلاد قريب (${esc(bdL.map(bdWho).join("، "))}): إلا شرا طارط (أونترومي) ياخد −10%</div>` : "") + redeemBox + `<button type="button" class="btn small" data-act="staffdisc">👩‍🍳 شرية ديال بائعة (−10%)</button>`}${trOn ? `<div class="alert warn" style="cursor:default">🌙 تخفيض التريتور <b>−${trR * 100}%</b> (${trR === 0.5 ? "من 21:30" : "من 20:30"}) · داخل فالثمن</div>` : ""}${(() => {
+   ${st ? `<div class="alert acc" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px"><b>👩‍🍳 شرية ديال ${esc(st.name)} · −10%</b><span class="muted">وافق: ${esc(st.by)} · باقي ليها اليوم ${money(capLeft)} من ${money(STAFF_CAP)}${gross > capLeft ? " · الخصم غير على " + money(capLeft) : ""}</span><span style="font-weight:800">الخصم: −${money(sDisc)}</span><span class="muted" style="font-size:.8rem">ما كيتجمعش مع حتى خصم آخر (العرض، التريتور، الوفاء).</span><button type="button" class="btn small" data-act="staffoff">✖️ لغي شرية البائعة</button></div>` : custChip(p) + (bdL.length ? ids.some(isBdCake) ? bdL.map((b) => `<button type="button" class="opt" style="flex-direction:row;justify-content:center;gap:8px;padding:12px" data-act="bdon" data-id="${esc(bdKey(b))}" aria-pressed="${bdSel && bdKey(bdSel) === bdKey(b)}"><span class="ico">🎂</span><span>عيد الميلاد ديال ${esc(bdWho(b))} · ${b.d.slice(3)}/${b.d.slice(0, 2)} · −10% على الأونترومي${bdSel && bdKey(bdSel) === bdKey(b) ? " = −" + money(bDisc) : ""}</span></button>`).join("") : `<div class="alert acc" style="cursor:default">🎂 عندو عيد ميلاد قريب (${esc(bdL.map(bdWho).join("، "))}): إلا شرا طارط (أونترومي) ياخد −10%</div>` : "") + redeemBox + `<button type="button" class="btn small" data-act="bdcode">🎟️ كود عيد الميلاد (−10%)</button><button type="button" class="btn small" data-act="staffdisc">👩‍🍳 شرية ديال بائعة (−10%)</button>`}${trOn ? `<div class="alert warn" style="cursor:default">🌙 تخفيض التريتور <b>−${trR * 100}%</b> (${trR === 0.5 ? "من 21:30" : "من 20:30"}) · داخل فالثمن</div>` : ""}${(() => {
     const X = (S.exch || {})[p];
     if (!X) return "";
     const d = r2(total - X.amt);
@@ -7893,7 +7899,7 @@ function sheetCart() {
         }
         if (bD > 0) {
           t.gross = grossT;
-          t.bday = { key: bdKey(bdS), who: bdS.who || "", name: bdS.name || "", d: bdS.d, disc: bD };
+          t.bday = __spreadValues({ key: bdKey(bdS), who: bdS.who || "", name: bdS.name || "", d: bdS.d, disc: bD }, (S.bdCode || {})[p] ? { code: S.bdCode[p] } : {});
         }
         const upd = { points: bal, total: r2((+cd.total || 0) + tot), visits: (+cd.visits || 0) + 1, lastTs: Date.now() };
         if (t.bday) upd.bdUsed = __spreadProps(__spreadValues({}, cd.bdUsed || {}), { [t.bday.key]: today().slice(0, 4) });
@@ -7939,6 +7945,7 @@ function sheetCart() {
       S.packEdit[p] = {};
       if (S.staff) delete S.staff[p];
       if (S.bdOn) delete S.bdOn[p];
+      if (S.bdCode) delete S.bdCode[p];
       if ((_d = S.exch) == null ? void 0 : _d[p]) {
         t.exch = S.exch[p].no;
         delete S.exch[p];
@@ -8397,6 +8404,7 @@ async function receiptBlob(sh, t, copy) {
       if (l.note) wrap("📝 " + l.note, Math.round(F * 0.75), false, W - 2 * P).forEach((z) => R.push({ k: "p", r: z, l: "", sz: Math.round(F * 0.75), b: false, mut: true }));
     });
     line();
+    if (o.bday) pair("🎂 خصم عيد الميلاد (−10%) " + (o.bday.code || ""), "-" + money(o.bday.disc), Math.round(F * 0.85));
     pair("المجموع", money(o.total), Math.round(F * 1.3), true);
     pair("التسبيق (كاش)", money(o.advance || 0), Math.round(F * 0.95), true);
     if (copy === "ordl") pair("خلص اليوم (كاش)", money(((_a = o.delivery) == null ? void 0 : _a.paid) || 0), Math.round(F * 0.95), true);
@@ -9738,7 +9746,7 @@ function sheetClient(back) {
         await ref.set(cd);
         toast("🎉 زبون جديد فالوفاء");
       }
-      S.cust[S.pos] = { id, name: cd.name || cd.phone || "زبون", phone: cd.phone || f.cph.value.trim(), points: +cd.points || 0, vouchers: cd.vouchers || [], useV: null, isNew: !cd.waTs, bn: (cd.bdays || []).length };
+      S.cust[S.pos] = { id, name: cd.name || cd.phone || "زبون", phone: cd.phone || f.cph.value.trim(), points: +cd.points || 0, vouchers: cd.vouchers || [], useV: null, isNew: !cd.waTs, bn: (cd.bdays || []).length, bdays: cd.bdays || [], bdUsed: cd.bdUsed || {} };
       back === "cart" ? sheetCart() : (closeSheet(), render());
     } catch (e) {
       fail(f, e);
@@ -18761,12 +18769,12 @@ function sheetOrder2(id) {
   };
   openSheet("📝 طلبية #" + o.num, `<div class="head"><h2>👤 ${esc(o.client)}</h2><span class="tag ${st === "delivered" ? "good" : st === "refused" ? "bad" : "acc"}">${OSTI[st] || ""} ${OSTL[st] || st}</span></div>
    <div class="muted">${(o.phones || []).map((p) => "📞 " + esc(p.n) + (p.wa ? " 💬" : "")).join(" · ")}<br>🏠 ${esc(o.address || "")}<br>${LOCI[o.pos]} ${esc(LOC[o.pos])} · 📅 ${o.due} ${o.dueTime || ""} · ✍️ ${esc(o.by || "")}</div>
-   ${(o.lines || []).map(ln).join("")}
+   ${(o.lines || []).map(ln).join("")}${o.bday ? `<div class="alert acc" style="cursor:default">🎂 خصم عيد الميلاد −10% · 🎟️ ${esc(o.bday.code || "")} · <b>−${money(o.bday.disc)}</b></div>` : ""}
    <div class="stats sheet-stats"><div class="stat"><span>💰 المجموع</span><b>${o.total != null ? money(o.total) : "؟"}</b></div><div class="stat"><span>💵 التسبيق</span><b>${money(o.advance || 0)}</b></div><div class="stat"><span>⏳ الباقي</span><b>${o.total != null ? money(rest) : "؟"}</b></div></div>
    ${["wait", "refused", "topay"].includes(st) ? `<div class="box" style="gap:6px"><h3 style="margin:0">✅ الموافقات</h3>${(o.wss || []).map(chefRow).join("")}
      ${(o.lines || []).some((l) => l.kind === "sp") ? `<div class="prow"><span>💰 الثمن ديال الطلبيات الخاصة</span><span>${ordPriced(o) ? "✅ " + esc(o.pricedBy || "") : "⏳ كيتسنى المسير"}</span></div>${!ordPriced(o) && isMgr() ? `<button type="button" class="btn primary block" data-act="oprice" data-id="${o.id}">💰 عطي الثمن</button>` : ""}` : ""}
      ${o.advReq ? `<div class="prow"><span>💵 تسبيق أقل من 50%: ${money(o.advReq.amt)}</span><span>${o.advReq.st === "ok" ? "✅ وافق " + esc(o.advReq.by || "") : o.advReq.st === "no" ? "⛔ رفض" : "⏳ كيتسنى المسير"}</span></div>${o.advReq.st === "wait" && isMgr() ? `<div class="btns" style="margin:0"><button type="button" class="btn danger" data-act="oadvq" data-id="${o.id}" data-d="no">❌ رفض</button><button type="button" class="btn primary" data-act="oadvq" data-id="${o.id}" data-d="ok">✅ وافق</button></div>` : ""}` : ""}</div>` : ""}
-   <div class="btns">${st === "topay" && mine ? `<button type="button" class="btn primary" data-act="opay" data-id="${o.id}">💵 خلص التسبيق</button>` : ""}
+   <div class="btns">${mine && o.total != null && !o.bday && !["delivered", "cancel"].includes(st) && (o.lines || []).some((l) => l.kind !== "sp" && isBdCake(l.item)) ? `<button type="button" class="btn" data-act="obdcode" data-id="${o.id}">🎟️ كود عيد الميلاد (−10%)</button>` : ""}${st === "topay" && mine ? `<button type="button" class="btn primary" data-act="opay" data-id="${o.id}">💵 خلص التسبيق</button>` : ""}
     ${st === "refused" && mine ? `<button type="button" class="btn primary" data-act="oredate" data-id="${o.id}">📅 بدل التاريخ وعاود صيفط</button>` : ""}
     ${["new", "production"].includes(st) && (isChefOf(o.ws) || (o.wss || []).some(isChefOf)) ? nextStatuses(st).map((n) => `<button type="button" class="btn primary" data-act="oadv" data-id="${o.id}" data-s="${n}">${OSTI[n]} ${OSTL[n]}</button>`).join("") : ""}
     ${["ready", "transit"].includes(st) && mine ? `<button type="button" class="btn primary" data-act="odeliver" data-id="${o.id}">🎉 سلم للزبون</button>` : ""}
@@ -18774,9 +18782,10 @@ function sheetOrder2(id) {
     ${["wait", "refused", "topay"].includes(st) && (isMgr() || o.byId === me.id) ? `<button type="button" class="btn danger" data-act="ocancel" data-id="${o.id}">🗑️ لغي الطلبية</button>` : ""}</div>`);
 }
 async function ordSave(o, upd, hist) {
+  var _a;
   const n = __spreadValues(__spreadValues({}, o), upd);
   n.status = ordState(n);
-  if (n.total == null && ordPriced(n)) n.total = ordTotal(n);
+  if (n.total == null && ordPriced(n)) n.total = r2(ordTotal(n) - (+((_a = n.bday) == null ? void 0 : _a.disc) || 0));
   const u = __spreadProps(__spreadValues({}, upd), { status: n.status, total: n.total != null ? n.total : null });
   if (hist) u.history = [...o.history || [], __spreadProps(__spreadValues({}, hist), { by: meName(), ts: Date.now() })];
   await db.doc("orders/" + o.id).update(u);
@@ -18818,11 +18827,12 @@ function sheetOrdPrice(id) {
     var _a;
     return l.kind === "sp" ? `<div class="box" style="gap:6px"><b>✨ ${esc(l.title)} × ${fmt(l.qty)}</b>${l.note ? `<div class="muted" style="white-space:pre-wrap">${esc(l.note)}</div>` : ""}${audioOf(l.voice)}${((_a = l.photos) == null ? void 0 : _a.length) ? `<div class="media">${mediaBtns(l.photos, "صورة")}</div>` : ""}${moneyIn("opr" + i, "💰 الثمن ديال الحبة", l.price != null ? fmt(l.price) : "")}</div>` : "";
   }).join("")}${errP}<button class="btn primary block" type="submit">✅ حفظ الثمن</button>`, async (f) => {
+    var _a;
     const lines = L.map((l, i) => l.kind === "sp" ? __spreadProps(__spreadValues({}, l), { price: num(f["opr" + i].value) }) : l);
     if (lines.some((l) => l.kind === "sp" && !(l.price > 0))) return ferr("دخل الثمن ديال كل طلبية خاصة.");
     busy(f, true);
     try {
-      await ordSave(o, { lines, total: ordTotal({ lines }), pricedBy: meName(), pricedTs: Date.now() }, { s: "priced", note: money(ordTotal({ lines })) });
+      await ordSave(o, { lines, total: r2(ordTotal({ lines }) - (+((_a = o.bday) == null ? void 0 : _a.disc) || 0)), pricedBy: meName(), pricedTs: Date.now() }, { s: "priced", note: money(ordTotal({ lines })) });
       toast("💰 الثمن تسجل");
       sheetOrder2(id);
     } catch (e) {
@@ -18868,6 +18878,66 @@ function sheetOrdPay(id) {
       fail(f, e);
     }
   });
+}
+const BDCE = { bad: "❓ الكود ماشي صحيح (بحال BD4UYC7)", notfound: "❓ ما كاينش هاد الكود", used: "⛔ هاد الكود تستعمل ديجا", expired: "⌛ هاد الكود فات عليه الوقت" };
+function sheetBdCode(oid) {
+  const o = oid ? S.orders.find((x) => x.id === oid) : null;
+  if (oid && !o) return;
+  openSheet("🎟️ كود عيد الميلاد", `<p class="muted" style="margin:0">الزبون كياخد الكود من صفحة الوفاء (أعياد الميلاد). كيعطي −10% على الأونترومي، مرة وحدة.</p>${inp("bdc", "🎟️ الكود", "", "text", 'autocomplete="off" autocapitalize="characters" placeholder="BDXXXXX" style="text-transform:uppercase;letter-spacing:.15em;direction:ltr;text-align:center"')}${errP}<button class="btn primary block" type="submit">✅ طبق الخصم</button>`, async (f) => {
+    busy(f, true);
+    let r;
+    try {
+      r = await window.morangoRpc("pos_bdcode", { p_code: f.bdc.value });
+    } catch (_) {
+      busy(f, false);
+      return ferr("📶 ما كاينش الأنترنيت، عاود");
+    }
+    if (!r || !r.ok) {
+      busy(f, false);
+      return ferr((BDCE[r == null ? void 0 : r.err] || "❓") + ((r == null ? void 0 : r.name) ? " · " + r.name : ""));
+    }
+    try {
+      if (o) {
+        const disc = r2(BD_R * (o.lines || []).filter((l) => l.kind !== "sp" && isBdCake(l.item)).reduce((a, l) => a + (+l.qty || 0) * (+l.price || 0), 0));
+        if (!(disc > 0)) {
+          busy(f, false);
+          return ferr("🎂 ما كاين حتى أونترومي فهاد الطلبية");
+        }
+        if (o.total == null || o.bday) {
+          busy(f, false);
+          return ferr("⛔ ما يمكنش دابا");
+        }
+        const nt = r2(o.total - disc);
+        if (nt < r2((+o.advance || 0) + (+o.paidRest || 0)) - 9e-3) {
+          busy(f, false);
+          return ferr("⛔ الزبون خلص كثر من الثمن الجديد");
+        }
+        const u = await window.morangoRpc("pos_bdcode_use", { p_code: r.code, p_ref: "order:" + o.id, p_by: meName() });
+        if (!(u == null ? void 0 : u.ok)) {
+          busy(f, false);
+          return ferr(BDCE[u == null ? void 0 : u.err] || "❓");
+        }
+        await ordSave(o, { bday: { code: r.code, key: r.key, cid: r.cid, who: r.who || "", name: r.bname || "", d: r.d, disc, by: meName(), ts: Date.now() }, total: nt }, { s: "bdcode", note: "🎟️ " + r.code + " −" + money(disc) });
+        toast("🎂 الخصم تطبق −" + money(disc));
+        sheetOrder2(o.id);
+        return;
+      }
+      const cs = await db.doc("clients/" + r.cid).get();
+      const cd = cs.exists ? cs.data() : {};
+      const p = S.pos;
+      S.cust[p] = { id: r.cid, name: cd.name || cd.phone || "زبون", phone: cd.phone || r.phone || "", points: +cd.points || 0, vouchers: cd.vouchers || [], useV: null, isNew: !cd.waTs, bn: (cd.bdays || []).length, bdays: cd.bdays || [], bdUsed: cd.bdUsed || {} };
+      if (!bdElig(S.cust[p]).some((b) => bdKey(b) === r.key)) {
+        busy(f, false);
+        return ferr("⛔ عيد الميلاد ديال هاد الكود ما بقاش صالح");
+      }
+      (S.bdOn = S.bdOn || {})[p] = r.key;
+      (S.bdCode = S.bdCode || {})[p] = r.code;
+      toast("🎂 " + (r.name || "") + " · الخصم واجد" + (Object.keys(S.cart[p] || {}).some((id) => S.cart[p][id] > 0 && isBdCake(id)) ? "" : " · زيدي الأونترومي فالسلة"));
+      sheetCart();
+    } catch (e) {
+      fail(f, e);
+    }
+  }, (f) => f.bdc.focus());
 }
 function sheetOrdRedate(id) {
   const o = S.orders.find((x) => x.id === id);
@@ -20365,6 +20435,8 @@ const ACT = {
     sheetCartAdd();
   },
   staffdisc: () => sheetStaffDisc(),
+  bdcode: () => sheetBdCode(),
+  obdcode: (el) => sheetBdCode(el.dataset.id),
   bdon: (el) => {
     S.bdOn = S.bdOn || {};
     S.bdOn[S.pos] = S.bdOn[S.pos] === el.dataset.id ? null : el.dataset.id;
