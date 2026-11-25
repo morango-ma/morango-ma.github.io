@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125201242" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125202446" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -18727,7 +18727,7 @@ function sheetOrdCat() {
     });
   });
 }
-const ENT_COEF = 2.5, ENT_DISC = 1.1;
+const ENT_COEF = 2.5, ENT_DISC = 1.1, ENT_PRINT = 60;
 const entSizes = (re) => itemsArr().filter((i) => i.active !== false && ["pack", "cons"].includes(i.kind) && +costOf(i.id) > 0).map((i) => {
   const m = re.exec(i.fr || i.name || "");
   return m ? { id: i.id, n: i.fr || i.name, sz: +m[1], cost: +costOf(i.id) } : null;
@@ -18815,7 +18815,7 @@ function entSvg(e) {
   let ly = 0;
   const leg = [...e.layers].reverse().map((l) => `<div style="display:flex;gap:6px;align-items:center"><span style="width:14px;height:14px;border-radius:3px;background:${ENT_COL(l.n)};border:1px solid #0002;flex:none"></span><span>${esc(l.n)}</span><b class="num" style="margin-inline-start:auto">${fmt(l.mm)} مم</b></div>`).join("");
   return `<div class="box" style="gap:6px"><b>📐 <bdi dir="ltr">${fmt(s)} × ${fmt(s)} × ${fmt(h)} cm</bdi> · ⚖️ ${fmt(e.kg)} كغ</b><svg viewBox="0 0 380 ${H.toFixed(0)}" style="width:100%;max-width:380px;align-self:center" role="img" aria-label="entremet 3D">${out}</svg>
-   <div style="display:flex;flex-direction:column;gap:3px;font-size:.88rem"><span class="muted">⬆️ من الفوق للتحت${((_c = e.deco) == null ? void 0 : _c.length) ? " · 🍓 الديكور: " + esc(e.deco.join("، ")) : ""}</span>${leg}</div><div style="font-size:.9rem">📦 ${e.box ? esc(e.box) : '<b style="color:var(--bad,#b8252f)">ما كاينش كارطون قد هادا</b>'} · 🟨 ${e.board ? esc(e.board) : '<b style="color:var(--bad,#b8252f)">ما كاينش كارو دوري قد هادا</b>'}</div>${!e.board || !e.box ? `<div class="alert bad" style="cursor:default">⚠️ ${fmt(s)} cm: ما كاينش ${!e.board ? "كارو دوري" : "كارطون"} كبير بزاف فالستوك. شري واحد كبر ولا نقصو الوزن.</div>` : ""}</div>`;
+   <div style="display:flex;flex-direction:column;gap:3px;font-size:.88rem"><span class="muted">⬆️ من الفوق للتحت${((_c = e.deco) == null ? void 0 : _c.length) ? " · 🍓 الديكور: " + esc(e.deco.join("، ")) : ""}</span>${leg}</div>${e.print ? `<div style="font-size:.9rem">🖼️ صورة مطبوعة فوق الأونترومي (شوف الصور تحت)</div>` : ""}<div style="font-size:.9rem">📦 ${e.box ? esc(e.box) : '<b style="color:var(--bad,#b8252f)">ما كاينش كارطون قد هادا</b>'} · 🟨 ${e.board ? esc(e.board) : '<b style="color:var(--bad,#b8252f)">ما كاينش كارو دوري قد هادا</b>'}</div>${!e.board || !e.box ? `<div class="alert bad" style="cursor:default">⚠️ ${fmt(s)} cm: ما كاينش ${!e.board ? "كارو دوري" : "كارطون"} كبير بزاف فالستوك. شري واحد كبر ولا نقصو الوزن.</div>` : ""}</div>`;
 }
 const entFlavors = () => itemsArr().filter((i) => {
   var _a;
@@ -18839,7 +18839,7 @@ function sheetOrdEnt() {
   const low = L.filter((x) => entMargin(x, 1) < ENT_WARN);
   openSheet("🎂 أونترومي على الطلب (بالكيلو)", `${low.length ? `<div class="alert bad" style="cursor:default">⚠️ المارج قرب لـ 50%: ${low.map((x) => esc(x.fr || x.name) + " " + Math.round(entMargin(x, 1) * 100) + "%").join("، ")}. التكلفة طلعات، خاص المسير يراجع الثمن الأدنى.</div>` : ""}<p class="muted" style="margin:0">الثمن = (تكلفة الكادر ديال الطرانش بالكيلو × الوزن + الكارطون والكارو الدوري اللي مناسبين للحجم) + 10% × 2,5، مدوّر لأقرب 10 د.م. الثمن ديال الكيلو اللي تحت غير تقريبي (بلا العلبة).</p><div style="display:flex;flex-direction:column;gap:4px">${L.length ? L.map((x) => `<button type="button" class="prow" data-pick="${x.id}" style="border:1px solid var(--line,#eee);border-radius:12px;background:var(--surface,#fff);color:inherit;text-align:start;padding:8px 10px;font:inherit"><div class="lead"><span class="em">${ico(x.id)}</span><b>${esc(x.name)}${x.fr ? ` <small class="muted"><bdi>${esc(x.fr)}</bdi></small>` : ""}</b></div><span style="text-align:end"><b class="num">~${money(x.ppk)}/كغ</b>${entMargin(x, 1) < ENT_WARN ? `<br><small style="color:var(--bad,#b8252f)">⚠️ المارج ${Math.round(entMargin(x, 1) * 100)}%</small>` : ""}</span></button>`).join("") : '<p class="muted">ما كاين حتى طرانش عندو كادر.</p>'}</div>
    ${fld("oe_kg", "⚖️ الوزن (كغ)", stepper("data-oek", "q", "1", "كغ"))}<div id="oe_tot" class="alert acc" style="cursor:default">👆 اختار الذوق</div><div id="oe_3d"></div>
-   ${fld("oe_note", "📝 الكتابة، الشكل، الديكور...", '<textarea id="oe_note" name="oe_note" rows="2"></textarea>')}${photoField("oeph", "📷 صور (اختيارية)")}${voiceBox()}
+   ${fld("oe_note", "📝 الكتابة، الشكل، الديكور...", '<textarea id="oe_note" name="oe_note" rows="2"></textarea>')}<label class="prow" style="gap:8px;justify-content:flex-start;min-height:48px"><input type="checkbox" name="oe_pr" style="width:24px;height:24px"> 🖼️ طبع صورة على الأونترومي (+${money(ENT_PRINT)})</label>${photoField("oeph", "📷 صور (إجبارية إلا كانت صورة مطبوعة)")}${voiceBox()}
    ${errP}<div class="btns"><button type="button" class="btn" id="oe_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
     var _a;
     const x = L.find((y) => y.id === pick);
@@ -18847,13 +18847,15 @@ function sheetOrdEnt() {
     if (REC.rec) return ferr("⏹️ وقف التسجيل قبل.");
     const kg = num($("input[data-oek]", f).value);
     if (!(kg >= 0.5)) return ferr("⚖️ الوزن خاصو يكون 0,5 كغ ولا كثر.");
-    OD.lines.push({ kind: "sp", ent: __spreadValues({ t: x.id, kg, ppk: x.ppk, ck: Math.round(x.ck * 100) / 100, pack: Math.round(entPack(x, kg) * 100) / 100 }, (() => {
+    const pr = f.oe_pr.checked;
+    if (pr && !(PH.oeph || []).length) return ferr("📷 زيد الصورة اللي غادي تطبع على الأونترومي.");
+    OD.lines.push({ kind: "sp", ent: __spreadValues(__spreadProps(__spreadValues({ t: x.id, kg, ppk: x.ppk }, pr ? { print: ENT_PRINT } : {}), { ck: Math.round(x.ck * 100) / 100, pack: Math.round(entPack(x, kg) * 100) / 100 }), (() => {
       var _a2, _b;
       const E = entLayers(x.id);
       if (!E) return {};
       const sd = entSize(E.G, kg), P = entPackFor(sd);
       return { side: sd, layers: E.layers, deco: E.deco, box: ((_a2 = P.box) == null ? void 0 : _a2.n) || null, board: ((_b = P.board) == null ? void 0 : _b.n) || null };
-    })()), title: x.name + (x.fr ? " · " + x.fr : "") + " · " + fmt(kg) + " كغ", qty: 1, price: entPrice(x, kg), ws: ((_a = S.items[x.id]) == null ? void 0 : _a.ws) || "w1", note: f.oe_note.value.trim(), photos: [...PH.oeph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
+    })()), title: x.name + (x.fr ? " · " + x.fr : "") + " · " + fmt(kg) + " كغ" + (pr ? " · 🖼️ صورة" : ""), qty: 1, price: entPrice(x, kg) + (pr ? ENT_PRINT : 0), ws: ((_a = S.items[x.id]) == null ? void 0 : _a.ws) || "w1", note: f.oe_note.value.trim(), photos: [...PH.oeph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
     recReset();
     sheetNewOrder(true);
   }, (f) => {
@@ -18864,7 +18866,7 @@ function sheetOrdEnt() {
     };
     const upd = () => {
       const x = L.find((y) => y.id === pick), kg = num($("input[data-oek]", f).value);
-      $("#oe_tot", f).innerHTML = x ? kg > 0 ? "🎂 <b>" + esc(x.name) + "</b> · " + fmt(kg) + " كغ + العلبة = <b>" + money(entPrice(x, kg)) + "</b>" + (isMgr() ? " · المارج " + Math.round(entMargin(x, kg) * 100) + "%" : "") : "⚖️ دخل الوزن" : "👆 اختار الذوق";
+      $("#oe_tot", f).innerHTML = x ? kg > 0 ? "🎂 <b>" + esc(x.name) + "</b> · " + fmt(kg) + " كغ + العلبة" + (f.oe_pr.checked ? " + 🖼️ الصورة" : "") + " = <b>" + money(entPrice(x, kg) + (f.oe_pr.checked ? ENT_PRINT : 0)) + "</b>" + (isMgr() ? " · المارج " + Math.round(entMargin(x, kg) * 100) + "%" : "") : "⚖️ دخل الوزن" : "👆 اختار الذوق";
       const E = x && kg > 0 ? entLayers(x.id) : null;
       $("#oe_3d", f).innerHTML = E ? (() => {
         var _a, _b;
@@ -19056,7 +19058,10 @@ function sheetBdCode(oid) {
     }
     try {
       if (o) {
-        const disc = r2(BD_R * (o.lines || []).filter(ordBdLine).reduce((a, l) => a + (+l.qty || 0) * (+l.price || 0), 0));
+        const disc = r2(BD_R * (o.lines || []).filter(ordBdLine).reduce((a, l) => {
+          var _a;
+          return a + (+l.qty || 0) * (+l.price || 0) - (+((_a = l.ent) == null ? void 0 : _a.print) || 0);
+        }, 0));
         if (!(disc > 0)) {
           busy(f, false);
           return ferr("🎂 ما كاين حتى أونترومي فهاد الطلبية");
