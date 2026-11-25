@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125214244" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125231530" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -1404,6 +1404,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     if (error) throw error;
     return data;
   } };
+  window.morangoFn = async (name, body) => {
+    await ensure();
+    return sb.functions.invoke(name, { body });
+  };
   window.morangoLogout = async () => {
     try {
       await sb.auth.signOut();
@@ -3183,8 +3187,8 @@ function drawTabs() {
 function draw() {
   var _a, _b, _c;
   {
-    const sb2 = $("#srchbtn");
-    if (sb2) sb2.hidden = !me || me.role === "kiosk";
+    const sb = $("#srchbtn");
+    if (sb) sb.hidden = !me || me.role === "kiosk";
     const mm = $("#main");
     if (mm && mm.dataset.v !== S.view) {
       mm.dataset.v = S.view;
@@ -5941,10 +5945,10 @@ function sheetProduce(kind, pre) {
         qi0.readOnly = st === "full";
         $$("#pqw button", f).forEach((b) => b.disabled = st === "full");
         $("#pbf", f).style.display = st === "full" ? "none" : "";
-        const sb2 = $('button[type="submit"]', f);
-        if (sb2) sb2.textContent = st === "none" ? "❌ سجل بلي ما تصاوبش" : st === "part" ? "⚠️ أكد الكمية الجزئية" : st === "more" ? "➕ أكد الكمية الزايدة" : "✅ أكد بلي تسالا كامل";
+        const sb = $('button[type="submit"]', f);
+        if (sb) sb.textContent = st === "none" ? "❌ سجل بلي ما تصاوبش" : st === "part" ? "⚠️ أكد الكمية الجزئية" : st === "more" ? "➕ أكد الكمية الزايدة" : "✅ أكد بلي تسالا كامل";
         if (st === "none") {
-          if (sb2) sb2.disabled = false;
+          if (sb) sb.disabled = false;
           return;
         }
       }
@@ -5982,8 +5986,8 @@ function sheetProduce(kind, pre) {
       };
       const short = !stockFree() && q > 0 && r.lines.some((l) => !noSt(l.item) && !optSt(l.item) && !(it.kind === "final" && autoSemiOf(ws, l.item)) && haveX(ws, l.item) + 1e-9 < nd(l));
       {
-        const sb2 = $("button[type=submit]", f);
-        if (sb2) sb2.disabled = short;
+        const sb = $("button[type=submit]", f);
+        if (sb) sb.disabled = short;
       }
       $("#pprev", f).innerHTML = q > 0 ? `<div class="box"><h3>🥄 غادي يتنقص من المخزون</h3>${r.lines.map((l) => {
         const need = cq(l, r2(lineQty(l) * k)), have = haveX(ws, l.item), ns = noSt(l.item), hh = xHome(ws, l.item);
@@ -12134,16 +12138,16 @@ function computeReport() {
         const part = T > 0 ? v * x.v / T : v / WS.length;
         if (W[x.id] && part) {
           W[x.id].direct = (W[x.id].direct || 0) + part;
-          const sb2 = W[x.id].paySub || (W[x.id].paySub = {});
-          sb2.prod = (sb2.prod || 0) + part;
+          const sb = W[x.id].paySub || (W[x.id].paySub = {});
+          sb.prod = (sb.prod || 0) + part;
         }
       });
       return;
     }
     if (c.cat === "salaries" && W[c.ws]) {
       W[c.ws].direct = (W[c.ws].direct || 0) + v;
-      const sb2 = W[c.ws].paySub || (W[c.ws].paySub = {});
-      sb2[c.sub || "base"] = (sb2[c.sub || "base"] || 0) + v;
+      const sb = W[c.ws].paySub || (W[c.ws].paySub = {});
+      sb[c.sub || "base"] = (sb[c.sub || "base"] || 0) + v;
     } else {
       overhead += v;
       ohBy[c.cat] = (ohBy[c.cat] || 0) + v;
@@ -17842,8 +17846,8 @@ function sheetNewPreq(purpose) {
       }
       {
         const blk = f.rwhy.value === "order" && !f.rord;
-        const sb2 = $("button[type=submit]", f);
-        if (sb2) sb2.disabled = blk;
+        const sb = $("button[type=submit]", f);
+        if (sb) sb.disabled = blk;
         const rl = $("#rlines", f);
         if (rl) rl.style.display = blk ? "none" : "";
       }
@@ -19762,8 +19766,7 @@ function sheetAsk() {
     askPaint();
     let msg, err = false;
     try {
-      await ensure();
-      const { data, error } = await sb.functions.invoke("assistant", { body: { messages: ASK.h.filter((m) => !m.err).slice(-16).map((m) => ({ role: m.role, content: m.content })) } });
+      const { data, error } = await window.morangoFn("assistant", { messages: ASK.h.filter((m) => !m.err).slice(-16).map((m) => ({ role: m.role, content: m.content })) });
       if (error) {
         let j = null;
         try {
