@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261124203205" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125151319" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -8406,6 +8406,22 @@ async function receiptBlob(sh, t, copy) {
     pair("التاريخ", dhms(copy === "ordl" ? ((_c = o.delivery) == null ? void 0 : _c.ts) || Date.now() : o.advTs || Date.now()), Math.round(F * 0.8));
     gap(4);
     center(copy === "ordc" ? "⚠️ الباقي كيتخلص قبل التسليم" : "✅ الطلبية تسلمات وتخلصات", Math.round(F * 0.95), true);
+    if (copy === "ordc" && LOY().on) {
+      const qp = ptsLines(o.lines);
+      if (qp > 0) {
+        line();
+        center("⭐ نهار التسليم غادي تربح " + fmt(qp) + " نقطة الوفاء", Math.round(F * 0.88), true);
+        center("سكاني الكود اللي فبون التسليم 📲", Math.round(F * 0.8), false);
+        line();
+      }
+    }
+    if (copy === "ordl" && o.qr) {
+      line();
+      center("📲 سكاني الكود وربح النقاط ديال هاد الطلبية", Math.round(F * 0.92), true);
+      center("ونتسناو رأيك فالمنتوجات والخدمة 🙏", Math.round(F * 0.82), false);
+      center("كلمتك كتعاونا نكونو ديما حسن 💛", Math.round(F * 0.82), false);
+      line();
+    }
     center(copy === "ordc" ? "جيب هاد البون نهار التسليم" : cfg.footer || "شكراً على الثقة", Math.round(F * 0.85));
     gap(P);
   } else if (copy === "bonc" || copy === "bono") {
@@ -8513,7 +8529,8 @@ async function receiptBlob(sh, t, copy) {
     if (code && /^[\x20-\x7e]+$/.test(code)) {
       const bc = barcodeCanvas(code, W - 2 * P, W > 400 ? 90 : 70);
       R.push({ k: "g", h: 8 });
-      const loy = t.qr && copy !== "shop" && copy !== "archive" && !String(copy || "").startsWith("ord") && !String(copy || "").startsWith("bon");
+      const loy = t.qr && copy !== "shop" && copy !== "archive" && (copy === "ordl" || !String(copy || "").startsWith("ord")) && !String(copy || "").startsWith("bon");
+      const tcl = t.client && typeof t.client === "object" ? t.client : null;
       try {
         if (loy) {
           const cw = W - 2 * P, half = Math.floor(cw / 2), qs = W > 400 ? 200 : 150;
@@ -8533,9 +8550,9 @@ async function receiptBlob(sh, t, copy) {
           y2.textBaseline = "middle";
           y2.font = font(fs, true);
           const by = Math.max(qa.height, qb.height);
-          y2.fillText(t.client ? "⭐ +" + fmt((_d = t.client.earned) != null ? _d : t.qrPts) + " تزادو ليك" : "⭐ +" + fmt(t.qrPts) + " نقطة الوفاء", half + half / 2, by + ch / 2);
+          y2.fillText(tcl ? "⭐ +" + fmt((_d = tcl.earned) != null ? _d : t.qrPts) + " تزادو ليك" : "⭐ +" + fmt(t.qrPts) + " نقطة الوفاء", half + half / 2, by + ch / 2);
           y2.font = font(Math.round(fs * 0.92), false);
-          y2.fillText(t.client ? "سكاني وشوف النقاط ديالك" : "سكاني بالتيليفون ديالك", half + half / 2, by + ch * 1.5);
+          y2.fillText(tcl ? "سكاني وشوف النقاط ديالك" : "سكاني بالتيليفون ديالك", half + half / 2, by + ch * 1.5);
           y2.font = font(fs, true);
           y2.direction = "ltr";
           y2.fillText(code, half / 2, by + ch / 2);
@@ -18889,8 +18906,18 @@ function sheetOrdDeliver(id) {
       if (sh) await db.doc("shifts/" + sh.id).update({ ocash: [...sh.ocash || [], { order: o.id, num: o.num, amt: rest, kind: "rest", ts: Date.now(), by: meName() }] });
       const delivery = { ts: Date.now(), by: meName(), paid: rest > 9e-3 ? rest : 0, photos, shift: (sh == null ? void 0 : sh.id) || null };
       const pr = r2((+o.paidRest || 0) + (rest > 9e-3 ? rest : 0));
-      await db.doc("orders/" + o.id).update({ status: "delivered", paidRest: pr, delivery, history: [...o.history || [], { s: "delivered", by: meName(), ts: Date.now(), note: rest > 9e-3 ? "خلص " + money(rest) : "" }] });
-      Object.assign(o, { status: "delivered", paidRest: pr, delivery });
+      const oq = {};
+      if (LOY().on && !o.qr) {
+        const qp = ptsLines(L);
+        if (qp > 0) {
+          oq.qr = clubTok();
+          oq.qrPts = qp;
+        }
+      }
+      await db.doc("orders/" + o.id).update(__spreadProps(__spreadValues({ status: "delivered", paidRest: pr, delivery }, oq), { history: [...o.history || [], { s: "delivered", by: meName(), ts: Date.now(), note: rest > 9e-3 ? "خلص " + money(rest) : "" }] }));
+      Object.assign(o, __spreadValues({ status: "delivered", paidRest: pr, delivery }, oq));
+      if (oq.qr) await db.doc("qrt/" + oq.qr).set({ ts: delivery.ts, pts: oq.qrPts, total: +o.total || 0, no: "#" + o.num, pos: o.pos, order: o.id, claimed: false }).catch(() => {
+      });
       closeSheet();
       toast("🎉 الطلبية #" + o.num + " تسلمات");
       printOrderSlip(o, "ordl");
