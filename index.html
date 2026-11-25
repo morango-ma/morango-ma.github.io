@@ -414,7 +414,11 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
+<<<<<<< HEAD
 <script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125210737"}</script>
+=======
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125214210"}</script>
+>>>>>>> ec7564c (Assistant Morango: read-only data Q&A for admin/manager)
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1421,7 +1425,7 @@ function vMore(arr){const r=me.role;const T=[];
   if(r!=='driver'&&r!=='worker'&&r!=='kiosk'&&r!=='seller'){const lb=lotsActive().filter(l=>(isMgr()||isProd()||l.loc===me.loc)&&ld(l)!=null&&ld(l)<=2).length;T.unshift({i:'🏷️',l:'التتبع والصلاحية',v:'lots',c:3,b:lb})}
   if(isMgr()||r==='driver')T.unshift({i:'🚚',l:'مصاريف سيارة التوصيل',v:'vehicle',c:2});
   if(isMgr())T.unshift({i:'🔄',l:'تحويل المواد بين الورشات',a:'xfhome',c:6,b:xfList().filter(o=>o.status==='sent').length});
-  if(r==='admin')T.unshift({i:'💰',l:'الأثمنة والهامش الصافي',v:'pricing',c:4},{i:'🎯',l:'الأهداف وتتبع البيع',v:'objectifs',c:5},{i:'📅',l:'النوبات والأدوار ديال البائعات',v:'roster',c:2},{i:'📈',l:'الأرباح حسب الورشة',v:'report',c:5},{i:'💼',l:'المصاريف',v:'charges',c:1},{i:'🔥',l:'الغاز (البوطات والفواتير)',v:'gas',c:1});if(r==='admin'||r==='manager')T.unshift({i:'🧠',l:'المساعد live (التحليل والتنبيهات)',v:'live',c:3});
+  if(r==='admin')T.unshift({i:'💰',l:'الأثمنة والهامش الصافي',v:'pricing',c:4},{i:'🎯',l:'الأهداف وتتبع البيع',v:'objectifs',c:5},{i:'📅',l:'النوبات والأدوار ديال البائعات',v:'roster',c:2},{i:'📈',l:'الأرباح حسب الورشة',v:'report',c:5},{i:'💼',l:'المصاريف',v:'charges',c:1},{i:'🔥',l:'الغاز (البوطات والفواتير)',v:'gas',c:1});if(r==='admin'||r==='manager')T.unshift({i:'🧠',l:'المساعد live (التحليل والتنبيهات)',v:'live',c:3});if(r==='admin'||r==='manager')T.unshift({i:'🤖',l:'سول Assistant Morango',a:'ask',c:5});
   if(r==='admin')T.push({i:'👥',l:'الفريق',v:'team',c:5});if(isMgr()&&window.morangoDev)T.unshift({i:'📱',l:'الأجهزة وكود الدخول',v:'devices',c:6});
   if(isAdmin())T.push({i:'💾',l:'النسخ الاحتياطية',a:'backup',c:2});if(isMgr())T.push({i:'🗓️',l:'السجل اليومي',v:'journal',c:3},{i:'🧾',l:'شكل الوصل',a:'rcfg',c:1},{i:'🔍',l:'فك رمز الوصل',a:'rcdec',c:2});
   if(arr)return T;
@@ -4958,7 +4962,28 @@ function sheetItem(id){
 async function openMedia(id){$('#viewer-body').innerHTML=emptyB('⏳','كيتحمل...');$('#viewer').hidden=false;if(String(id).startsWith('a:')){$('#viewer-body').innerHTML=`<img alt="صورة" src="/_blob/${String(id).slice(2)}">`;return}try{const s=await db.doc('media/'+id).get();$('#viewer-body').innerHTML=s.exists?`<img alt="دليل" src="${s.data().data}">`:emptyB('🤷','الصورة ما كايناش.')}catch(e){$('#viewer-body').innerHTML=emptyB('😕','ما قدرناش نحملو الصورة.')}}
 
 /* ---------- events ---------- */
-const ACT={
+
+/* Assistant Morango: read-only Q&A on the data (admin / manager), edge function "assistant" */
+const ASK={h:[],busy:false};
+function askMd(s){const L=esc(s).split('\n');let o='',tb=null,ul=false;const inl=x=>x.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const endUl=()=>{if(ul){o+='</ul>';ul=false}};const flush=()=>{if(tb){o+='<div style="overflow-x:auto"><table class="asktb">'+tb.map((r,i)=>'<tr>'+r.map(c=>i?'<td>'+inl(c)+'</td>':'<th>'+inl(c)+'</th>').join('')+'</tr>').join('')+'</table></div>';tb=null}};
+  for(const l of L){const t=l.trim();if(/^\|.*\|$/.test(t)){endUl();if(/^\|[\s:|-]+\|$/.test(t))continue;(tb=tb||[]).push(t.slice(1,-1).split('|').map(c=>c.trim()));continue}flush();
+    if(/^[-*•] /.test(t)){if(!ul){o+='<ul style="margin:4px 0;padding-inline-start:20px">';ul=true}o+='<li>'+inl(t.slice(2))+'</li>';continue}endUl();
+    if(/^#{1,4} /.test(t)){o+='<b>'+inl(t.replace(/^#+ /,''))+'</b><br>';continue}o+=t?inl(t)+'<br>':'<br>'}
+  flush();endUl();return o.replace(/(<br>)+(<div style="overflow|<ul)/g,'$2').replace(/(<\/table><\/div>|<\/ul>)(<br>)+/g,'$1').replace(/(<br>){3,}/g,'<br><br>').replace(/(<br>)+$/,'')}
+const askErr=e=>({nokey:'⚙️ Assistant mazal ma t-activa: khass la clé API d Anthropic f Supabase.',forbidden:'🔒 Ma 3ndekch l7a9 f l\'assistant.',limit:'⏳ Wsselti l 7ad dyal so2alat lyoum. 3awed ghedda.',api:'⚠️ Mochkil f Claude. 3awed men ba3d chwiya.'}[e]||'⚠️ Ma 9dertch njaweb daba. Chouf l internet w 3awed.');
+function askLogHtml(){if(!ASK.h.length)return `<div class="muted" style="line-height:1.7">🤖 Salam! Sowelni 3la ay 7aja f Morango, b7al:<br>• ch7al bi3na lyoum f Rawan?<br>• chno l produits li kaybi3o ktar had simana?<br>• chno na9es f stock dyal la viennoiserie?<br>• ch7al taklofa dyal croissant amande?<br><small>Kanchouf ghir, ma kanbddel walo.</small></div>`;
+  return ASK.h.map(m=>m.role==='user'?`<div dir="auto" style="align-self:flex-end;max-width:88%;background:var(--accent,#1F4D3A);color:#fff;border-radius:14px 14px 4px 14px;padding:8px 12px;white-space:pre-wrap">${esc(m.content)}</div>`:`<div dir="auto" class="askm" style="align-self:flex-start;max-width:96%;background:${m.err?'#FDECEC':'var(--card2,#F4EFE6)'};color:var(--ink,#2B1B12);border-radius:14px 14px 14px 4px;padding:8px 12px;line-height:1.6">${askMd(m.content)}</div>`).join('')+(ASK.busy?'<div class="muted" style="align-self:flex-start">🤖 kanchouf f lmo3tayate…</div>':'')}
+function askPaint(){const el=$('#asklog');if(!el)return;el.innerHTML=askLogHtml();el.scrollTop=el.scrollHeight;const b=$('#sf [type=submit]');if(b)b.disabled=ASK.busy}
+function sheetAsk(){if(!isMgr())return toast('🔒 ما عندكش الحق',true);
+  openSheet('🤖 Assistant Morango',`<style>.asktb{border-collapse:collapse;margin:4px 0;font-size:.92em}.asktb th,.asktb td{border:1px solid rgba(0,0,0,.15);padding:3px 7px;text-align:start;white-space:nowrap}.asktb th{background:rgba(0,0,0,.06)}</style><div id="asklog" style="display:flex;flex-direction:column;gap:10px;max-height:58vh;overflow:auto">${askLogHtml()}</div>
+   <textarea name="q" rows="2" dir="auto" placeholder="Ktab so2al dyalek… / اكتب السؤال ديالك" style="font-size:16px"></textarea><div class="btns"><button class="btn primary" type="submit">📨 سول</button><button type="button" class="btn" data-act="askclear">🧹 محادثة جديدة</button></div>`,async f=>{
+    const q=f.q.value.trim();if(!q||ASK.busy)return;ASK.h.push({role:'user',content:q});f.q.value='';ASK.busy=true;askPaint();let msg,err=false;
+    try{await ensure();const {data,error}=await sb.functions.invoke('assistant',{body:{messages:ASK.h.filter(m=>!m.err).slice(-16).map(m=>({role:m.role,content:m.content}))}});
+      if(error){let j=null;try{j=await error.context?.json()}catch(_){}msg=askErr(j?.error);err=true}else if(data?.text)msg=data.text;else{msg=askErr(data?.error);err=true}}catch(_){msg=askErr();err=true}
+    ASK.h.push({role:'assistant',content:msg,err});ASK.busy=false;askPaint()},f=>{const t=f.q;t.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!('ontouchstart' in window)){e.preventDefault();f.requestSubmit()}});const el=$('#asklog');if(el)el.scrollTop=el.scrollHeight})}
+
+const ACT={ask:()=>sheetAsk(),askclear:()=>{if(ASK.busy)return;ASK.h=[];askPaint()},
   back:()=>doBack(),
   go:el=>{if(!leaveSaleOk(el.dataset.v))return;if(el.dataset.v==='report')S.rep.data=null;if(S.view!==el.dataset.v){S.hist.push(S.view);if(S.hist.length>30)S.hist.shift()}if(el.dataset.v==='home')S.hist=[];S.view=el.dataset.v;closeSheet();window.scrollTo(0,0);render()},
   close:()=>closeSheet(),closeviewer:()=>{$('#viewer').hidden=true},
