@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125204959" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125205420" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -18573,6 +18573,7 @@ const ordTotal = (o) => r2((o.lines || []).reduce((a, l) => a + (+l.qty || 0) * 
 const ordPriced = (o) => (o.lines || []).every((l) => l.kind !== "sp" || l.price != null);
 const ordRest = (o) => r2((+o.total || 0) - (+o.advance || 0) - (+o.paidRest || 0));
 const lnName = (l) => l.kind === "sp" ? l.title || "طلبية خاصة" : iname(l.item);
+const ordApv = () => isMgr();
 const isChefOf = (w) => me && (me.role === "admin" || me.role === "prod" || me.role === "ws" && (me.loc === w || (me.locs || []).includes(w)));
 function ordState(o) {
   if (["new", "production", "ready", "transit", "delivered", "cancel"].includes(o.status)) return o.status;
@@ -18596,7 +18597,7 @@ const ordTodo = (o) => {
   if (o.status === "wait") {
     (o.wss || []).forEach((w) => {
       if (!ch[w] || ch[w].st === "wait") {
-        if (isChefOf(w)) T.push("chef:" + w);
+        if (ordApv()) T.push("chef:" + w);
       }
     });
     if (!ordPriced(o) && isMgr()) T.push("price");
@@ -18639,7 +18640,7 @@ function sheetNewOrder(keep) {
     <div class="btns" style="margin:0"><button type="button" class="btn" data-oadd="cat">➕ منتوج من الكتالوج</button><button type="button" class="btn" data-oadd="ent">🎂 أونترومي بالكيلو</button><button type="button" class="btn" data-oadd="cd">🎨 Cake design</button><button type="button" class="btn" data-oadd="sp">✨ طلبية خاصة</button></div>
     ${o.lines.length ? `<div class="prow"><b>المجموع${hasSp ? " (بلا الطلبيات الخاصة)" : ""}</b><b class="num">${money(tot)}</b></div>` : ""}</div>
    <div class="box" style="gap:8px"><h3 style="margin:0">📅 التسليم</h3>${choice("o_due", "إمتى؟", [{ v: daysAgo(-1), l: "غدا", i: "🌅" }, { v: daysAgo(-2), l: "بعد غدا", i: "📆" }, { v: daysAgo(-3), l: "من هنا 3 أيام", i: "🗓️" }], [daysAgo(-1), daysAgo(-2), daysAgo(-3)].includes(o.due) ? o.due : "", 3)}<div class="two">${inp("o_due2", "ولا تاريخ آخر", [daysAgo(-1), daysAgo(-2), daysAgo(-3)].includes(o.due) ? "" : o.due, "date")}${inp("o_time", "⏰ الساعة", o.time, "time")}</div>
-    <p class="muted" style="margin:0">⏳ الشاف ديال الورشة خاصو يوافق على التاريخ${hasSp ? "، والمسير كيعطي الثمن ديال الطلبيات الخاصة" : ""}. من بعد الزبون كيخلص تسبيق 50% على الأقل، كاش.</p></div>
+    <p class="muted" style="margin:0">⏳ Alae ولا Yusuf خاصهم يوافقو على التاريخ${hasSp ? "، والمسير كيعطي الثمن ديال الطلبيات الخاصة" : ""}. من بعد الزبون كيخلص تسبيق 50% على الأقل، كاش.</p></div>
    ${errP}<button class="btn primary block" type="submit">📨 صيفط للموافقة</button>`, async (f) => {
     var _a, _b;
     ordReadForm(f);
@@ -19024,7 +19025,7 @@ function sheetOrder2(id) {
   };
   const chefRow = (w) => {
     const c = ch[w] || { st: "wait" };
-    return `<div class="prow"><span>🏭 ${esc(LOC[w] || w)}</span><span>${c.st === "ok" ? "✅ وافق " + esc(c.by || "") : c.st === "no" ? "⛔ رفض " + esc(c.by || "") : "⏳ كيتسنى الشاف"}</span></div>${c.st === "no" ? `<div class="alert bad" style="cursor:default"><div style="white-space:pre-wrap">💬 ${esc(c.reason || "")}</div>${audioOf(c.voice)}</div>` : ""}${c.st === "wait" && isChefOf(w) && st === "wait" ? `<div class="btns" style="margin:0"><button type="button" class="btn danger" data-act="ochef" data-id="${o.id}" data-w="${w}" data-d="no">❌ رفض</button><button type="button" class="btn primary" data-act="ochef" data-id="${o.id}" data-w="${w}" data-d="ok">✅ موافق على التاريخ</button></div>` : ""}`;
+    return `<div class="prow"><span>🏭 ${esc(LOC[w] || w)}</span><span>${c.st === "ok" ? "✅ وافق " + esc(c.by || "") : c.st === "no" ? "⛔ رفض " + esc(c.by || "") : "⏳ كيتسنى Alae ولا Yusuf"}</span></div>${c.st === "no" ? `<div class="alert bad" style="cursor:default"><div style="white-space:pre-wrap">💬 ${esc(c.reason || "")}</div>${audioOf(c.voice)}</div>` : ""}${c.st === "wait" && ordApv() && st === "wait" ? `<div class="btns" style="margin:0"><button type="button" class="btn danger" data-act="ochef" data-id="${o.id}" data-w="${w}" data-d="no">❌ رفض</button><button type="button" class="btn primary" data-act="ochef" data-id="${o.id}" data-w="${w}" data-d="ok">✅ موافق على التاريخ</button></div>` : ""}`;
   };
   openSheet("📝 طلبية #" + o.num, `<div class="head"><h2>👤 ${esc(o.client)}</h2><span class="tag ${st === "delivered" ? "good" : st === "refused" ? "bad" : "acc"}">${OSTI[st] || ""} ${OSTL[st] || st}</span></div>
    <div class="muted">${(o.phones || []).map((p) => "📞 " + esc(p.n) + (p.wa ? " 💬" : "")).join(" · ")}<br>🏠 ${esc(o.address || "")}<br>${LOCI[o.pos]} ${esc(LOC[o.pos])} · 📅 ${o.due} ${o.dueTime || ""} · ✍️ ${esc(o.by || "")}</div>
@@ -19053,7 +19054,7 @@ async function ordSave(o, upd, hist) {
 }
 function sheetOrdChef(id, w, d) {
   const o = S.orders.find((x) => x.id === id);
-  if (!o || !isChefOf(w)) return;
+  if (!o || !ordApv()) return;
   recReset();
   if (d === "ok") {
     if (!confirm("✅ موافق على التسليم " + o.due + " " + (o.dueTime || "") + " (" + (LOC[w] || "") + ")؟")) return;
@@ -20791,7 +20792,7 @@ const ACT = {
   },
   oadvq: async (el) => {
     const o = S.orders.find((x) => x.id === el.dataset.id);
-    if (!(o == null ? void 0 : o.advReq) || !isMgr()) return;
+    if (!(o == null ? void 0 : o.advReq) || !ordApv()) return;
     const ok = el.dataset.d === "ok";
     try {
       await db.doc("orders/" + o.id).update({ advReq: __spreadProps(__spreadValues({}, o.advReq), { st: ok ? "ok" : "no", by: meName(), dts: Date.now() }) });
