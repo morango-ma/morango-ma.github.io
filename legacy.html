@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125204126" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125204959" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -18834,6 +18834,13 @@ const entFlavors = () => itemsArr().filter((i) => {
 }).filter((x) => x.ppk > 0).sort((a, b) => a.name.localeCompare(b.name));
 const fixSp = (l) => !!(l && (l.ent || l.cd));
 const CD_PP = 50, CD_MIN = 10, CD_H = 10, CD_PARTS = { 10: 6, 15: 12, 20: 24, 25: 38, 30: 56 };
+const CD_SUG = [["🍫 Chocolat", ["s_bis_viennois_fn", "s_ganache_noir", "s_mousse_noire"]], ["❤️ Red velvet", ["s_rv_biscuit", "s_mousse_rv"]], ["🍓 Vanille framboise", ["s_bis_joconde", "s_mousse_vanille", "s_insert_framb"]], ["🍪 Oreo", ["s_bis_cake_am", "s_mousse_cake_blanc"]], ["🍮 Caramel", ["s_bis_cake_am", "s_cremeux_caramel", "s_mousse_choco_lait"]], ["💚 Pistache", ["s_pa_biscuit", "s_praline_pist_maison", "s_cab_nature"]]];
+const cdNm = (id) => {
+  const i = S.items[id];
+  return i ? i.fr || i.name : id;
+};
+const cdBis = () => itemsArr().filter((i) => i.kind === "semi" && i.active !== false && i.ws === "w1" && /^biscuit/i.test(i.fr || i.name || "")).map((i) => i.id);
+const cdGar = () => itemsArr().filter((i) => i.kind === "semi" && i.active !== false && i.ws === "w1" && /(ganache|mousse|crème|creme|crémeux|cremeux|coulis|caramel|praliné|praline|bavarois|insert)/i.test(i.fr || i.name || "") && !/macaron|congel/i.test(i.fr || i.name || "")).map((i) => i.id);
 const cdAutoE = (n) => n <= 20 ? 1 : n <= 45 ? 2 : 3;
 function cdTiers(n, E) {
   const D = Object.keys(CD_PARTS).map(Number).sort((a, b) => a - b);
@@ -18859,27 +18866,32 @@ function cdSvg(cd) {
     y = top;
   });
   return `<div class="box" style="gap:6px"><b>🎨 Cake design · ${fmt(cd.n)} شخص · ${T.length} طبقة · <bdi dir="ltr">${T.length * CD_H} cm</bdi></b><svg viewBox="0 0 ${W} ${H.toFixed(0)}" style="width:100%;max-width:${W}px;align-self:center" role="img" aria-label="cake 3D">${out}</svg>
-   <div style="display:flex;flex-direction:column;gap:3px;font-size:.88rem">${T.map((d, i) => `<div style="display:flex;justify-content:space-between"><span>${i === 0 ? "⬇️ " : ""}طبقة ${i + 1}: <bdi dir="ltr">Ø ${d} × ${CD_H} cm</bdi></span><b class="num">~${CD_PARTS[d]} حصة</b></div>`).join("")}${cd.fl ? `<span class="muted">🍰 الداخل: ${esc(cd.fl)}</span>` : ""}</div></div>`;
+   <div style="display:flex;flex-direction:column;gap:3px;font-size:.88rem">${T.map((d, i) => `<div style="display:flex;justify-content:space-between"><span>${i === 0 ? "⬇️ " : ""}طبقة ${i + 1}: <bdi dir="ltr">Ø ${d} × ${CD_H} cm</bdi></span><b class="num">~${CD_PARTS[d]} حصة</b></div>`).join("")}${cd.mt ? `<span class="muted">🍰 المونتاج${cd.mt.mode === "nous" ? " (اقتراح ديالنا: " + esc(cd.mt.name) + ")" : " (اختيار الزبون)"}: ${esc(cd.mt.parts.join(" + "))}</span>` : cd.fl ? `<span class="muted">🍰 الداخل: ${esc(cd.fl)}</span>` : ""}</div></div>`;
 }
 function sheetOrdCd() {
   recReset();
   const fl = "";
-  let E = 0;
+  let E = 0, MM = "nous", SG = null, BI = null, GA = [];
+  const mtHtml = () => MM === "nous" ? `<div class="choice" style="--cols:2">${CD_SUG.map(([n, p], i) => `<button type="button" class="opt" data-cdp="${i}" aria-pressed="${SG === i}" style="flex-direction:column;gap:2px"><b>${esc(n)}</b><small class="muted">${p.map((id) => esc(cdNm(id))).join(" + ")}</small></button>`).join("")}</div>` : `<span class="lbl">🧁 البيسكوي (واحد)</span><div class="choice" style="--cols:2">${cdBis().map((id) => `<button type="button" class="opt" data-cdb="${id}" aria-pressed="${BI === id}">${esc(cdNm(id))}</button>`).join("")}</div><span class="lbl">🥣 الحشوة (حتى 2)</span><div class="choice" style="--cols:2">${cdGar().map((id) => `<button type="button" class="opt" data-cdg="${id}" aria-pressed="${GA.includes(id)}">${esc(cdNm(id))}</button>`).join("")}</div>`;
+  const mtVal = () => MM === "nous" ? SG != null ? { mode: "nous", name: CD_SUG[SG][0], parts: CD_SUG[SG][1].map(cdNm) } : null : BI && GA.length ? { mode: "client", name: "الزبون", parts: [BI, ...GA].map(cdNm) } : null;
   openSheet("🎨 Cake design", `<p class="muted" style="margin:0">💰 ${money(CD_PP)} للشخص · الحد الأدنى ${CD_MIN} أشخاص (${money(CD_PP * CD_MIN)}).</p>
    ${fld("cd_n", "👥 شحال من شخص؟", stepper("data-cdn", "q", "15", ""))}
    <div class="field"><span class="lbl">🎂 شحال من طبقة؟</span><div class="choice" style="--cols:4">${["auto", 1, 2, 3].map((v) => `<button type="button" class="opt" data-cde="${v}" aria-pressed="${v === "auto"}">${v === "auto" ? "🤖 أوتو" : v}</button>`).join("")}</div></div>
+   <div class="field"><span class="lbl">🍰 المونتاج</span><div class="choice" style="--cols:2"><button type="button" class="opt" data-cdm="nous" aria-pressed="true">💡 نقترحو عليه</button><button type="button" class="opt" data-cdm="client" aria-pressed="false">👤 الزبون كيختار</button></div><div id="cd_mt" style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${mtHtml()}</div></div>
    <div id="cd_tot" class="alert acc" style="cursor:default"></div><div id="cd_3d"></div>
-   ${fld("cd_note", "📝 الداخل (الذوق)، الثيم، الألوان، الكتابة، الشخصيات... · إجبارية", '<textarea id="cd_note" name="cd_note" rows="3"></textarea>')}${photoField("cdph", "📷 صورة النموذج · إجبارية")}${voiceBox()}
+   ${fld("cd_note", "📝 الثيم، الألوان، الكتابة، الشخصيات... · إجبارية", '<textarea id="cd_note" name="cd_note" rows="3"></textarea>')}${photoField("cdph", "📷 صورة النموذج · إجبارية")}${voiceBox()}
    ${errP}<div class="btns"><button type="button" class="btn" id="cd_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
     const n = Math.round(num($("input[data-cdn]", f).value));
     if (!(n > 0)) return ferr("👥 دخل عدد الأشخاص.");
     if (REC.rec) return ferr("⏹️ وقف التسجيل قبل.");
+    const mt = mtVal();
+    if (!mt) return ferr(MM === "nous" ? "🍰 اختار مونتاج من الاقتراحات." : "🍰 اختار البيسكوي وعلى الأقل حشوة وحدة.");
     const note = f.cd_note.value.trim();
     if (note.length < 3) return ferr("📝 كتب الثيم والتفاصيل.");
     if (!(PH.cdph || []).length) return ferr("📷 زيد صورة النموذج.");
     const T = cdTiers(Math.max(n, CD_MIN), E || cdAutoE(Math.max(n, CD_MIN)));
     if (!T) return ferr(E === 3 || !E && cdAutoE(Math.max(n, CD_MIN)) === 3 ? "⛔ كثر من 118 شخص: ديرها طلبية خاصة مع المسير." : "⛔ بزاف ديال الأشخاص لهاد عدد الطبقات. زيد طبقة.");
-    OD.lines.push({ kind: "sp", cd: { n, tiers: T, h: CD_H }, title: "🎨 Cake design · " + n + " شخص", qty: 1, price: cdPrice(n), ws: "w1", note, photos: [...PH.cdph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
+    OD.lines.push({ kind: "sp", cd: { n, tiers: T, h: CD_H, mt }, title: "🎨 Cake design · " + n + " شخص · " + (mt.mode === "nous" ? mt.name : mt.parts.join(" + ")), qty: 1, price: cdPrice(n), ws: "w1", note, photos: [...PH.cdph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
     recReset();
     sheetNewOrder(true);
   }, (f) => {
@@ -18891,11 +18903,25 @@ function sheetOrdCd() {
     const upd = () => {
       const n = Math.round(num($("input[data-cdn]", f).value)) || 0, m = Math.max(n, CD_MIN), T = n > 0 ? cdTiers(m, E || cdAutoE(m)) : null;
       $("#cd_tot", f).innerHTML = n > 0 ? "👥 " + fmt(n) + " شخص" + (n < CD_MIN ? " (الحد الأدنى " + CD_MIN + ")" : "") + " = <b>" + money(cdPrice(n)) + "</b>" + (T ? "" : " · ⛔ زيد طبقة") : "👥 دخل عدد الأشخاص";
-      $("#cd_3d", f).innerHTML = T ? cdSvg({ n, tiers: T, fl }) : "";
+      $("#cd_3d", f).innerHTML = T ? cdSvg({ n, tiers: T, mt: mtVal() }) : "";
     };
     f.addEventListener("input", upd);
     f.addEventListener("click", (e) => {
-      const a = e.target.closest("[data-cde]");
+      const a = e.target.closest("[data-cde]"), m = e.target.closest("[data-cdm]"), sp = e.target.closest("[data-cdp]"), bi = e.target.closest("[data-cdb]"), ga = e.target.closest("[data-cdg]");
+      if (m || sp || bi || ga) {
+        e.preventDefault();
+        if (m) {
+          MM = m.dataset.cdm;
+          $$("[data-cdm]", f).forEach((x) => x.setAttribute("aria-pressed", String(x === m)));
+        }
+        if (sp) SG = +sp.dataset.cdp;
+        if (bi) BI = bi.dataset.cdb;
+        if (ga) {
+          const id = ga.dataset.cdg;
+          GA = GA.includes(id) ? GA.filter((x) => x !== id) : [...GA, id].slice(-2);
+        }
+        $("#cd_mt", f).innerHTML = mtHtml();
+      }
       if (a) {
         e.preventDefault();
         E = a.dataset.cde === "auto" ? 0 : +a.dataset.cde;
