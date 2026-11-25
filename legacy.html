@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125203627" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125204126" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -18863,26 +18863,23 @@ function cdSvg(cd) {
 }
 function sheetOrdCd() {
   recReset();
-  let fl = "";
+  const fl = "";
   let E = 0;
-  const F = entFlavors().map((x) => x.fr || x.name);
   openSheet("🎨 Cake design", `<p class="muted" style="margin:0">💰 ${money(CD_PP)} للشخص · الحد الأدنى ${CD_MIN} أشخاص (${money(CD_PP * CD_MIN)}).</p>
    ${fld("cd_n", "👥 شحال من شخص؟", stepper("data-cdn", "q", "15", ""))}
    <div class="field"><span class="lbl">🎂 شحال من طبقة؟</span><div class="choice" style="--cols:4">${["auto", 1, 2, 3].map((v) => `<button type="button" class="opt" data-cde="${v}" aria-pressed="${v === "auto"}">${v === "auto" ? "🤖 أوتو" : v}</button>`).join("")}</div></div>
-   <div class="field"><span class="lbl">🍰 الداخل (الذوق)</span><div class="choice" style="--cols:2">${[...F, "وصفة خاصة (كتبها فالملاحظة)"].map((v) => `<button type="button" class="opt" data-cdf="${esc(v)}">${esc(v)}</button>`).join("")}</div></div>
    <div id="cd_tot" class="alert acc" style="cursor:default"></div><div id="cd_3d"></div>
-   ${fld("cd_note", "📝 الثيم، الألوان، الكتابة، الشخصيات... · إجبارية", '<textarea id="cd_note" name="cd_note" rows="3"></textarea>')}${photoField("cdph", "📷 صورة النموذج · إجبارية")}${voiceBox()}
+   ${fld("cd_note", "📝 الداخل (الذوق)، الثيم، الألوان، الكتابة، الشخصيات... · إجبارية", '<textarea id="cd_note" name="cd_note" rows="3"></textarea>')}${photoField("cdph", "📷 صورة النموذج · إجبارية")}${voiceBox()}
    ${errP}<div class="btns"><button type="button" class="btn" id="cd_back">→ رجع</button><button class="btn primary" type="submit">✅ زيد</button></div>`, async (f) => {
     const n = Math.round(num($("input[data-cdn]", f).value));
     if (!(n > 0)) return ferr("👥 دخل عدد الأشخاص.");
-    if (!fl) return ferr("🍰 اختار الداخل.");
     if (REC.rec) return ferr("⏹️ وقف التسجيل قبل.");
     const note = f.cd_note.value.trim();
     if (note.length < 3) return ferr("📝 كتب الثيم والتفاصيل.");
     if (!(PH.cdph || []).length) return ferr("📷 زيد صورة النموذج.");
     const T = cdTiers(Math.max(n, CD_MIN), E || cdAutoE(Math.max(n, CD_MIN)));
     if (!T) return ferr(E === 3 || !E && cdAutoE(Math.max(n, CD_MIN)) === 3 ? "⛔ كثر من 118 شخص: ديرها طلبية خاصة مع المسير." : "⛔ بزاف ديال الأشخاص لهاد عدد الطبقات. زيد طبقة.");
-    OD.lines.push({ kind: "sp", cd: { n, tiers: T, h: CD_H, fl }, title: "🎨 Cake design · " + n + " شخص · " + fl, qty: 1, price: cdPrice(n), ws: "w1", note, photos: [...PH.cdph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
+    OD.lines.push({ kind: "sp", cd: { n, tiers: T, h: CD_H }, title: "🎨 Cake design · " + n + " شخص", qty: 1, price: cdPrice(n), ws: "w1", note, photos: [...PH.cdph || []], voice: REC.data ? { data: REC.data, dur: REC.dur || 0 } : null });
     recReset();
     sheetNewOrder(true);
   }, (f) => {
@@ -18898,16 +18895,11 @@ function sheetOrdCd() {
     };
     f.addEventListener("input", upd);
     f.addEventListener("click", (e) => {
-      const a = e.target.closest("[data-cde]"), b = e.target.closest("[data-cdf]");
+      const a = e.target.closest("[data-cde]");
       if (a) {
         e.preventDefault();
         E = a.dataset.cde === "auto" ? 0 : +a.dataset.cde;
         $$("[data-cde]", f).forEach((x) => x.setAttribute("aria-pressed", String(x === a)));
-      }
-      if (b) {
-        e.preventDefault();
-        fl = b.dataset.cdf;
-        $$("[data-cdf]", f).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
       }
       setTimeout(upd, 0);
     });
