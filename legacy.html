@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261125231655" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261127111137" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4721,7 +4721,12 @@ function custChip(p) {
   return cu ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">⭐</span><div><b>${esc(cu.name)}</b><div class="muted num">${fmt(cu.points)} نقطة${(cu.vouchers || []).some((v) => v.status === "active") ? " · 🎁 عندو خصم مصادق عليه" : ""}</div></div></div><button type="button" class="link" data-act="custclear">حيد</button></div>
    <div class="btns" hidden>${""}<button type="button" class="btn small" data-act="bdays" data-id="${cu.id}">🎂 أعياد الميلاد${cu.bn ? " (" + cu.bn + ")" : ""}</button></div>` : `<button type="button" class="btn block" data-act="cust">⭐ زبون الوفاء</button>`;
 }
-const cartQty = (id, q) => `<div class="stp"><button type="button" class="sb" style="min-width:40px;height:44px;font-size:1.4rem;font-weight:800" data-act="cstep" data-id="${id}" data-d="-1" aria-label="نقص">−</button><input class="qty" style="width:60px;height:44px;font-size:1.2rem" data-cq="${id}" type="text" inputmode="decimal" value="${fmt(q)}" aria-label="العدد ديال ${esc(iname(id))}" onfocus="this.select()"><button type="button" class="sb" style="min-width:40px;height:44px;font-size:1.4rem;font-weight:800;background:var(--good-soft,#dcfce7);color:var(--good,#15803d)" data-act="cstep" data-id="${id}" data-d="1" aria-label="زيد">+</button><button type="button" class="sb" style="background:var(--bad-soft);color:var(--bad)" data-act="cdel" data-id="${id}" aria-label="حيد ${esc(iname(id))}">×</button></div>`;
+const sStep = (id) => {
+  var _a;
+  return Math.max(1, Math.round(+((_a = S.items[id]) == null ? void 0 : _a.sellStep) || 1));
+};
+const stepBad = (c) => Object.entries(c || {}).find(([id, q]) => sStep(id) > 1 && +q > 0 && Math.abs(+q / sStep(id) - Math.round(+q / sStep(id))) > 1e-9);
+const cartQty = (id, q) => (sStep(id) > 1 ? `<div class="muted" style="font-size:.8rem;font-weight:700;color:var(--bad)">⚠️ كيتباع ${sStep(id)} ب ${sStep(id)} · ما كيتباعش بوحدو</div>` : "") + `<div class="stp"><button type="button" class="sb" style="min-width:40px;height:44px;font-size:1.4rem;font-weight:800" data-act="cstep" data-id="${id}" data-d="-1" aria-label="نقص">−</button><input class="qty" style="width:60px;height:44px;font-size:1.2rem" data-cq="${id}" type="text" inputmode="decimal" value="${fmt(q)}" aria-label="العدد ديال ${esc(iname(id))}" onfocus="this.select()"><button type="button" class="sb" style="min-width:40px;height:44px;font-size:1.4rem;font-weight:800;background:var(--good-soft,#dcfce7);color:var(--good,#15803d)" data-act="cstep" data-id="${id}" data-d="1" aria-label="زيد">+</button><button type="button" class="sb" style="background:var(--bad-soft);color:var(--bad)" data-act="cdel" data-id="${id}" aria-label="حيد ${esc(iname(id))}">×</button></div>`;
 function ticketPanel(p) {
   var _a, _b;
   const c = cartOf(p);
@@ -6946,6 +6951,13 @@ function sheetBonNew() {
     if (S.bonMode) delete S.bonMode[p];
     return closeSheet();
   }
+  {
+    const b = stepBad(c);
+    if (b) {
+      toast("⚠️ " + iname(b[0]) + ": كيتباع غير " + sStep(b[0]) + " ب " + sStep(b[0]) + " (2، 4، 6…)", true);
+      return;
+    }
+  }
   if (!((me == null ? void 0 : me.role) === "seller" && posMode(p) === "v")) {
     S.bonMode = S.bonMode || {};
     S.bonMode[p] = 1;
@@ -7760,6 +7772,13 @@ function sheetCart() {
     sheetTemp(S.pos);
     return;
   }
+  {
+    const b = stepBad(cartOf(S.pos));
+    if (b) {
+      toast("⚠️ " + iname(b[0]) + ": كيتباع غير " + sStep(b[0]) + " ب " + sStep(b[0]) + " (2، 4، 6…)", true);
+      return;
+    }
+  }
   if (vitLocked(S.pos)) {
     sheetVitShot();
     return;
@@ -7819,6 +7838,10 @@ function sheetCart() {
     var _a2, _b, _c, _d;
     const sh = openShift(p);
     if (!sh) return ferr("ما كاينة حتى نوبة مفتوحة.");
+    {
+      const b = stepBad(c);
+      if (b) return ferr("⚠️ " + iname(b[0]) + ": كيتباع غير " + sStep(b[0]) + " ب " + sStep(b[0]) + " (2، 4، 6…). صلح الكمية.");
+    }
     if (LOY().on && !st && !S.cust[p] && !((_a2 = S.bonPay) == null ? void 0 : _a2[p])) return ferr("⭐ خاص الزبون ديال الوفاء قبل الخلاص (السمية والتيليفون).");
     const lines = ids.filter((id) => c[id] > 0).map((id) => ({ item: id, qty: c[id], price: unitPx(id, c[id], c), unitCost: costOf(id, 0, p) }));
     const grossT = r2(lines.reduce((s, l) => s + l.qty * l.price, 0));
@@ -19933,7 +19956,7 @@ const ACT = {
       return;
     }
     const c = cartOf(S.pos);
-    c[el.dataset.id] = (c[el.dataset.id] || 0) + 1;
+    c[el.dataset.id] = (c[el.dataset.id] || 0) + sStep(el.dataset.id);
     render();
   },
   cart: () => sheetCart(),
@@ -20751,7 +20774,7 @@ const ACT = {
   },
   cstep: (el) => {
     const c = cartOf(S.pos), id = el.dataset.id;
-    const v = Math.round(((+c[id] || 0) + +el.dataset.d) * 1e3) / 1e3;
+    const v = Math.round(((+c[id] || 0) + +el.dataset.d * sStep(id)) * 1e3) / 1e3;
     if (v > 0) c[id] = v;
     else delete c[id];
     render();
