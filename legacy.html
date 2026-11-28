@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128122326" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128150404" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -19184,6 +19184,58 @@ function sheetOrdSp() {
     };
   });
 }
+function sheetOrdEdit(id) {
+  const o = S.orders.find((x) => x.id === id);
+  if (!o) return;
+  const L = o.lines || [];
+  const rows = L.map((l, i) => `<div class="box" style="gap:6px"><div class="prow"><b>${l.kind === "sp" ? "✨" : ico(l.item)} ${esc(lnName(l))}</b><span class="num">${l.price != null ? money(l.price) + " للوحدة" : "💰 ؟"}</span></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label style="display:flex;gap:6px;align-items:center">الكمية <input class="qty" name="q${i}" inputmode="decimal" value="${fmt(l.qty)}" style="width:90px"></label><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" name="d${i}"> 🗑️ حيد هاد المنتوج</label></div>
+    <textarea name="n${i}" rows="2" placeholder="📝 ملاحظة (الكتابة، الشكل…)">${esc(l.note || "")}</textarea></div>`).join("");
+  const opts = itemsArr().filter((i) => i.kind === "final" && i.active !== false && !i.archived && !i.bundle && +i.price > 0).sort((a, b) => (a.ws || "").localeCompare(b.ws || "") || iname(a.id).localeCompare(iname(b.id))).map((i) => `<option value="${i.id}">${esc(LOC[i.ws] || "")} · ${esc(iname(i.id))} · ${money(i.price)}</option>`).join("");
+  openSheet("✏️ بدل الطلبية #" + o.num, `<p class="muted" style="margin:0">بدل الكمية، الملاحظة، حيد منتوج ولا زيد منتوج جديد. الثمن والباقي كيتحسبو بوحدهم.</p>${rows}
+    <div class="box" style="gap:6px"><h3 style="margin:0">➕ زيد منتوج من الكتالوگ</h3><select name="addi" class="big-in"><option value="">— اختار منتوج —</option>${opts}</select>
+    <label style="display:flex;gap:6px;align-items:center">الكمية <input class="qty" name="addq" inputmode="decimal" value="1" style="width:90px"></label><textarea name="addn" rows="2" placeholder="📝 ملاحظة"></textarea></div>
+    <div class="btns"><button class="btn primary" type="submit">💾 سجل التبديلات</button></div>`, async (f) => {
+    const ch = [], lines = [];
+    L.forEach((l, i) => {
+      var _a, _b, _c;
+      const del = (_a = f["d" + i]) == null ? void 0 : _a.checked, q = num((_b = f["q" + i]) == null ? void 0 : _b.value), n2 = (((_c = f["n" + i]) == null ? void 0 : _c.value) || "").trim();
+      if (del || !(q > 0)) {
+        ch.push("🗑️ " + lnName(l));
+        return;
+      }
+      if (q !== +l.qty) ch.push(lnName(l) + ": " + fmt(l.qty) + " ← " + fmt(q));
+      if (n2 !== (l.note || "")) ch.push("📝 " + lnName(l));
+      lines.push(__spreadProps(__spreadValues({}, l), { qty: q, note: n2 }));
+    });
+    const ai = f.addi.value;
+    if (ai) {
+      const q = num(f.addq.value);
+      if (!(q > 0)) return ferr("دخل الكمية ديال المنتوج الجديد.");
+      const it = S.items[ai];
+      lines.push({ ws: it.ws, qty: q, item: ai, kind: "cat", note: (f.addn.value || "").trim(), price: +it.price || 0, title: "", voice: null, photos: [] });
+      ch.push("➕ " + iname(ai) + " × " + fmt(q));
+    }
+    if (!lines.length) return ferr("الطلبية خاصها منتوج واحد على الأقل. إلا الكليان ما بغاش والو، لغي الطلبية.");
+    if (!ch.length) {
+      closeSheet();
+      return;
+    }
+    const n = __spreadProps(__spreadValues({}, o), { lines });
+    let total = ordPriced(n) ? ordTotal(n) : null, bday = o.bday || null;
+    if (bday && total != null) {
+      const el = lines.filter(ordBdLine).reduce((a, l) => a + (+l.qty || 0) * (+l.price || 0), 0);
+      bday = __spreadProps(__spreadValues({}, bday), { disc: r2(el * BD_R) });
+      total = r2(total - bday.disc);
+    }
+    const old = o.total;
+    await ordSave(o, __spreadValues({ lines, wss: ordWss(n), total }, bday ? { bday } : {}), { s: "edit", note: "✏️ " + ch.join(" · ") + (old != null && total != null && old !== total ? " · 💰 " + money(old) + " ← " + money(total) : "") });
+    closeSheet();
+    const r = ordRest(o);
+    toast(r < 0 ? "✅ تبدلات · 💵 خاص ترجع للكليان " + money(-r) : "✅ تبدلات الطلبية · الباقي " + money(r));
+    sheetOrder2(id);
+  });
+}
 function sheetOrder2(id) {
   const o = S.orders.find((x) => x.id === id);
   if (!o) return;
@@ -19202,12 +19254,12 @@ function sheetOrder2(id) {
   };
   openSheet("📝 طلبية #" + o.num, `<div class="head"><h2>👤 ${esc(o.client)}</h2><span class="tag ${st === "delivered" ? "good" : st === "refused" ? "bad" : "acc"}">${OSTI[st] || ""} ${OSTL[st] || st}</span></div>
    <div class="muted">${(o.phones || []).map((p) => "📞 " + esc(p.n) + (p.wa ? " 💬" : "")).join(" · ")}<br>🏠 ${esc(o.address || "")}<br>${LOCI[o.pos]} ${esc(LOC[o.pos])} · 📅 ${o.due} ${o.dueTime || ""} · ✍️ ${esc(o.by || "")}</div>
-   ${(o.lines || []).map(ln).join("")}${o.bday ? `<div class="alert acc" style="cursor:default">🎂 خصم عيد الميلاد −10% · 🎟️ ${esc(o.bday.code || "")} · <b>−${money(o.bday.disc)}</b></div>` : ""}
+   ${(o.lines || []).map(ln).join("")}${(o.history || []).filter((h) => h.s === "edit").map((h) => `<div class="muted" style="font-size:.85rem">${esc(h.note || "")} · ${esc(h.by || "")} · ${dhm(h.ts)}</div>`).join("")}${o.bday ? `<div class="alert acc" style="cursor:default">🎂 خصم عيد الميلاد −10% · 🎟️ ${esc(o.bday.code || "")} · <b>−${money(o.bday.disc)}</b></div>` : ""}
    <div class="stats sheet-stats"><div class="stat"><span>💰 المجموع</span><b>${o.total != null ? money(o.total) : "؟"}</b></div><div class="stat"><span>💵 التسبيق</span><b>${money(o.advance || 0)}</b></div><div class="stat"><span>⏳ الباقي</span><b>${o.total != null ? money(rest) : "؟"}</b></div></div>
    ${["wait", "refused", "topay"].includes(st) ? `<div class="box" style="gap:6px"><h3 style="margin:0">✅ الموافقات</h3>${(o.wss || []).map(chefRow).join("")}
      ${(o.lines || []).some((l) => l.kind === "sp" && !fixSp(l)) ? `<div class="prow"><span>💰 الثمن ديال الطلبيات الخاصة</span><span>${ordPriced(o) ? "✅ " + esc(o.pricedBy || "") : "⏳ كيتسنى المسير"}</span></div>${!ordPriced(o) && isMgr() ? `<button type="button" class="btn primary block" data-act="oprice" data-id="${o.id}">💰 عطي الثمن</button>` : ""}` : ""}
      ${o.advReq ? `<div class="prow"><span>💵 تسبيق أقل من 50%: ${money(o.advReq.amt)}</span><span>${o.advReq.st === "ok" ? "✅ وافق " + esc(o.advReq.by || "") : o.advReq.st === "no" ? "⛔ رفض" : "⏳ كيتسنى المسير"}</span></div>${o.advReq.st === "wait" && isMgr() ? `<div class="btns" style="margin:0"><button type="button" class="btn danger" data-act="oadvq" data-id="${o.id}" data-d="no">❌ رفض</button><button type="button" class="btn primary" data-act="oadvq" data-id="${o.id}" data-d="ok">✅ وافق</button></div>` : ""}` : ""}</div>` : ""}
-   <div class="btns">${mine && o.total != null && !o.bday && !["delivered", "cancel"].includes(st) && (o.lines || []).some(ordBdLine) ? `<button type="button" class="btn" data-act="obdcode" data-id="${o.id}">🎟️ كود عيد الميلاد (−10%)</button>` : ""}${st === "topay" && mine ? `<button type="button" class="btn primary" data-act="opay" data-id="${o.id}">💵 خلص التسبيق</button>` : ""}
+   <div class="btns">${mine && o.total != null && !o.bday && !["delivered", "cancel"].includes(st) && (o.lines || []).some(ordBdLine) ? `<button type="button" class="btn" data-act="obdcode" data-id="${o.id}">🎟️ كود عيد الميلاد (−10%)</button>` : ""}${st === "topay" && mine ? `<button type="button" class="btn primary" data-act="opay" data-id="${o.id}">💵 خلص التسبيق</button>` : ""}${mine && !["delivered", "cancel"].includes(st) ? `<button type="button" class="btn" data-act="oedit" data-id="${o.id}">✏️ بدل الطلبية</button>` : ""}
     ${st === "refused" && mine ? `<button type="button" class="btn primary" data-act="oredate" data-id="${o.id}">📅 بدل التاريخ وعاود صيفط</button>` : ordFull() && !["delivered", "cancel"].includes(st) ? `<button type="button" class="btn" data-act="oredate" data-id="${o.id}">📅 بدل التاريخ</button>` : ""}
     ${["new", "production"].includes(st) && (ordFull() || isChefOf(o.ws) || (o.wss || []).some(isChefOf)) ? nextStatuses(st).map((n) => `<button type="button" class="btn primary" data-act="oadv" data-id="${o.id}" data-s="${n}">${OSTI[n]} ${OSTL[n]}</button>`).join("") : ""}
     ${["ready", "transit"].includes(st) && mine ? `<button type="button" class="btn primary" data-act="odeliver" data-id="${o.id}">🎉 سلم للزبون</button>` : ""}
@@ -21065,6 +21117,7 @@ const ACT = {
   oprice: (el) => sheetOrdPrice(el.dataset.id),
   opay: (el) => sheetOrdPay(el.dataset.id),
   oredate: (el) => sheetOrdRedate(el.dataset.id),
+  oedit: (el) => sheetOrdEdit(el.dataset.id),
   odeliver: (el) => sheetOrdDeliver(el.dataset.id),
   oslip: (el) => {
     const o = S.orders.find((x) => x.id === el.dataset.id);
