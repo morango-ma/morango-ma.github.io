@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128160155" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128160556" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3481,10 +3481,28 @@ function vDayPlan() {
   const sum = past && gp ? `<div class="stats"><div class="stat"><span>📋 المبرمج</span><b>${fmt(gp)}</b></div><div class="stat"><span>🚚 اللي مشا</span><b>${fmt(gs)}</b></div><div class="stat"><span>🎯 النسبة</span><b class="${gs < gp * 0.9 ? "neg" : ""}">${Math.round(gs / gp * 100)}%</b></div></div>` : "";
   return head + `<p class="muted">${past ? "كل خانة: الرقم الكبير = المبرمج · 🚚 = اللي تصيفط بصح · (+/−) = الفرق." : "البرنامج ديال " + d + ". عمرو فالليل وكل بوسط غادي يعرف شنو يخرج لكل محل."} <button class="link" data-act="dplreload">حدث</button></p>` + sum + blocks;
 }
+const dplRet = (d, w) => {
+  const y = shiftDay(d, -1), m = {};
+  allOps().filter((o) => o.type === "return" && o.date === y && o.ws === w).forEach((o) => {
+    if (o.status === "decided" && o.decisions) o.decisions.forEach((x) => {
+      const r = +x.resell || 0;
+      if (r > 0) {
+        const a = m[x.item] || (m[x.item] = { rs: 0, wt: 0 });
+        a.rs += r;
+      }
+    });
+    else (o.lines || []).forEach((l) => {
+      const a = m[l.item] || (m[l.item] = { rs: 0, wt: 0 });
+      a.wt += +l.qty || 0;
+    });
+  });
+  return m;
+};
 function sheetDplEdit(w) {
   const P = dplState(), d = P.d;
   if (!dplCan(w)) return toast("🔒 ما عندكش الحق", true);
   const curT = ((P.cache[d] || {})[w] || {}).times || {}, defT = ((P.cache[d] || {})[w] || {}).time || "07:00";
+  const RT = dplRet(d, w);
   const cur = ((P.cache[d] || {})[w] || {}).lines || {};
   const rows = itemsArr().filter((i) => i.kind === "final" && i.ws === w && i.active !== false && !i.archived && !i.bundle);
   const order = catsOf(w);
@@ -3493,10 +3511,18 @@ function sheetDplEdit(w) {
     return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || a.localeCompare(b);
   });
   const cellS = "width:70px;height:40px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:inherit;text-align:center;font:inherit;font-weight:700";
-  const body = cats.map((c) => `<tr class="dplg" data-cat="${esc(c)}"><td colspan="${POS.length + 3}" style="font-weight:800;color:#c8102e;padding-top:8px">${esc(String(c).replace(/\s*\(.*\)\s*$/, ""))}</td></tr>${rows.filter((i) => (i.cat || "أخرى") === c).map((i) => `<tr class="dplr" data-nm="${esc(sNorm(i.name + " " + (i.fr || "")))}"><td style="font-size:.85rem;max-width:160px">${ico(i.id)} ${esc(i.name.split(" (")[0])}</td><td><input type="time" data-ti="${i.id}" value="${curT[i.id] || ""}" style="${cellS};width:92px;font-size:.85rem"></td>${POS.map((p) => `<td><input data-pi="${i.id}" data-pp="${p.id}" inputmode="decimal" value="${(cur[i.id] || {})[p.id] ? fmt(cur[i.id][p.id]) : ""}" style="${cellS}"></td>`).join("")}<td class="num" data-pt="${i.id}" style="text-align:center;font-weight:800"></td></tr>`).join("")}`).join("");
+  const body = cats.map((c) => `<tr class="dplg" data-cat="${esc(c)}"><td colspan="${POS.length + 3}" style="font-weight:800;color:#c8102e;padding-top:8px">${esc(String(c).replace(/\s*\(.*\)\s*$/, ""))}</td></tr>${rows.filter((i) => (i.cat || "أخرى") === c).map((i) => {
+    var _a, _b;
+    return `<tr class="dplr" data-nm="${esc(sNorm(i.name + " " + (i.fr || "")))}"><td style="font-size:.85rem;max-width:160px">${ico(i.id)} ${esc(i.name.split(" (")[0])}${((_a = RT[i.id]) == null ? void 0 : _a.rs) ? `<div style="font-size:.75rem;color:#2e7d32;font-weight:700">↩️ ${fmt(RT[i.id].rs)} غادي يتعاود يتباع</div>` : ""}${((_b = RT[i.id]) == null ? void 0 : _b.wt) ? `<div class="muted" style="font-size:.75rem">↩️ ${fmt(RT[i.id].wt)} رجعو · كيتسناو القرار</div>` : ""}</td><td><input type="time" data-ti="${i.id}" value="${curT[i.id] || ""}" style="${cellS};width:92px;font-size:.85rem"></td>${POS.map((p) => `<td><input data-pi="${i.id}" data-pp="${p.id}" inputmode="decimal" value="${(cur[i.id] || {})[p.id] ? fmt(cur[i.id][p.id]) : ""}" style="${cellS}"></td>`).join("")}<td class="num" data-pt="${i.id}" style="text-align:center;font-weight:800"></td></tr>`;
+  }).join("")}`).join("");
   const W = WS.find((x) => x.id === w) || {};
   openSheet(`📋 برنامج ${W.i || ""} ${esc((W.name || w).split(" (")[0])} · ${d}`, `<input class="big-in" id="dpls" type="search" placeholder="🔍 قلب على منتوج…" autocomplete="off">
-   <input type="hidden" id="dplt" value="${defT}"><p class="muted" style="margin:0">⏰ ملي كتكتب الكمية ديال شي منتوج، الوقت كيتعمر بوحدو بنفس الوقت ديال المنتوج اللي قبلو. بدلو غير إلا بغيتي وقت آخر.</p>
+   <input type="hidden" id="dplt" value="${defT}">${(() => {
+    const e = Object.entries(RT);
+    if (!e.length) return "";
+    const rs = e.filter(([, a]) => a.rs), wt = e.filter(([, a]) => a.wt);
+    return `<div class="alert ${rs.length ? "good" : "warn"}" style="cursor:default"><div class="lead"><span class="em">↩️</span><div><b>الريتور ديال ${shiftDay(d, -1)}</b>${rs.length ? `<div style="margin-top:4px">🛍️ <b>تقرر يتعاود يتباع:</b> ${rs.map(([id, a]) => esc(iname(id).split(" (")[0]) + " <b>×" + fmt(a.rs) + "</b>").join(" · ")}</div><div class="muted" style="font-size:.8rem">نقص هادشي من الكمية اللي غادي تخرج من الأتولي.</div>` : ""}${wt.length ? `<div class="muted" style="margin-top:4px">⏳ كيتسناو القرار: ${wt.map(([id, a]) => esc(iname(id).split(" (")[0]) + " ×" + fmt(a.wt)).join(" · ")}</div>` : ""}</div></div></div>`;
+  })()}<p class="muted" style="margin:0">⏰ ملي كتكتب الكمية ديال شي منتوج، الوقت كيتعمر بوحدو بنفس الوقت ديال المنتوج اللي قبلو. بدلو غير إلا بغيتي وقت آخر.</p>
    <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn small" id="dplcopy">📋 نسخ من البارح</button><button type="button" class="btn small" id="dplclr">🧹 مسح الكل</button></div>
    <div style="overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:12px;padding:4px"><table style="border-collapse:separate;border-spacing:4px;width:100%"><thead><tr><th style="text-align:start">المنتوج</th><th>⏰ الوقت</th>${POS.map((p) => `<th>${esc(p.name.split(" (")[0])}</th>`).join("")}<th>المجموع</th></tr></thead><tbody>${body}</tbody><tfoot><tr><td><b>المجموع</b></td><td></td>${POS.map((p) => `<td class="num" data-ptp="${p.id}" style="text-align:center;font-weight:800"></td>`).join("")}<td class="num" id="dplgt" style="text-align:center;font-weight:800"></td></tr></tfoot></table></div>
    ${errP}<button class="btn primary block" type="submit">✅ حفظ البرنامج</button>`, async (f) => {
