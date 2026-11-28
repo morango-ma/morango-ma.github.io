@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128111235" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128111638" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6067,37 +6067,29 @@ function sheetSend(pre) {
   ((pre == null ? void 0 : pre.lines) || []).forEach((l) => preQ[l.item] = l.qty);
   openSheet((pre == null ? void 0 : pre.fromOrd) ? "🚚 صيفط المنتوج المفيني · " + LOC[pre.pos] : pre ? "🚚 إرسال الطلب ديال " + LOC[pre.pos] : "🚚 إرسال لنقطة البيع", `${(pre == null ? void 0 : pre.fromOrd) ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">🧁</span><div><b>تأكد الإنتاج · صيفطو دابا لـ${esc(LOC[pre.pos])} حسب البرنامج</b><div class="muted">${PHOTO_REQ ? "📷 صورة إجبارية لكل منتوج." : "📷 صورة لكل منتوج (اختيارية دابا)."}${((_b = pre.queue) == null ? void 0 : _b.length) ? " من بعد: " + pre.queue.map((x) => esc(LOC[x.pos]) + " (" + fmt(x.lines[0].qty) + ")").join("، ") : ""}</div></div></div></div>` : pre ? `<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📨</span><div><b>طلب من ${esc(pre.by)}</b><div class="muted">الكميات معمرة من الطلب. بدلهم إلا ما كاينش كلشي.</div></div></div></div>` : ""}${me.role === "ws" ? `<input type="hidden" id="sws" name="sws" value="${ws0}">` : choice("sws", "من الورشة", WS.map((x) => ({ v: x.id, l: x.name, i: x.i })), ws0, 3)}
    ${(pre == null ? void 0 : pre.fromOrd) ? `<input type="hidden" id="spos" name="spos" value="${pre.pos}"><div class="field"><span class="lbl">لفين؟</span><b>${LOCI[pre.pos]} ${esc(LOC[pre.pos])}</b></div>` : choice("spos", "لفين؟", POS.map((x) => ({ v: x.id, l: x.name, i: x.i })), (pre == null ? void 0 : pre.pos) || S.pos, 2)}<div id="slines"></div>${photoField("send", PHOTO_REQ ? "📷 صورة لكل منتوج كتصيفطو (إجبارية)" : "📷 صورة لكل منتوج كتصيفطو (اختيارية دابا)")}<div id="sdrv"></div>${errP}<button class="btn primary block" type="submit">✅ أكد الإرسال</button>`, async (f) => {
-    var _a2, _b2;
+    var _a2;
     const ws = f.sws.value, pos = f.spos.value;
     const lines = $$("input[data-line]", f).map((i) => ({ item: i.dataset.line, qty: num(i.value), unitCost: costOf(i.dataset.line, 0, f.sws.value) })).filter((l) => l.qty > 0);
     if (!lines.length) return ferr("زيد الكمية ديال منتوج واحد على الأقل.");
-    if ((pre == null ? void 0 : pre.dplan) && !stockFree()) {
+    if (false) {
       const over = lines.filter((l) => l.qty > Math.max(0, stockOf(ws, l.item)) + 1e-9);
       if (over.length) return ferr("⚠️ كتر من اللي كاين فالمخزون: " + over.map((l) => iname(l.item) + " (" + fmt(Math.max(0, stockOf(ws, l.item))) + ")").join("، "));
     }
     if (PHOTO_REQ && (PH.send || []).length < lines.length) return ferr("📷 خاص صورة لكل منتوج كتصيفطو: " + lines.length + " صورة على الأقل (دابا " + (PH.send || []).length + ").");
-    let driver = "";
-    if (pos === "p2") {
-      driver = (((_a2 = f.sdriver) == null ? void 0 : _a2.value) || "").trim();
-      if (!driver) return ferr("اختار السائق.");
-      if (!sigData("sdsig")) return ferr("خاص السائق يوقع.");
-    }
+    const driver = "";
     busy(f, true);
     try {
       const photos = await saveMedia(PH.send, "send");
-      const sig = pos === "p2" ? await sigSave("sdsig", "driver") : null;
-      const d = {};
-      lines.forEach((l) => d[l.item] = -l.qty);
-      await bumpStock(ws, d);
-      const tid = await newOp({ type: "transfer", ws, pos, lines, photos, driver, driverSig: sig, status: pos === "p2" ? "with_driver" : "sent", posreq: (pre == null ? void 0 : pre.id) || null, dplan: (pre == null ? void 0 : pre.dplan) || null });
+      const sig = null;
+      const tid = await newOp({ type: "transfer", ws, pos, lines, photos, driver, driverSig: sig, status: "sent", noWsStock: true, posreq: (pre == null ? void 0 : pre.id) || null, dplan: (pre == null ? void 0 : pre.dplan) || null });
       if (pre == null ? void 0 : pre.dplan) try {
         await dpMark(pre, lines, tid);
       } catch (_) {
       }
       if (pre == null ? void 0 : pre.id) await db.doc("posreqs/" + pre.id).update({ status: "done", transferId: tid, doneBy: meName(), doneTs: Date.now(), sent: lines.map((l) => ({ item: l.item, qty: l.qty })) });
       closeSheet();
-      toast(pos === "p2" ? "🚚 السلعة مع السائق" : "📦 تصيفطات، البائعة غادي تحسب وتأكد");
-      if ((_b2 = pre == null ? void 0 : pre.queue) == null ? void 0 : _b2.length) {
+      toast("📦 تصيفطات، البائعة غادي تحسب وتأكد");
+      if ((_a2 = pre == null ? void 0 : pre.queue) == null ? void 0 : _a2.length) {
         const [n, ...r] = pre.queue;
         n.queue = r;
         setTimeout(() => sheetSend(n), 350);
@@ -6120,7 +6112,7 @@ function sheetSend(pre) {
       }
       if (pos !== lastPos) {
         lastPos = pos;
-        $("#sdrv", f).innerHTML = pos === "p2" ? (drivers.length ? choice("sdriver", "السائق", drivers, drivers[0].v, 3) : inp("sdriver", "سمية السائق")) + sigField("sdsig", "توقيع السائق (خدا السلعة)") : '<p class="muted">🤝 التسليم مباشر للبائعة، هي غادي تحسب وتوقع.</p>';
+        $("#sdrv", f).innerHTML = '<p class="muted">🤝 البائعة غادي تحسب السلعة وتأكد الاستلام.</p>';
         $$("canvas.sig", $("#sdrv", f)).forEach(initSig);
       }
     };
