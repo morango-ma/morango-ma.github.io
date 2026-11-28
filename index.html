@@ -414,7 +414,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128111638"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128111756"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -787,7 +787,7 @@ const phoneId=ph=>'c'+String(ph||'').replace(/\D/g,'');
 function loyRedeemUnused(points,total){const L=LOY();if(!L.on||!(+L.redeemPts>0))return{units:0,pts:0,val:0};let units=Math.floor((+points||0)/L.redeemPts);units=Math.min(units,Math.floor(total/L.redeemVal));return{units,pts:units*L.redeemPts,val:r2(units*L.redeemVal)}}
 async function newOp(o){o.ts=Date.now();if(o.type==='production'&&S.backDate&&!o.date){o.date=S.backDate;o.backDated=true}o.date=o.date||today();o.by=o.by||meName();o.byId=me?.id||'';
   /* everything the data-entry agent records waits for the workshop chef (signs on her screen, or from his own account) and then the management */
-  const vw=VTYPES[o.type]?(o.ws||(String(o.loc||'')[0]==='w'?o.loc:'')):'';if(me?.role==='prod'&&VTYPES[o.type]&&!o.auto)o.vld={chef:{ws:vw,st:vw?'wait':'na'},mgr:{st:'wait'}};
+  const vw=VTYPES[o.type]?(o.ws||(String(o.loc||'')[0]==='w'?o.loc:'')):'';if(me?.role==='prod'&&VTYPES[o.type]&&o.type!=='transfer'&&!o.auto)o.vld={chef:{ws:vw,st:vw?'wait':'na'},mgr:{st:'wait'}};
   const ref=db.collection('ops').doc();await ref.set(o);if(o.vld&&vw){const id=ref.id;const t0=Date.now();const iv=setInterval(()=>{if($('#sheet').hidden||Date.now()-t0>20000){clearInterval(iv);if($('#sheet').hidden)sheetVld(id,o)}},400)}return ref.id}
 /* purchases typed by the data-entry agent reach the stock only once the management approves them; a refusal never touches the stock */
 async function holdResolve(o,v){if(o.type!=='purchase'||!o.stockHold||o.stockDone||o.stockVoid||!o.hold)return '';const lots=Object.values(S.lotm||{}).filter(l=>l.purchaseId===o.id&&l.status==='hold');
