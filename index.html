@@ -414,7 +414,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261127111137"}</script>
+<script>window.MORANGO_CFG={"url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128111212"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>/* Morango standalone: Supabase backend behind the same db API the app uses (doc/collection/where/orderBy/limit/onSnapshot) */
 (function(){
@@ -1685,6 +1685,21 @@ function sheetProduce(kind,pre){if(invGuard())return;if(ordOnly()&&!pre)return s
 }
 
 /* --- send / receive --- */
+
+/* send sheet: products grouped by category, chips + search, quantities kept while filtering */
+const sNorm=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ًͯ-ْ]/g,'').replace(/[أإآ]/g,'ا').replace(/[ڭگ]/g,'ك').replace(/ى/g,'ي').replace(/ة/g,'ه');
+function sendList(ws,rows,qv){if(!rows.length)return '<p class="muted">ما كاين حتى منتوج مفيني.</p>';
+  const order=catsOf(ws);const cats=[...new Set(rows.map(i=>i.cat||'أخرى'))].sort((a,b)=>{const ia=order.indexOf(a),ib=order.indexOf(b);return (ia<0?999:ia)-(ib<0?999:ib)||a.localeCompare(b)});
+  const sh=c=>esc(String(c).replace(/\s*\(.*\)\s*$/,''));
+  const chips=`<div class="chips sendchips" style="padding:2px 0 6px"><button type="button" class="chip on" data-scat="">الكل</button>${cats.map(c=>`<button type="button" class="chip" data-scat="${esc(c)}">${sh(c)} <small>${rows.filter(i=>(i.cat||'أخرى')===c).length}</small></button>`).join('')}<button type="button" class="chip" data-scat="__q">✅ اللي فيهم الكمية</button></div>`;
+  const body=cats.map(c=>`<div class="sendgrp" data-cat="${esc(c)}"><div class="sendgh" style="font-weight:800;margin:10px 0 2px;color:var(--acc,#b3142f)">${sh(c)}</div>${rows.filter(i=>(i.cat||'أخرى')===c).map(i=>`<div class="sendrow" data-cat="${esc(c)}" data-nm="${esc(sNorm((i.name||'')+' '+(i.fr||'')+' '+(i.nameFull||'')))}">${prow(i.id,'فالورشة: '+fmt(stockOf(ws,i.id)),stepper('data-line',i.id,qv(i.id),i.unit))}</div>`).join('')}</div>`).join('');
+  return `<style>.sendchips .chip.on{background:var(--brand,#e0213f);color:#fff;border-color:transparent}</style><div class="field"><span class="lbl">شنو غادي تصيفط؟</span><input class="big-in" id="ssearch" type="search" placeholder="🔍 قلب على منتوج… / Rechercher" autocomplete="off" style="margin-bottom:6px">${chips}<div id="sendbody">${body}</div><p class="muted" id="sendnone" hidden>ما لقيت حتى منتوج.</p></div>`}
+function sendListWire(f){const box=$('#slines',f);if(!box)return;let cat='';
+  const apply=()=>{const q=sNorm($('#ssearch',box)?.value||'').trim();let any=0;
+    $$('.sendrow',box).forEach(r=>{const inp=r.querySelector('input[data-line]');const has=num(inp?.value)>0;const ok=(cat==='__q'?has:(!cat||r.dataset.cat===cat))&&(!q||q.split(/\s+/).every(w=>r.dataset.nm.includes(w)));r.hidden=!ok;if(ok)any++});
+    $$('.sendgrp',box).forEach(g=>{g.hidden=![...g.querySelectorAll('.sendrow')].some(r=>!r.hidden)});const n=$('#sendnone',box);if(n)n.hidden=!!any};
+  $('#ssearch',box)?.addEventListener('input',apply);
+  $$('[data-scat]',box).forEach(b=>b.addEventListener('click',()=>{cat=b.dataset.scat;$$('[data-scat]',box).forEach(x=>x.classList.toggle('on',x===b));apply()}));}
 function sheetSend(pre){if(invGuard())return;
   const ws0=pre?.ws||(me.loc?.[0]==='w'?me.loc:S.ws);const drivers=userOpts('driver');const preQ={};(pre?.lines||[]).forEach(l=>preQ[l.item]=l.qty);
   openSheet(pre?.fromOrd?'🚚 صيفط المنتوج المفيني · '+LOC[pre.pos]:pre?'🚚 إرسال الطلب ديال '+LOC[pre.pos]:'🚚 إرسال لنقطة البيع',`${pre?.fromOrd?`<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">🧁</span><div><b>تأكد الإنتاج · صيفطو دابا لـ${esc(LOC[pre.pos])} حسب البرنامج</b><div class="muted">${PHOTO_REQ?'📷 صورة إجبارية لكل منتوج.':'📷 صورة لكل منتوج (اختيارية دابا).'}${pre.queue?.length?' من بعد: '+pre.queue.map(x=>esc(LOC[x.pos])+' ('+fmt(x.lines[0].qty)+')').join('، '):''}</div></div></div></div>`:pre?`<div class="alert acc" style="cursor:default"><div class="lead"><span class="em">📨</span><div><b>طلب من ${esc(pre.by)}</b><div class="muted">الكميات معمرة من الطلب. بدلهم إلا ما كاينش كلشي.</div></div></div></div>`:''}${me.role==='ws'?`<input type="hidden" id="sws" name="sws" value="${ws0}">`:choice('sws','من الورشة',WS.map(x=>({v:x.id,l:x.name,i:x.i})),ws0,3)}
@@ -1697,7 +1712,7 @@ function sheetSend(pre){if(invGuard())return;
       if(pre?.id)await db.doc('posreqs/'+pre.id).update({status:'done',transferId:tid,doneBy:meName(),doneTs:Date.now(),sent:lines.map(l=>({item:l.item,qty:l.qty}))});closeSheet();toast(pos==='p2'?'🚚 السلعة مع السائق':'📦 تصيفطات، البائعة غادي تحسب وتأكد');if(pre?.queue?.length){const [n,...r]=pre.queue;n.queue=r;setTimeout(()=>sheetSend(n),350)}else if(pre?.back)setTimeout(()=>sheetOrders(),350)}catch(e){fail(f,e)}
   },f=>{let lastWs=null,lastPos=null;const upd=()=>{const ws=f.sws.value,pos=f.spos.value;
     if(ws!==lastWs&&pre?.fromOrd){lastWs=ws;$('#slines',f).innerHTML=`<div class="field"><span class="lbl">شنو غادي تصيفط؟</span>${pre.lines.map(l=>prow(l.item,'حسب البرنامج',`<b class="num">${fmt(l.qty)} ${esc(iunit(l.item))}</b><input type="hidden" data-line="${l.item}" value="${l.qty}">`)).join('')}</div>`}
-    else if(ws!==lastWs){lastWs=ws;const rows=itemsArr().filter(i=>i.kind==='final'&&i.ws===ws);$('#slines',f).innerHTML=`<div class="field"><span class="lbl">شنو غادي تصيفط؟</span>${rows.length?rows.map(i=>prow(i.id,'فالورشة: '+fmt(stockOf(ws,i.id)),stepper('data-line',i.id,pre&&pre.ws===ws?(preQ[i.id]||''):'',i.unit))).join(''):'<p class="muted">ما كاين حتى منتوج مفيني.</p>'}</div>`}
+    else if(ws!==lastWs){lastWs=ws;const rows=itemsArr().filter(i=>i.kind==='final'&&i.ws===ws&&i.active!==false&&!i.archived);$('#slines',f).innerHTML=sendList(ws,rows,id=>pre&&pre.ws===ws?(preQ[id]||''):'');sendListWire(f)}
     if(pos!==lastPos){lastPos=pos;$('#sdrv',f).innerHTML=pos==='p2'?(drivers.length?choice('sdriver','السائق',drivers,drivers[0].v,3):inp('sdriver','سمية السائق'))+sigField('sdsig','توقيع السائق (خدا السلعة)'):'<p class="muted">🤝 التسليم مباشر للبائعة، هي غادي تحسب وتوقع.</p>';$$('canvas.sig',$('#sdrv',f)).forEach(initSig)}};
     f.addEventListener('change',e=>{if(e.target.id==='sws'||e.target.id==='spos')upd()});upd()});
 }
