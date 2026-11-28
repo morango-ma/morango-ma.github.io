@@ -404,7 +404,7 @@ body.hasme .brand{flex-shrink:0}
 .ticket .tl .prow{flex-wrap:wrap!important;row-gap:4px!important}
 .ticket .tl .prow>.lead{flex:1 1 100%!important;min-width:0}
 .ticket .tl .prow>:last-child:not(.lead){margin-inline-start:auto}
-</style>
+.prod{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}</style>
 
 <header class="top">
   <div class="tleft"><button class="backbtn" id="backbtn" data-act="back" aria-label="رجوع" hidden>→</button><div class="brand"><span class="mmark" aria-hidden="true"><svg class="mlogo-svg" viewBox="0 0 100 132" aria-hidden="true"><path d="M50 34 C52 24 54 16 58 10" stroke="currentColor" stroke-width="6" stroke-linecap="round" fill="none"/><path fill="currentColor" d="M50 130 C33 124 9 100 7 66 C6 48 17 37 32 38 C40 38.5 45 41 50 41 C55 41 60 38.5 68 38 C83 37 94 48 93 66 C91 100 67 124 50 130 Z"/><path fill="currentColor" d="M20 43 L36 37 L39 26 L50 33 L61 26 L64 37 L80 43 L64 46 L58 55 L50 47 L42 55 L36 46 Z" stroke="var(--mseed,#fff)" stroke-width="2.6" stroke-linejoin="round"/><g fill="var(--mseed,#fff)"><ellipse cx="27" cy="66" rx="3.4" ry="4.8"/><ellipse cx="42" cy="64" rx="3.4" ry="4.8"/><ellipse cx="58" cy="64" rx="3.4" ry="4.8"/><ellipse cx="73" cy="66" rx="3.4" ry="4.8"/><ellipse cx="34" cy="84" rx="3.4" ry="4.8"/><ellipse cx="50" cy="83" rx="3.4" ry="4.8"/><ellipse cx="66" cy="84" rx="3.4" ry="4.8"/><ellipse cx="42" cy="102" rx="3.4" ry="4.8"/><ellipse cx="58" cy="102" rx="3.4" ry="4.8"/></g></svg></span><span class="mword"><b class="mname">MORANGO</b><small class="msub">مورانڭو</small></span></div></div>
@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128160556" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128162725" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -20263,6 +20263,88 @@ function sheetAsk() {
     if (el) el.scrollTop = el.scrollHeight;
   });
 }
+function compFlat(it, share, acc, d = 0) {
+  var _a, _b, _c, _d;
+  if (!((_b = (_a = it == null ? void 0 : it.recipe) == null ? void 0 : _a.lines) == null ? void 0 : _b.length) || d > 8) return;
+  for (const l of it.recipe.lines) {
+    const ch = S.items[l.item];
+    if (!ch) continue;
+    const lg = lineG(l);
+    if (isBought(ch.kind) || !((_d = (_c = ch.recipe) == null ? void 0 : _c.lines) == null ? void 0 : _d.length)) {
+      acc[ch.id] = (acc[ch.id] || 0) + (lg == null ? 0 : lg * share);
+      continue;
+    }
+    if (lg == null) {
+      compFlat(ch, share * (+l.qty || 0) / (+ch.recipe.yield || 1), acc, d + 1);
+      continue;
+    }
+    const T = nutTot(ch).g;
+    if (T > 0) compFlat(ch, share * lg / T, acc, d + 1);
+    else acc[ch.id] = (acc[ch.id] || 0) + lg * share;
+  }
+}
+function showComp(id) {
+  var _a;
+  const it0 = S.items[id];
+  if (!it0) return;
+  const B = bundleOf(id);
+  const it = B ? S.items[B.item] || it0 : it0;
+  const acc = {};
+  const y = +((_a = it.recipe) == null ? void 0 : _a.yield) || 1;
+  compFlat(it, 1 / y, acc);
+  const L = Object.entries(acc).filter(([k]) => {
+    const c = S.items[k];
+    return c && !["pack", "cons"].includes(c.kind) && !/الما|\beau\b|Eau/i.test((c.name || "") + " " + (c.fr || ""));
+  }).sort((a, b) => b[1] - a[1]);
+  const tot = L.reduce((a, [, g]) => a + g, 0);
+  let alg = [];
+  try {
+    alg = [...nutTot(it).alg];
+  } catch (_) {
+  }
+  const nm = (k) => esc(iname(k).replace(/\s*\(.*?\)\s*/g, " ").split("·")[0].trim());
+  openSheet((it0.icon || "🧁") + " " + iname(id).split(" (")[0], `${L.length ? `<div><b>🥣 فيه:</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${L.slice(0, 10).map(([k, g]) => `<span class="tag">${nm(k)}${tot > 0 && g > 0 ? ` <small class="muted">${Math.max(1, Math.round(g / tot * 100))}%</small>` : ""}</span>`).join("")}${L.length > 10 ? `<span class="tag">+${L.length - 10}</span>` : ""}</div></div>` : '<p class="muted">ما كايناش الوصفة ديال هاد المنتوج.</p>'}
+   ${alg.length ? `<div><b>⚠️ الحساسية:</b> ${alg.map((a) => {
+    const x = ALG.find((z) => z[0] === a);
+    return x ? `<span class="tag warn">${x[2]} ${x[1]}</span>` : "";
+  }).join(" ")}</div>` : ""}
+   ${tot > 0 && !isW(it.unit) ? `<p class="muted" style="margin:0">⚖️ تقريبا ${fmt(Math.round(tot))} غ ديال العجينة والحشوة (قبل الطياب)</p>` : ""}
+   <p class="muted" style="margin:0">💰 ${money(it0.price)}${it0.offer ? " · كيدخل فالعرض" : ""}</p>`);
+}
+(() => {
+  let t = null, fired = false, sx = 0, sy = 0;
+  const tile = (e) => e.target.closest && e.target.closest('[data-act="add"]');
+  document.addEventListener("pointerdown", (e) => {
+    const el = tile(e);
+    if (!el) return;
+    fired = false;
+    sx = e.clientX;
+    sy = e.clientY;
+    clearTimeout(t);
+    t = setTimeout(() => {
+      fired = true;
+      try {
+        navigator.vibrate && navigator.vibrate(15);
+      } catch (_) {
+      }
+      showComp(el.dataset.id);
+    }, 550);
+  }, true);
+  ["pointerup", "pointercancel"].forEach((ev) => document.addEventListener(ev, () => clearTimeout(t), true));
+  document.addEventListener("pointermove", (e) => {
+    if (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) clearTimeout(t);
+  }, true);
+  document.addEventListener("click", (e) => {
+    if (fired && tile(e)) {
+      e.stopPropagation();
+      e.preventDefault();
+      fired = false;
+    }
+  }, true);
+  document.addEventListener("contextmenu", (e) => {
+    if (tile(e)) e.preventDefault();
+  }, true);
+})();
 const ACT = {
   ask: () => sheetAsk(),
   askclear: () => {
