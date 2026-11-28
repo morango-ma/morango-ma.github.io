@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128115442" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128115724" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -3268,7 +3268,7 @@ function draw() {
     if (!(S.kf.step === "msg" && $("#ktext") || S.kf.step === "cand" && $("#cname") || S.kf.step === "idle" && $(".attract"))) $("#main").innerHTML = vKiosk();
     return;
   }
-  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, gas: vGas, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, avis: vAvis, live: vLive, cam: vCam, retours: vRetours, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
+  const V = { hist: vHist, needs: vNeeds, lots: vLots, dash: vDash, logi: vLogi, plan: vPlan, home: vHome, prod: vProd, send: vSend, pos: vPos, orders: vOrders, more: vMore, purchases: vPurchases, returns: vReturns, catalog: vCatalog, journal: vJournal, team: vTeam, loyalty: vLoyalty, report: vReport, charges: vCharges, gas: vGas, preqs: vPreqs, inv: vInv, workers: vWorkers, tickets: vTickets, feedback: vFeedback, posreqs: vPosreqs, cands: vCands, pack: vPack, vitrine: vVitrine, vehicle: vVehicle, devices: vDevices, pricing: vPricing, objectifs: vObjectifs, equip: vEquip, roster: vRoster, appfb: vAppFb, logins: vLogins, avis: vAvis, live: vLive, cam: vCam, retours: vRetours, dispatch: vDispatch, pxcheck: vPxCheck }[S.view] || vHome;
   const y = window.scrollY;
   $("#main").innerHTML = V();
   window.scrollTo(0, y);
@@ -4783,7 +4783,7 @@ function vMore(arr) {
   if (isMgr() || r === "prod" || r === "ws") T.unshift({ i: "🪟", l: "الفيترينة: الريبتير والصور", v: "vitrine", c: 6, b: openOuts().filter((o) => r !== "ws" || o.ws === me.loc).length });
   if (r === "seller") T.push({ i: "📸", l: "صور الفيترينة", a: "vitshot", c: 3 });
   if (isMgr() || r === "seller" || r === "buyer") T.push({ i: "📦", l: r === "seller" ? "التغليف واللوازم" : "التغليف ديال المحلات", v: "pack", c: 4 });
-  if (isMgr()) T.unshift({ i: "📊", l: "لوحة القيادة", v: "dash", c: 4 });
+  if (isMgr()) T.unshift({ i: "📊", l: "لوحة القيادة", v: "dash", c: 4 }, { i: "🚚", l: "الإرسال والمحلات (اليوم)", v: "logi", c: 4 });
   if (isMgr() || isProd() || canBuy() || r === "ws") T.unshift({ i: "🧮", l: "الحاجيات ديال السيمانة", v: "needs", c: 1 });
   if (r !== "driver" && r !== "worker" && r !== "kiosk" && r !== "seller") {
     const lb = lotsActive().filter((l) => (isMgr() || isProd() || l.loc === me.loc) && ld(l) != null && ld(l) <= 2).length;
@@ -12032,8 +12032,33 @@ function dCard(key, title, chart, table, extra = "") {
   const tb = S.dash.tbl[key];
   return `<section class="card"><div class="head"><h2>${title}</h2><button class="btn small" data-act="dtbl" data-id="${key}" aria-pressed="${!!tb}">${tb ? "📊 رسم" : "📋 جدول"}</button></div>${extra}${tb ? table : chart}</section>`;
 }
-function dashLogi() {
-  const D = S.dash, X = D.data, td = today();
+async function loadLogi() {
+  const L = S.lg;
+  L.loading = true;
+  const from = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+  try {
+    const sh = await db.collection("shifts").where("date", ">=", from).get();
+    L.data = { from, shifts: sh.docs.map((d) => d.data()), ts: Date.now() };
+  } catch (e) {
+    L.data = null;
+    toast("ما قدرناش نحملو المعطيات", true);
+  }
+  L.loading = false;
+  render();
+}
+function vLogi() {
+  if (!isMgr()) return emptyB("🔒", "غير للمسير والمشرف العام.");
+  S.lg = S.lg || { pos: "" };
+  const L = S.lg;
+  const head = `<h1>🚚 الإرسال والمحلات · اليوم</h1>${chipsHtml([{ id: "", name: "جوج المحلات", i: "🏪" }, ...POS.map((p) => ({ id: p.id, name: p.name, i: "🛍️" }))], L.pos, "lgpos")}`;
+  if (!L.data || L.data.from > today() || Date.now() - L.data.ts > 15 * 6e4) {
+    if (!L.loading) setTimeout(loadLogi, 0);
+    if (!L.data) return head + emptyB("⏳", "كنحسبو...");
+  }
+  return head + dashLogi(L) + `<p class="muted">🔄 ${new Date(L.data.ts).toLocaleTimeString("fr-MA", { timeStyle: "short" })} · <button class="link" data-act="lgreload">حدث دابا</button> · الإرسالات والمخزون كيتحدثو مباشرة، معدل البيع كيتحسب على 7 أيام.</p>`;
+}
+function dashLogi(D) {
+  const X = D.data, td = today();
   if (!X) return "";
   const fp = D.pos;
   const past = [...new Set(X.shifts.map((sh) => sh.date).filter((d) => d < td))];
@@ -12089,7 +12114,7 @@ function dashLogi() {
       <details ${empty.length ? "open" : ""}><summary><b>🚫 تستلمو ولكن سالاو فالمحل دابا</b></summary>${empty.length ? byWs(empty) : '<p class="muted">والو.</p>'}</details>
       <details ${outs.length ? "open" : ""}><summary><b>🪟 الريبتير اليوم</b></summary>${outs.length ? outs.map((o) => `<div class="prow"><span>${o.status === "open" ? "🔴" : "🟢"} ${nm(o.item)}</span><span class="muted">${o.outTs ? hm(o.outTs) : ""}${o.refillTs ? " → " + hm(o.refillTs) : " · مازال خاوي"}</span></div>`).join("") : '<p class="muted">ما كاين حتى ريبتير.</p>'}</details></div>`;
   }).join("");
-  return `<section class="card"><div class="head"><h2>🚚 الإرسال والمحلات · اليوم</h2></div><p class="muted" style="margin:0">«ما تصيفطوش» = منتوجات كتباع فالمعدل حبة ولا كثر فالنهار (${nd} يوم اللي فاتو) وما تصيفطوش اليوم. «سالاو» = المخزون فالمحل وصل 0 من بعد الاستلام.</p>${blocks}</section>`;
+  return `<section class="card"><p class="muted" style="margin:0">«ما تصيفطوش» = منتوجات كتباع فالمعدل حبة ولا كثر فالنهار (${nd} يوم اللي فاتو) وما تصيفطوش اليوم. «سالاو» = المخزون فالمحل وصل 0 من بعد الاستلام.</p>${blocks}</section>`;
 }
 function vDash() {
   if (!isMgr()) return emptyB("🔒", "غير للمسير والمشرف العام.");
@@ -12121,7 +12146,7 @@ function vDash() {
   const c5 = dCard("prod", "⚖️ الإنتاج: البرنامج مقابل الحقيقي (كغ)", pd.length ? svgBars(pd.map((d) => ({ lbl: dLbl(d), id: d, act: "dplan", tip: `<b>${d}</b><div><i style="background:var(--vplan)"></i>البرنامج: ${fmt(Math.round(C.planDay[d]))} كغ</div><div><i style="background:var(--sa)"></i>الحقيقي: ${fmt(Math.round(C.prodDay[d]))} كغ</div>${C.planDay[d] > 0 ? `<div>الإنجاز: <b>${Math.round(C.prodDay[d] / C.planDay[d] * 100)}%</b></div>` : ""}`, vals: [C.planDay[d], C.prodDay[d]] })), ["var(--vplan)", "var(--sa)"]) + `<div class="vleg"><span><i style="background:var(--vplan)"></i>📋 البرنامج</span><span><i style="background:var(--sa)"></i>✅ الحقيقي</span></div>` : emptyB("⚖️", "ما كاين لا برنامج لا إنتاج فهاد المدة."), dTable(["النهار", "البرنامج (كغ)", "الحقيقي (كغ)", "الإنجاز"], pd.map((d) => [d, fmt(Math.round(C.planDay[d])), fmt(Math.round(C.prodDay[d])), C.planDay[d] > 0 ? Math.round(C.prodDay[d] / C.planDay[d] * 100) + "%" : "—"])), '<p class="muted" style="margin:0">غير المنتوجات المفينية. 👆 ضغط على نهار باش تحل البرنامج ديالو.</p>');
   const ob = Object.entries(C.oBy).map(([id, v]) => __spreadProps(__spreadValues({ id }, v), { it: S.items[id] })).filter((x) => x.it).sort((a, b) => b.n - a.n).slice(0, 8);
   const c6 = dCard("outs", "🪟 أكثر المنتوجات اللي كيخواو (الريبتير)", ob.length ? hBars(ob.map((x) => ({ id: x.id, act: "itemview", lbl: ico(x.id) + " " + esc(x.it.name), v: x.n, col: "var(--bad)", sub: x.g ? "⏳ المعدل حتى تعمر: " + dur(x.gap / x.g) : "", tip: `<b>${esc(x.it.name)}</b><div>⚠️ خوا ${x.n} مرة</div>` })), (v) => "⚠️ " + fmt(v)) : emptyB("✨", "ما خوا حتى منتوج 👏"), dTable(["المنتوج", "عدد المرات", "المعدل حتى تعمر"], ob.map((x) => [esc(x.it.name), fmt(x.n), x.g ? dur(x.gap / x.g) : "—"])));
-  return `${head}${kpis}${dashLogi()}${c1}${c2}${c3}${c4}${c5}${c6}<p class="muted">🔄 تحدثات ${new Date(D.data.ts).toLocaleTimeString("fr-MA", { timeStyle: "short" })} · <button class="link" data-act="dreload">حدث دابا</button> · المبيعات بعد الخصم، والتكلفة فيها المواد واليد العاملة والتغليف.</p>`;
+  return `${head}${kpis}${c1}${c2}${c3}${c4}${c5}${c6}<p class="muted">🔄 تحدثات ${new Date(D.data.ts).toLocaleTimeString("fr-MA", { timeStyle: "short" })} · <button class="link" data-act="dreload">حدث دابا</button> · المبيعات بعد الخصم، والتكلفة فيها المواد واليد العاملة والتغليف.</p>`;
 }
 (() => {
   const tip = document.createElement("div");
@@ -20181,6 +20206,14 @@ const ACT = {
   },
   dpos: (el) => {
     S.dash.pos = el.dataset.id;
+    render();
+  },
+  lgpos: (el) => {
+    S.lg.pos = el.dataset.id;
+    render();
+  },
+  lgreload: () => {
+    if (S.lg) S.lg.data = null;
     render();
   },
   dws: (el) => {
