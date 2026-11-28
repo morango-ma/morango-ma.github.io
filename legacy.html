@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261127111137" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128111235" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -6016,6 +6016,48 @@ function sheetProduce(kind, pre) {
     upd();
   });
 }
+const sNorm = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ًͯ-ْ]/g, "").replace(/[أإآ]/g, "ا").replace(/[ڭگ]/g, "ك").replace(/ى/g, "ي").replace(/ة/g, "ه");
+function sendList(ws, rows, qv) {
+  if (!rows.length) return '<p class="muted">ما كاين حتى منتوج مفيني.</p>';
+  const order = catsOf(ws);
+  const cats = [...new Set(rows.map((i) => i.cat || "أخرى"))].sort((a, b) => {
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || a.localeCompare(b);
+  });
+  const sh = (c) => esc(String(c).replace(/\s*\(.*\)\s*$/, ""));
+  const chips = `<div class="chips sendchips" style="padding:2px 0 6px"><button type="button" class="chip on" data-scat="">الكل</button>${cats.map((c) => `<button type="button" class="chip" data-scat="${esc(c)}">${sh(c)} <small>${rows.filter((i) => (i.cat || "أخرى") === c).length}</small></button>`).join("")}<button type="button" class="chip" data-scat="__q">✅ اللي فيهم الكمية</button></div>`;
+  const body = cats.map((c) => `<div class="sendgrp" data-cat="${esc(c)}"><div class="sendgh" style="font-weight:800;margin:10px 0 2px;color:var(--acc,#b3142f)">${sh(c)}</div>${rows.filter((i) => (i.cat || "أخرى") === c).map((i) => `<div class="sendrow" data-cat="${esc(c)}" data-nm="${esc(sNorm((i.name || "") + " " + (i.fr || "") + " " + (i.nameFull || "")))}">${prow(i.id, "فالورشة: " + fmt(stockOf(ws, i.id)), stepper("data-line", i.id, qv(i.id), i.unit))}</div>`).join("")}</div>`).join("");
+  return `<style>.sendchips .chip.on{background:#c8102e;color:#fff;border-color:transparent}</style><div class="field"><span class="lbl">شنو غادي تصيفط؟</span><input class="big-in" id="ssearch" type="search" placeholder="🔍 قلب على منتوج… / Rechercher" autocomplete="off" style="margin-bottom:6px">${chips}<div id="sendbody">${body}</div><p class="muted" id="sendnone" hidden>ما لقيت حتى منتوج.</p></div>`;
+}
+function sendListWire(f) {
+  var _a;
+  const box = $("#slines", f);
+  if (!box) return;
+  let cat = "";
+  const apply = () => {
+    var _a2;
+    const q = sNorm(((_a2 = $("#ssearch", box)) == null ? void 0 : _a2.value) || "").trim();
+    let any = 0;
+    $$(".sendrow", box).forEach((r) => {
+      const inp2 = r.querySelector("input[data-line]");
+      const has = num(inp2 == null ? void 0 : inp2.value) > 0;
+      const ok = (cat === "__q" ? has : !cat || r.dataset.cat === cat) && (!q || q.split(/\s+/).every((w) => r.dataset.nm.includes(w)));
+      r.hidden = !ok;
+      if (ok) any++;
+    });
+    $$(".sendgrp", box).forEach((g) => {
+      g.hidden = ![...g.querySelectorAll(".sendrow")].some((r) => !r.hidden);
+    });
+    const n = $("#sendnone", box);
+    if (n) n.hidden = !!any;
+  };
+  (_a = $("#ssearch", box)) == null ? void 0 : _a.addEventListener("input", apply);
+  $$("[data-scat]", box).forEach((b) => b.addEventListener("click", () => {
+    cat = b.dataset.scat;
+    $$("[data-scat]", box).forEach((x) => x.classList.toggle("on", x === b));
+    apply();
+  }));
+}
 function sheetSend(pre) {
   var _a, _b;
   if (invGuard()) return;
@@ -6072,8 +6114,9 @@ function sheetSend(pre) {
         $("#slines", f).innerHTML = `<div class="field"><span class="lbl">شنو غادي تصيفط؟</span>${pre.lines.map((l) => prow(l.item, "حسب البرنامج", `<b class="num">${fmt(l.qty)} ${esc(iunit(l.item))}</b><input type="hidden" data-line="${l.item}" value="${l.qty}">`)).join("")}</div>`;
       } else if (ws !== lastWs) {
         lastWs = ws;
-        const rows = itemsArr().filter((i) => i.kind === "final" && i.ws === ws);
-        $("#slines", f).innerHTML = `<div class="field"><span class="lbl">شنو غادي تصيفط؟</span>${rows.length ? rows.map((i) => prow(i.id, "فالورشة: " + fmt(stockOf(ws, i.id)), stepper("data-line", i.id, pre && pre.ws === ws ? preQ[i.id] || "" : "", i.unit))).join("") : '<p class="muted">ما كاين حتى منتوج مفيني.</p>'}</div>`;
+        const rows = itemsArr().filter((i) => i.kind === "final" && i.ws === ws && i.active !== false && !i.archived);
+        $("#slines", f).innerHTML = sendList(ws, rows, (id) => pre && pre.ws === ws ? preQ[id] || "" : "");
+        sendListWire(f);
       }
       if (pos !== lastPos) {
         lastPos = pos;
