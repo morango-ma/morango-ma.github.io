@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128115724" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128120109" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -12086,7 +12086,12 @@ function dashLogi(D) {
     T.forEach((o) => (o.lines || []).forEach((l) => sent[l.item] = (sent[l.item] || 0) + (+l.qty || 0)));
     const rec = T.filter((o) => o.recv || o.status === "received").length, pend = T.length - rec, pcs = Object.values(sent).reduce((a, b) => a + b, 0);
     const usual = Object.entries(avg).filter(([k, v]) => k.startsWith(p.id + "|") && v / nd >= 1).map(([k, v]) => ({ id: k.split("|")[1], a: v / nd })).filter((x) => it(x.id).kind === "final" && it(x.id).active !== false && !it(x.id).archived).sort((a, b) => b.a - a.a);
-    const notSent = usual.filter((x) => !sent[x.id]);
+    const avgOf = (id) => (avg[p.id + "|" + id] || 0) / nd;
+    const catAll = itemsArr().filter((i) => i.kind === "final" && i.active !== false && !i.archived && !i.bundle && i.ws && i.ws[0] === "w");
+    const notSent = catAll.filter((i) => !sent[i.id]).map((i) => ({ id: i.id, a: avgOf(i.id) })).sort((a, b) => b.a - a.a);
+    const notSentU = notSent.filter((x) => x.a >= 1);
+    const inSt = catAll.map((i) => ({ id: i.id, q: stockOf(p.id, i.id), pr: +i.price || 0 })).filter((x) => x.q > 0).sort((a, b) => b.q * b.pr - a.q * a.pr);
+    const stVal = inSt.reduce((a, x) => a + x.q * x.pr, 0), stQ = inSt.reduce((a, x) => a + x.q, 0);
     const got = {};
     T.filter((o) => o.recv || o.status === "received").forEach((o) => (o.lines || []).forEach((l) => got[l.item] = 1));
     const empty = usual.filter((x) => got[x.id] && stockOf(p.id, x.id) <= 0);
@@ -12098,7 +12103,7 @@ function dashLogi(D) {
         const w = it(x.id).ws || "";
         (g[w] = g[w] || []).push(x);
       });
-      return Object.entries(g).map(([w, a]) => `<div style="margin:4px 0"><b>${LOCI[w] || "🏭"} ${esc(LOC[w] || w)}</b> <span class="muted">(${a.length})</span><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px">${a.map((x) => `<span class="tag" title="معدل البيع">${nm(x.id)} · ${fmt(Math.round(x.a))}/نهار</span>`).join("")}</div></div>`).join("");
+      return Object.entries(g).map(([w, a]) => `<div style="margin:4px 0"><b>${LOCI[w] || "🏭"} ${esc(LOC[w] || w)}</b> <span class="muted">(${a.length})</span><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px">${a.map((x) => `<span class="tag" style="${x.a >= 1 ? "font-weight:700" : "opacity:.75"}" title="معدل البيع">${nm(x.id)}${x.a >= 1 ? " · " + fmt(Math.round(x.a)) + "/نهار" : x.a > 0 ? " · قليل" : ""}</span>`).join("")}</div></div>`).join("");
     };
     const trRows = T.length ? T.map((o) => {
       var _a;
@@ -12108,9 +12113,10 @@ function dashLogi(D) {
     }).join("") : '<p class="muted">ما تصيفط والو اليوم.</p>';
     const stat = (i, l, v, c = "") => `<div class="stat"><span>${i} ${l}</span><b class="${c}">${v}</b></div>`;
     return `<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px"><h3 style="margin:0 0 6px">${LOCI[p.id] || "🏪"} ${esc(p.name)}</h3>
-      <div class="stats dk">${stat("📦", "الإرسالات", fmt(T.length))}${stat("🧮", "الحبات", fmt(pcs))}${stat("⏳", "كيتسناو الاستلام", fmt(pend), pend ? "neg" : "")}${stat("❌", "ما تصيفطوش", fmt(notSent.length), notSent.length ? "neg" : "")}${stat("🚫", "سالاو فالمحل", fmt(empty.length), empty.length ? "neg" : "")}${stat("🪟", "ريبتير اليوم", fmt(outs.length) + (openO.length ? " (" + openO.length + " خاوي)" : ""), outs.length ? "neg" : "")}</div>
+      <div class="stats dk">${stat("📦", "الإرسالات", fmt(T.length))}${stat("🧮", "الحبات", fmt(pcs))}${stat("⏳", "كيتسناو الاستلام", fmt(pend), pend ? "neg" : "")}${stat("💰", "قيمة السلعة فالمحل", money(stVal))}${stat("❌", "ما تصيفطوش (كيتباعو عادة)", fmt(notSentU.length) + " / " + fmt(notSent.length), notSentU.length ? "neg" : "")}${stat("🚫", "سالاو فالمحل", fmt(empty.length), empty.length ? "neg" : "")}${stat("🪟", "ريبتير اليوم", fmt(outs.length) + (openO.length ? " (" + openO.length + " خاوي)" : ""), outs.length ? "neg" : "")}</div>
       <details open><summary><b>🚚 الإرسالات ديال اليوم</b></summary>${trRows}</details>
-      <details ${notSent.length ? "open" : ""}><summary><b>❌ ما تصيفطوش اليوم</b> <span class="muted">(منتوجات كتباع عادة فهاد المحل)</span></summary>${notSent.length ? byWs(notSent) : '<p class="muted">كلشي تصيفط ✅</p>'}</details>
+      <details open><summary><b>📦 السلعة اللي كاينة فالمحل دابا</b> <span class="muted">(${fmt(stQ)} حبة · ${money(stVal)} إلا تباعت كاملة بالثمن العادي)</span></summary>${inSt.length ? `<div class="tbl" style="overflow-x:auto"><table class="dtab" style="width:100%"><tr><th>المنتوج</th><th>الكمية</th><th>الثمن</th><th>القيمة</th></tr>${inSt.map((x) => `<tr><td>${nm(x.id)}</td><td class="num">${fmt(x.q)}</td><td class="num">${money(x.pr)}</td><td class="num"><b>${money(x.q * x.pr)}</b></td></tr>`).join("")}<tr><td><b>المجموع</b></td><td class="num"><b>${fmt(stQ)}</b></td><td></td><td class="num"><b>${money(stVal)}</b></td></tr></table></div><p class="muted" style="margin:4px 0 0">💡 القيمة بالثمن العادي. مع العرض (3–4 و 5+) البيع الحقيقي كيكون شوية أقل.</p>` : '<p class="muted">المخزون فالمحل خاوي (ولا السلعة مازال ما تستلماتش).</p>'}</details>
+      <details ${notSent.length ? "open" : ""}><summary><b>❌ المنتوجات ديال الكتالوگ اللي ما تصيفطوش اليوم</b> <span class="muted">(${notSent.length} · بالغليض اللي كيتباعو عادة)</span></summary>${notSent.length ? byWs(notSent) : '<p class="muted">كلشي تصيفط ✅</p>'}</details>
       <details ${empty.length ? "open" : ""}><summary><b>🚫 تستلمو ولكن سالاو فالمحل دابا</b></summary>${empty.length ? byWs(empty) : '<p class="muted">والو.</p>'}</details>
       <details ${outs.length ? "open" : ""}><summary><b>🪟 الريبتير اليوم</b></summary>${outs.length ? outs.map((o) => `<div class="prow"><span>${o.status === "open" ? "🔴" : "🟢"} ${nm(o.item)}</span><span class="muted">${o.outTs ? hm(o.outTs) : ""}${o.refillTs ? " → " + hm(o.refillTs) : " · مازال خاوي"}</span></div>`).join("") : '<p class="muted">ما كاين حتى ريبتير.</p>'}</details></div>`;
   }).join("");
