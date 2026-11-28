@@ -418,7 +418,7 @@ body.hasme .brand{flex-shrink:0}
 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Morango"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 <style>/* iPhone home-screen app: keep content below the status bar / notch */@supports(padding:env(safe-area-inset-top)){body{padding-top:env(safe-area-inset-top)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg,#fff6f7);z-index:30;pointer-events:none}#sheet .panel{max-height:calc(100% - env(safe-area-inset-top) - 8px)}}</style>
-<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128120712" };
+<script>window.MORANGO_CFG = { "url": "https://brxbykkrbpixrmjricco.supabase.co", "key": "sb_publishable_Z4BlEcmV2KvEW01prDcrRw_PmjsgEGl", "email": "app@morango.ma", "build": "20261128122326" };
 </script>
 <script src="supabase-legacy.js"></script>
 <script>var __defProp = Object.defineProperty;
@@ -4004,6 +4004,7 @@ function alertsFor() {
   }
   return alertsFor0();
 }
+const trItems = (o) => `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${(o.lines || []).map((l) => `<span class="tag">${esc(iname(l.item).split(" (")[0])} <b>×${fmt(l.qty)}</b></span>`).join("")}</div>`;
 function alertsFor0() {
   const r = me.role, A = [];
   if (isMgr()) retAll().filter((x) => x.status === "pending").forEach((x) => A.push(`<div class="alert warn" data-act="retopen" data-id="${x.id}"><div class="lead"><span class="em">↩️</span><div><b>${x.lateMin > 0 ? "⏰ متأخر · " : ""}ريتور كيتسنى الموافقة ديالك: ${money(x.total)}</b><div class="muted">🧾 ${esc(x.ticketNo)} · ${esc(LOC[x.pos] || "")} · 💁 ${esc(x.by)} ${hm(x.ts)} · ${esc(x.why || "")}</div></div></div><span class="tag warn">شوف</span></div>`));
@@ -4029,7 +4030,7 @@ function alertsFor0() {
   (S.orders || []).filter((o) => ordTodo(o).length).forEach((o) => A.push(`<div class="alert acc" data-act="order" data-id="${o.id}"><div class="lead"><span class="em">📝</span><div><b>طلبية #${o.num} كتسنى الموافقة ديالك</b><div class="muted">${esc(o.client)} · 📅 ${o.due} ${o.dueTime || ""} · ${ordTodo(o).map((t) => t === "price" ? "💰 الثمن" : t === "adv" ? "💵 التسبيق" : "⏳ التاريخ").join("، ")}</div></div></div><span class="tag acc">شوف</span></div>`));
   const big = r === "admin" || r === "manager" || r === "prod";
   const mine = (o) => big || r === "ws" && o.ws === me.loc || r === "seller" && o.pos === me.loc || r === "driver" && o.status === "with_driver";
-  S.pend.filter((o) => o.type === "transfer" && mine(o)).forEach((o) => A.push(`<div class="alert ${trLate(o) ? "bad" : "acc"}" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${o.status === "with_driver" ? "🚚" : "📦"}</span><div><b>${o.status === "with_driver" ? "مع السائق" : "كتسنى الاستلام"}${trLate(o) ? " ⏰ متأخر" : ""}</b><div class="muted">${esc(LOC[o.ws])} ← ${esc(LOC[o.pos])} · ${hm(o.ts)} · هادي ${dur(trAge(o))}</div></div></div><span class="tag acc">شوف</span></div>`));
+  S.pend.filter((o) => o.type === "transfer" && mine(o)).forEach((o) => A.push(`<div class="alert ${trLate(o) ? "bad" : "acc"}" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${o.status === "with_driver" ? "🚚" : "📦"}</span><div><b>${o.status === "with_driver" ? "مع السائق" : "كتسنى الاستلام"}${trLate(o) ? " ⏰ متأخر" : ""}</b><div class="muted">${esc(LOC[o.ws])} ← ${esc(LOC[o.pos])} · ${hm(o.ts)} · هادي ${dur(trAge(o))}</div>${trItems(o)}</div></div><span class="tag acc">شوف</span></div>`));
   if (big || r === "ws" || r === "seller") {
     allOps().filter((o) => o.type === "transfer" && o.hasDiff && mine(o)).slice(0, 5).forEach((o) => A.push(`<div class="alert bad" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">⚠️</span><div><b>فرق فالاستلام</b><div class="muted">${esc(LOC[o.ws])} ← ${esc(LOC[o.pos])} · ${o.date}</div></div></div><span class="tag bad">شوف</span></div>`));
     S.pend.filter((o) => o.type === "return" && (big || r === "ws" && o.ws === me.loc)).forEach((o) => A.push(`<div class="alert" data-act="decide" data-id="${o.id}"><div class="lead"><span class="em">↩️</span><div><b>مرتجعات كتسنى القرار</b><div class="muted">${esc(LOC[o.pos])} ← ${esc(LOC[o.ws])} · ${o.lines.length} منتوج</div></div></div><span class="tag warn">قرر</span></div>`));
@@ -4260,7 +4261,7 @@ function stTag(o) {
 }
 const trAge = (o) => o.recv ? o.recv.ts - o.ts : Date.now() - o.ts;
 const trLate = (o) => !o.recv && trAge(o) > SEND_LATE_MIN * 6e4;
-const trRow = (o) => `<li class="clk" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${LOCI[o.ws]}</span><div><b>${esc(LOC[o.ws])} ← ${esc(LOC[o.pos])}</b><div class="muted">${o.date} ${hm(o.ts)} · ${o.lines.length} منتوج${o.driver ? " · " + esc(o.driver) : ""} · ${o.recv ? "⏱️ وصلات فـ " + dur(trAge(o)) : "⏳ هادي " + dur(trAge(o))}</div></div></div>${trLate(o) ? '<span class="tag bad">⏰ متأخر</span>' : stTag(o)}</li>`;
+const trRow = (o) => `<li class="clk" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${LOCI[o.ws]}</span><div><b>${esc(LOC[o.ws])} ← ${esc(LOC[o.pos])}</b><div class="muted">${o.date} ${hm(o.ts)} · ${o.lines.length} منتوج${o.driver ? " · " + esc(o.driver) : ""} · ${o.recv ? "⏱️ وصلات فـ " + dur(trAge(o)) : "⏳ هادي " + dur(trAge(o))}</div>${trItems(o)}</div></div>${trLate(o) ? '<span class="tag bad">⏰ متأخر</span>' : stTag(o)}</li>`;
 function vSend() {
   let pend = S.pend.filter((o) => o.type === "transfer");
   if (me.role === "driver") pend = pend.filter((o) => o.status === "with_driver");
@@ -12109,12 +12110,29 @@ function dashLogi(D) {
       var _a;
       const n = (o.lines || []).reduce((a, l) => a + (+l.qty || 0), 0);
       const ok = o.recv || o.status === "received";
-      return `<div class="alert ${ok ? "good" : "warn"}" data-act="transfer" data-id="${o.id}" style="margin:4px 0"><div class="lead"><span class="em">${ok ? "✅" : "⏳"}</span><div><b>${LOCI[o.ws] || ""} ${esc(LOC[o.ws] || o.ws)} · ${fmt(n)} حبة · ${(o.lines || []).length} منتوج</b><div class="muted">${hm(o.ts)} · ${esc(o.by || "")} · ${ok ? "تستلمات" + (((_a = o.recv) == null ? void 0 : _a.ts) ? " " + hm(o.recv.ts) : "") : "كتسنى الاستلام"}${o.hasDiff ? " · ⚠️ كاين فرق" : ""}</div></div></div></div>`;
+      return `<div class="alert ${ok ? "good" : "warn"}" data-act="transfer" data-id="${o.id}" style="margin:4px 0"><div class="lead"><span class="em">${ok ? "✅" : "⏳"}</span><div><b>${LOCI[o.ws] || ""} ${esc(LOC[o.ws] || o.ws)} · ${fmt(n)} حبة · ${(o.lines || []).length} منتوج</b><div class="muted">${hm(o.ts)} · ${esc(o.by || "")} · ${ok ? "تستلمات" + (((_a = o.recv) == null ? void 0 : _a.ts) ? " " + hm(o.recv.ts) : "") : "كتسنى الاستلام"}${o.hasDiff ? " · ⚠️ كاين فرق" : ""}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${(o.diff || o.lines || []).map((l) => {
+        const q = o.diff ? l.sent : l.qty, g = o.diff ? l.got : null;
+        return `<span class="tag">${nm(l.item)} <b>×${fmt(q)}</b>${g != null && g !== q ? ` <span class="neg">(وصل ${fmt(g)})</span>` : ""}</span>`;
+      }).join("")}</div></div></div></div>`;
     }).join("") : '<p class="muted">ما تصيفط والو اليوم.</p>';
+    const agg = {};
+    T.forEach((o) => {
+      const ok = o.recv || o.status === "received";
+      (o.diff || o.lines || []).forEach((l) => {
+        const id = l.item, q = +(o.diff ? l.sent : l.qty) || 0, g = ok ? +(o.diff ? l.got : l.qty) || 0 : 0;
+        const a = agg[id] || (agg[id] = { s: 0, g: 0, p: 0 });
+        a.s += q;
+        a.g += g;
+        if (!ok) a.p += q;
+      });
+    });
+    const aRows = Object.entries(agg).sort((x, y) => (it(x[0]).ws || "").localeCompare(it(y[0]).ws || "") || y[1].s - x[1].s);
+    const sumTbl = aRows.length ? `<div style="overflow-x:auto"><table class="dtab" style="width:100%"><tr><th>المنتوج</th><th>تصيفط</th><th>تستلم</th><th>كيتسنى</th></tr>${aRows.map(([id, a]) => `<tr><td>${LOCI[it(id).ws] || ""} ${nm(id)}</td><td class="num"><b>${fmt(a.s)}</b></td><td class="num">${a.g ? fmt(a.g) : "–"}</td><td class="num ${a.p ? "neg" : ""}">${a.p ? fmt(a.p) : "–"}</td></tr>`).join("")}<tr><td><b>المجموع</b></td><td class="num"><b>${fmt(aRows.reduce((t, [, a]) => t + a.s, 0))}</b></td><td class="num"><b>${fmt(aRows.reduce((t, [, a]) => t + a.g, 0))}</b></td><td class="num"><b>${fmt(aRows.reduce((t, [, a]) => t + a.p, 0))}</b></td></tr></table></div>` : '<p class="muted">ما تصيفط والو اليوم.</p>';
     const stat = (i, l, v, c = "") => `<div class="stat"><span>${i} ${l}</span><b class="${c}">${v}</b></div>`;
     return `<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px"><h3 style="margin:0 0 6px">${LOCI[p.id] || "🏪"} ${esc(p.name)}</h3>
       <div class="stats dk">${stat("📦", "الإرسالات", fmt(T.length))}${stat("🧮", "الحبات", fmt(pcs))}${stat("⏳", "كيتسناو الاستلام", fmt(pend), pend ? "neg" : "")}${stat("💰", "قيمة السلعة فالمحل", money(stVal))}${stat("❌", "ما تصيفطوش", fmt(notSent.length), notSent.length ? "neg" : "")}${stat("🚫", "سالاو فالمحل", fmt(empty.length), empty.length ? "neg" : "")}${stat("🪟", "ريبتير اليوم", fmt(outs.length) + (openO.length ? " (" + openO.length + " خاوي)" : ""), outs.length ? "neg" : "")}</div>
       <details open><summary><b>🚚 الإرسالات ديال اليوم</b></summary>${trRows}</details>
+      <details open><summary><b>📋 شحال تصيفط من كل منتوج اليوم</b></summary>${sumTbl}</details>
       <details open><summary><b>📦 السلعة اللي كاينة فالمحل دابا</b> <span class="muted">(${fmt(stQ)} حبة · ${money(stVal)} إلا تباعت كاملة بالثمن العادي)</span></summary>${inSt.length ? `<div class="tbl" style="overflow-x:auto"><table class="dtab" style="width:100%"><tr><th>المنتوج</th><th>الكمية</th><th>الثمن</th><th>القيمة</th></tr>${inSt.map((x) => `<tr><td>${nm(x.id)}</td><td class="num">${fmt(x.q)}</td><td class="num">${money(x.pr)}</td><td class="num"><b>${money(x.q * x.pr)}</b></td></tr>`).join("")}<tr><td><b>المجموع</b></td><td class="num"><b>${fmt(stQ)}</b></td><td></td><td class="num"><b>${money(stVal)}</b></td></tr></table></div><p class="muted" style="margin:4px 0 0">💡 القيمة بالثمن العادي. مع العرض (3–4 و 5+) البيع الحقيقي كيكون شوية أقل.</p>` : '<p class="muted">المخزون فالمحل خاوي (ولا السلعة مازال ما تستلماتش).</p>'}</details>
       <details ${notSent.length ? "open" : ""}><summary><b>❌ المنتوجات ديال الكتالوگ اللي ما تصيفطوش اليوم</b> <span class="muted">(${notSent.length})</span></summary>${notSent.length ? byWs(notSent) : '<p class="muted">كلشي تصيفط ✅</p>'}</details>
       <details ${empty.length ? "open" : ""}><summary><b>🚫 تستلمو ولكن سالاو فالمحل دابا</b></summary>${empty.length ? byWs(empty) : '<p class="muted">والو.</p>'}</details>
@@ -21012,7 +21030,7 @@ const ACT = {
     const p = me.loc || S.pos;
     const L = S.pend.filter((o) => o.type === "transfer" && o.pos === p);
     if (L.length === 1) return sheetTransfer(L[0].id);
-    openSheet("📦 السلعة اللي جاية لـ" + LOC[p], L.length ? L.map((o) => `<div class="alert acc" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${o.status === "with_driver" ? "🚚" : "📦"}</span><div><b>${esc(LOC[o.ws] || "")} · ${(o.lines || []).length} منتوج</b><div class="muted">${hm(o.ts)} · ${esc(o.by || "")}</div></div></div><span class="tag acc">استلم</span></div>`).join("") : emptyB("📦", "ما كاينة حتى سلعة جاية دابا."));
+    openSheet("📦 السلعة اللي جاية لـ" + LOC[p], L.length ? L.map((o) => `<div class="alert acc" data-act="transfer" data-id="${o.id}"><div class="lead"><span class="em">${o.status === "with_driver" ? "🚚" : "📦"}</span><div><b>${esc(LOC[o.ws] || "")} · ${(o.lines || []).length} منتوج</b><div class="muted">${hm(o.ts)} · ${esc(o.by || "")}</div>${trItems(o)}</div></div><span class="tag acc">استلم</span></div>`).join("") : emptyB("📦", "ما كاينة حتى سلعة جاية دابا."));
   },
   dpedit: (el) => sheetDpEdit(el.dataset.id),
   dpgrid: () => sheetDpGrid(),
